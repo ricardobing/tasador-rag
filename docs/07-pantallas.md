@@ -175,6 +175,14 @@ usuario lo ve y pregunta. Ocultarlo sería la decisión cómoda.
 
 El markdown renderizado, con un botón "Copiar" para pegarlo en un mail o WhatsApp.
 
+### 6.5 bis «Preguntale al informe» (18/09/2026)
+
+Una caja de texto debajo de la narrativa. La respuesta llega con las citas que la
+sostienen —cada una es un hecho del informe (`[C-07]`, `[V]`) o un párrafo de la
+metodología (`[Met §4.2]`)— o llega rechazada: cuando no hay evidencia, la API no
+llama al modelo y lo dice. Debajo de cada respuesta, el costo y el tiempo. No
+aparece en el link compartido del propietario (doc 18 §5; ADR-013).
+
 ### 6.6 Limitaciones
 
 Recuadro gris, siempre visible, nunca colapsado. Con el texto de

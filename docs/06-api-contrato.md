@@ -223,6 +223,29 @@ un cliente no se sobrescribe nunca.
 
 ---
 
+### `POST /v1/reports/{id}/ask` — preguntar sobre un informe (doc 18 §5)
+
+Solo sobre informes `SUCCEEDED`. Cuerpo: `{"pregunta": "…"}` (3 a 500 caracteres).
+
+```json
+{
+  "report_id": "…",
+  "pregunta": "¿Por qué no se usó el aviso de Thames 1800?",
+  "respuesta": "Se descartó porque está en pozo: su precio incluye el plazo de obra [C-07].",
+  "citas": [{"id": "C-07", "texto": "Comparable C-07: Thames 1800 (PORTAL_A), USD 240.000 … Descartado: …", "fuente": "informe"}],
+  "rechazada": false,
+  "motivo": null,
+  "cost_usd": 0.0004,
+  "duration_ms": 1820
+}
+```
+
+`rechazada: true` con `motivo` cuando no hay evidencia (por debajo del umbral de
+similitud no se llama al modelo), cuando el modelo declara que no la hay, o cuando
+la respuesta no pasó la verificación (una cita inexistente, una cifra que no está
+en lo citado). Cada pregunta queda como evento `ask` en la traza del informe, con
+su costo. **No disponible en el informe compartido** (`/shared/{token}`).
+
 ### `POST /v1/inventory/snapshot` — el panel empuja su inventario
 
 Este es el endpoint que **elimina el riesgo de cuota de el CRM**

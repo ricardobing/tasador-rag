@@ -66,7 +66,7 @@ LLM. Todo lo demás es lenguaje y juicio alrededor de él.
 | # | Nodo | Tipo | Modelo (tarea) | Costo/informe | Estado |
 |---|---|---|---|---|---|
 | 1 | `normalize_subject` | determinístico | — | $0 | ✅ |
-| 2 | `retrieve_candidates` | SQL (+ embeddings, Fase 5) | — | $0 | ✅ |
+| 2 | `retrieve_candidates` | SQL; híbrido denso+léxico construido y apagado (doc 18) | — | $0 | ✅ |
 | 3 | `ondemand_capture` | I/O (Playwright) | — | $0 | ⚠️ fetcher ✅, nodo ⬜ |
 | **4** | **`extract_features`** | **LLM** | `extractor` | **0,0032 / $0 en caliente** | ✅ |
 | **5** | **`dedup_cluster`** | **híbrido** | `judge` (solo dudas) | **0,001** | ✅ |
@@ -167,8 +167,8 @@ aditivos.
 │ panel la inmobiliaria   │      │ listing_features    ⬜ │  │   ┌──────────────────┐
 └──────────────────┘      │ ◀ lo que llena nodo 4  │  │   │ nodo 7: valuar ✅│
                           ├────────────────────────┤  │   └────────┬─────────┘
-                          │ listing_embeddings  ⬜ │──┘            ▼
-                          │ pgvector 1024 + HNSW   │      ┌──────────────────┐
+                          │ listing_chunks      ✅ │──┘            ▼
+                          │ MiniLM 384 d · tsv     │      ┌──────────────────┐
                           ├────────────────────────┤      │ core.reports  ⬜ │
                           │ listing_snapshots   ✅ │      │ + comparables    │
                           │ historial de precio    │      │ + events + pdf   │

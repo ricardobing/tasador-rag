@@ -47,8 +47,16 @@ class Settings(BaseSettings):
     sentry_dsn: str = ""
 
     # ── Embeddings ───────────────────────────────────────────────────────
-    embedding_model: str = "intfloat/multilingual-e5-large"
-    embedding_dim: int = 1024
+    # ADR-010. `multilingual-e5-large` (1024 d, 512 tokens) embebe a 0,4-0,8
+    # pasajes/s en esta CPU: indexar 17.500 chunks son horas. MiniLM-L12
+    # multilingüe (384 d, 128 tokens) embebe ~13/s, 30x más rápido, y su
+    # contexto corto hace del chunking una necesidad y no un adorno.
+    embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    embedding_dim: int = 384
+    # Tamaño de chunk en tokens del modelo (objetivo y tope). Con 128 de
+    # contexto: 100 y 120. Con e5-large se subirían a 320 y 480.
+    chunk_objetivo: int = 100
+    chunk_maximo: int = 120
     # Dónde se cachea el modelo (2,2 GB): un volumen, no la imagen. Vacío =
     # `/data/models` si existe (el contenedor) o `data/models` del repo.
     models_dir: str = ""
@@ -74,6 +82,16 @@ class Settings(BaseSettings):
     # arranca y funciona igual; hay un test que lo verifica.
     panel_source_enabled: bool = False
     panel_readonly_dsn: SecretStr = SecretStr("")
+
+    # ── «Preguntale al informe» (doc 18 §5) ─────────────────────────────
+    qa_task: str = "judge"
+    # Compuerta antes del modelo: se rechaza sin llamarlo solo si el mejor
+    # coseno Y el mejor solapamiento léxico quedan por debajo. Medido el 18/09
+    # con MiniLM (scripts/eval_qa.py): el coseno solo no separa (0,43-0,74 con
+    # respuesta contra 0,32-0,51 sin); las dos señales juntas, sí.
+    qa_umbral: float = 0.40
+    qa_umbral_lexico: float = 0.34
+    qa_k: int = 8
 
     # ── Geocodificación ──────────────────────────────────────────────────
     nominatim_url: str = "https://nominatim.openstreetmap.org"

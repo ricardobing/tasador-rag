@@ -19,7 +19,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from tasador.settings import get_settings
-from tasador.v1 import admin, auth, calidad, comparables, health, inventory, reports
+from tasador.v1 import admin, ask, auth, calidad, comparables, health, inventory, reports
 
 log = structlog.get_logger()
 
@@ -141,6 +141,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router, prefix="/v1", tags=["operación"])
     app.include_router(auth.router, prefix="/v1", tags=["autenticación"])
     app.include_router(reports.router, prefix="/v1", tags=["informes"])
+    app.include_router(ask.router, prefix="/v1", tags=["informes"])
     app.include_router(comparables.router, prefix="/v1", tags=["corpus"])
     app.include_router(calidad.router, prefix="/v1", tags=["calidad"])
     app.include_router(admin.router, prefix="/v1", tags=["administración"])

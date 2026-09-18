@@ -87,8 +87,9 @@ nodes:
       semantic:
         enabled: false
         modo: hibrido                  # denso | lexico | hibrido
-        chunker: C-oraciones-v1
-        model: intfloat/multilingual-e5-large
+        # Vacíos = el modelo y el tamaño de chunk de settings (ADR-010).
+        chunker: ""
+        model: ""
         rrf_k: 60
         usar_notas_del_agente: true    # local: las notas no salen de la máquina
 

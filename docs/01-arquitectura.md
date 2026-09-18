@@ -337,6 +337,131 @@ el CI sin tocar internet ni gastar un centavo.
 
 ---
 
+---
+
+### ADR-010 — Embeddings locales: MiniLM multilingüe por defecto, e5-large medido y descartado en CPU
+
+**Contexto.** ADR-004 y `settings.py` nombraban `BAAI/bge-m3` vía `fastembed`.
+Verificado el 17/09/2026 contra la librería instalada (0.8.0): **no lo sirve**. Los
+multilingües que sí sirve: `intfloat/multilingual-e5-large` (1024 d, 512 tokens, MIT),
+`jinaai/jina-embeddings-v3` (1024 d, 8.192 tokens, **CC-BY-NC**),
+`paraphrase-multilingual-mpnet-base-v2` (768 d, 128 tokens, Apache) y
+`paraphrase-multilingual-MiniLM-L12-v2` (384 d, 128 tokens, Apache).
+
+**Lo medido antes de decidir**, en esta máquina (12 núcleos, sin GPU, ONNX):
+
+```
+                                   pasajes/s   dim   contexto   17.500 chunks
+intfloat/multilingual-e5-large        0,4–0,8  1024   512 tok    6 a 12 horas
+paraphrase-multilingual-MiniLM-L12-v2    13     384   128 tok    ~25 minutos
+```
+
+La primera corrida de indexado con e5-large llevaba 35 minutos y había escrito
+199 chunks. Un experimento que no se puede repetir en una tarde no es un
+experimento: no se pueden comparar tres chunkers, ni reindexar tras un cambio.
+
+**Decisión.** `paraphrase-multilingual-MiniLM-L12-v2` como modelo por defecto para
+esta etapa, con el modelo y el tamaño de chunk en `settings` (`embedding_model`,
+`chunk_objetivo`, `chunk_maximo`) y **en la clave de `listing_chunks`**: dos
+modelos conviven indexados y se comparan sin reindexar. La columna `embedding` no
+tiene dimensión fija por eso mismo, y no lleva HNSW (ADR-012). Los prefijos de e5
+(`query:` / `passage:`) quedan en el `Embedder`, que los aplica solo a los modelos
+que los esperan. Todo corre en CPU, se cachea en un volumen y **nunca en el event
+loop** (`asyncio.to_thread`, con un test que lo mide).
+
+**Consecuencia que cambia el diseño.** Con 128 tokens de contexto, el chunking deja
+de ser una mejora opcional: medido con el tokenizador del modelo, sin truncar, sobre
+8.514 avisos vigentes, el aviso entero tiene p50 374 tokens, p90 710, máx 2.400 —
+**prácticamente ningún aviso entra entero**. "Truncar" (la estrategia A) descarta la
+mitad del texto, y eso es lo que la tabla de ablación mide contra "partir por
+oraciones con encabezado" (ADR-011).
+
+**Una trampa que costó una medición.** El tokenizador que `fastembed` usa para
+embeber trunca al contexto del modelo, así que contar con él responde "ninguno se
+pasa" por construcción: la primera medición dio p90 = p99 = máx = 512. Se cuenta con
+una copia del tokenizador sin truncación.
+
+**Queda abierto, y está dicho:** con GPU, o con presupuesto para un servicio de
+embeddings, e5-large o bge-m3 son la opción natural, y el eval está listo para
+compararlos: `scripts/embed_corpus.py --modelo … --chunker C` y una fila más en la
+tabla.
+
+---
+
+### ADR-011 — Chunking por oraciones con encabezado estructurado; el aviso es el documento padre
+
+**Contexto.** Con un modelo de 512 tokens, un cuarto del corpus se truncaría y
+perdería justamente la cola del aviso, donde suelen ir el estado y las expensas.
+
+**Decisión.** Tres estrategias implementadas y comparadas en el mismo eval: **A**
+truncar (la línea de base), **B** ventana fija de palabras con solape (lo de
+tutorial), **C** por oraciones y párrafos hasta un objetivo de tokens (100 con
+MiniLM; 320 con e5-large), con solape de una oración. El tamaño va en la versión
+del chunker (`C-oraciones-100-v1`) porque dos tamaños son dos índices. Cada chunk se embebe precedido de un **encabezado
+armado desde las columnas** —tipo, ambientes, m², barrio, piso, estado, USD/m²
+redondeado a la centena—: *contextual chunking* sin LLM, porque el contexto ya está
+en la base. Con e5-large (objetivo 320) dio 2,06 chunks por aviso y ningún chunk
+sobre 480; con MiniLM (objetivo 100) el número está en doc 18 §9.
+
+**El aviso es el documento padre.** Se recuperan chunks y se devuelven avisos: el
+puntaje de un aviso es el máximo de sus chunks. Ningún chunk mezcla dos avisos.
+
+**Versión y modelo en la clave** de `corpus.listing_chunks`: un embedding es una
+interpretación, igual que `listing_features`; dos modelos conviven indexados y se
+comparan sin reindexar.
+
+**Descartado:** partir cada 500 caracteres (corta "a refac|cionar"); un LLM que
+resuma cada chunk (paga por aviso lo que las columnas ya dicen gratis).
+
+---
+
+### ADR-012 — Búsqueda híbrida exacta sobre el pool filtrado, fusión por RRF, reranking opcional
+
+**Contexto.** El nodo 2 de siempre llena su cupo de 60 por recencia cuando el filtro
+duro deja más candidatos de los que entran (124 a 1.637 en Palermo). Ese `ORDER BY`
+es el único lugar donde una señal semántica puede aportar.
+
+**Decisión.** El filtro duro y la escalera de relajación no cambian. Sobre el pool
+que dejan: coseno contra los chunks (máximo por aviso) + `ts_rank_cd` sobre una
+columna `tsvector` en español, fusionados con **Reciprocal Rank Fusion** (k=60).
+Después, opcionalmente, un **cross-encoder** local reordena los 60 finalistas.
+
+**Exacta, no ANN.** Después del filtro quedan a lo sumo ~1.700 avisos (~3.500
+chunks): la distancia exacta es cuestión de milisegundos con recall 100%, y evita
+el problema conocido de ANN + filtro (el índice devuelve los k vecinos del corpus
+entero y el filtro después deja menos de k). El índice HNSW se crea igual y se mide
+aparte, porque H-33 ya enseñó que un índice que "debería ayudar" puede no usarse.
+
+**RRF y no suma ponderada:** no pide calibrar escalas entre un coseno y un rank, un
+hiperparámetro menos contra un set chico —y este proyecto midió 17,6 pp de ruido
+en sus evals de componente.
+
+**Apagado por default.** `semantic.enabled: false` en `agents.yaml` hasta que la
+tabla de ablación de doc 18 §4.3 cumpla el criterio escrito en §4.4. Cualquiera de
+los dos resultados es publicable.
+
+---
+
+### ADR-013 — «Preguntale al informe»: RAG con citas obligatorias y rechazo sin modelo
+
+**Contexto.** Las preguntas del propietario («¿por qué no usaron el de Thames?»)
+tienen respuesta en `report_comparables` y en doc 05, pero hay que saber dónde
+mirar.
+
+**Decisión.** Un índice en memoria por informe —un hecho por comparable con su
+motivo en castellano, la valuación, la confianza, el contexto, más doc 05 partido
+por encabezado— consultado por híbrido (coseno + solapamiento léxico, RRF). El
+modelo responde con un schema cerrado donde **`citas` es requerido**, y la
+respuesta pasa por dos verificaciones sin LLM: toda cita existe entre los
+fragmentos que se le pasaron, y toda cifra de la respuesta existe en los
+fragmentos citados —**la misma `cifras_no_trazables` de la fase A del crítico**,
+reusada—. Si el mejor coseno no llega al umbral, se rechaza **sin llamar al
+modelo**. En el link compartido del propietario queda apagado.
+
+**Fundamento.** Es el mismo principio de todo el sistema aplicado a una superficie
+nueva: el modelo explica, no produce cifras, y lo que produce se verifica contra
+datos por comparación de strings, no por otro modelo.
+
 ## 5. Flujo de una generación de informe
 
 ```

@@ -57,18 +57,29 @@ class Semantica:
     """Cómo se puntúa el pool. Sale de `agents.yaml` (`params.semantic`)."""
 
     modo: Modo = "hibrido"
-    chunker_version: str = "C-oraciones-v1"
-    model: str = "intfloat/multilingual-e5-large"
+    chunker_version: str = ""
+    model: str = ""
     rrf_k: int = 60
     usar_notas: bool = True
+
+    def __post_init__(self) -> None:
+        # Sin `frozen` no haría falta; con él, los defaults que dependen de
+        # settings se resuelven acá.
+        from tasador.rag.chunking import chunkers
+        from tasador.settings import get_settings
+
+        if not self.model:
+            object.__setattr__(self, "model", get_settings().embedding_model)
+        if not self.chunker_version:
+            object.__setattr__(self, "chunker_version", chunkers()["C"].version)
 
     @classmethod
     def desde(cls, params: dict[str, Any] | None) -> Semantica:
         p = params or {}
         return cls(
             modo=p.get("modo", "hibrido"),
-            chunker_version=p.get("chunker", "C-oraciones-v1"),
-            model=p.get("model", "intfloat/multilingual-e5-large"),
+            chunker_version=p.get("chunker", ""),
+            model=p.get("model", ""),
             rrf_k=int(p.get("rrf_k", 60)),
             usar_notas=bool(p.get("usar_notas_del_agente", True)),
         )

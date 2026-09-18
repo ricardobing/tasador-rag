@@ -66,6 +66,15 @@ eval:       ## Backtest local, y lo guarda en eval.backtest_runs
 eval-hist:  ## Serie histórica de backtests
 	$(COMPOSE) run --rm worker python -m tasador.eval.run --history --dataset BADATA_2015_2020
 
+embed:      ## Indexa el corpus en corpus.listing_chunks (incremental; doc 18)
+	$(COMPOSE) run --rm worker python scripts/embed_corpus.py --chunker C
+
+eval-retrieval: ## Tabla de ablación de la recuperación (doc 18 §4.3), juzgando el pool
+	$(COMPOSE) run --rm worker python scripts/eval_retrieval.py --sistemas A,B,C,D,E,F --juzgar --avisos 60 --guardar
+
+eval-qa:    ## «Preguntale al informe»: rechazo, citas y cifras, mediana de 3 corridas
+	$(COMPOSE) run --rm worker python scripts/eval_qa.py --corridas 3 --guardar
+
 build:      ## Construye las imágenes y verifica que sean el repo
 	$(COMPOSE) build
 	uv run python ops/verificar_imagen.py

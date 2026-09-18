@@ -147,6 +147,13 @@ ORDER BY (SELECT embedding FROM corpus.listing_embeddings
 LIMIT 60;
 ```
 
+> **CORREGIDO (18/09/2026).** Lo que corre hoy ordena `duros` por `last_seen_at`
+> (recencia). La versión semántica existe en `rag/retriever.py` —coseno contra
+> `corpus.listing_chunks` con máximo por aviso, más `ts_rank_cd` en español,
+> fusionados con RRF— y se enciende con `semantic.enabled` en `agents.yaml`.
+> Está apagada hasta que la tabla de ablación de doc 18 §4.3 cumpla el criterio
+> de §4.4. ADR-010 a 012.
+
 **Relajación progresiva:** si con esos filtros hay < 25 candidatos, se relajan por
 etapas y **se registra qué se relajó** (impacta la confianza del informe):
 

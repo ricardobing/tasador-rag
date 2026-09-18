@@ -23,9 +23,12 @@ def sistemas_para_eval() -> dict[str, Any]:
     `scripts/eval_retrieval.py`."""
     from tasador.agents.config import load_agents_config
     from tasador.corpus.resolve import Barrios
+    from tasador.rag.chunking import chunkers
     from tasador.rag.queries import texto_de_consulta
     from tasador.rag.rerank import MODELOS, get_reranker, reordenar
     from tasador.rag.retriever import Semantica, buscar_semantico
+
+    ch = chunkers()
 
     def _sistema(sem: Semantica, rerank: str | None = None) -> Any:
         async def correr(session: AsyncSession, subject: dict[str, Any]) -> list[str]:
@@ -51,11 +54,11 @@ def sistemas_para_eval() -> dict[str, Any]:
 
         return correr
 
-    hibrido = Semantica(modo="hibrido", chunker_version="C-oraciones-v1")
+    hibrido = Semantica(modo="hibrido", chunker_version=ch["C"].version)
     return {
-        "B": _sistema(Semantica(modo="denso", chunker_version="A-truncar-v1")),
-        "C": _sistema(Semantica(modo="denso", chunker_version="C-oraciones-v1")),
-        "D": _sistema(Semantica(modo="lexico", chunker_version="C-oraciones-v1")),
+        "B": _sistema(Semantica(modo="denso", chunker_version=ch["A"].version)),
+        "C": _sistema(Semantica(modo="denso", chunker_version=ch["C"].version)),
+        "D": _sistema(Semantica(modo="lexico", chunker_version=ch["C"].version)),
         "E": _sistema(hibrido),
         "F": _sistema(hibrido, rerank=MODELOS["bge"]),
         "G": _sistema(hibrido, rerank=MODELOS["jina"]),

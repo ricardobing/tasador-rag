@@ -40,6 +40,12 @@ PREFIJO_CONSULTA = "query: "
 PREFIJO_PASAJE = "passage: "
 
 
+def _usa_prefijos(model: str) -> bool:
+    """Los e5 se entrenaron con `query:`/`passage:`; MiniLM y mpnet, no. Un
+    prefijo en un modelo que no lo espera es ruido en el vector."""
+    return "e5" in model.lower()
+
+
 class Embedder:
     """Un modelo, cargado perezosamente y una sola vez."""
 
@@ -49,6 +55,7 @@ class Embedder:
         self.dim = s.embedding_dim
         self.lote = lote
         self._m: Any = None
+        self._tok: Any = None
         self._lock = threading.Lock()
 
     # ── carga ────────────────────────────────────────────────────────────
@@ -68,11 +75,23 @@ class Embedder:
 
     # ── tokens ───────────────────────────────────────────────────────────
     def contar_tokens(self, texto: str) -> int:
-        """Con el tokenizador del modelo. Es lo que decide si un chunk entra."""
+        """Con el tokenizador del modelo, SIN truncar.
+
+        El tokenizador que usa fastembed para embeber trunca a 512: contar con
+        ese devuelve 512 para todo lo que se pasa, y "¿cuántos avisos no
+        entran?" se responde "ninguno" por construcción. Medido el 17/09:
+        p90 = p99 = máx = 512. Se cuenta con una copia sin truncación.
+        """
         m = self._cargar()
-        tok = getattr(getattr(m, "model", None), "tokenizer", None)
-        if tok is not None:
-            return len(tok.encode(texto).ids)
+        if self._tok is None:
+            tok = getattr(getattr(m, "model", None), "tokenizer", None)
+            if tok is not None:
+                import copy
+
+                self._tok = copy.deepcopy(tok)
+                self._tok.no_truncation()
+        if self._tok is not None:
+            return len(self._tok.encode(texto).ids)
         # Sin tokenizador accesible: ~3,7 caracteres por token en castellano,
         # medido. Se registra para que no pase inadvertido.
         log.warning("sin tokenizador; contando por caracteres", model=self.model)
@@ -84,13 +103,15 @@ class Embedder:
         return [[float(x) for x in v] for v in m.embed(list(textos), batch_size=self.lote)]
 
     async def pasajes(self, textos: Iterable[str]) -> list[list[float]]:
-        ts = [PREFIJO_PASAJE + t for t in textos]
+        pref = PREFIJO_PASAJE if _usa_prefijos(self.model) else ""
+        ts = [pref + t for t in textos]
         if not ts:
             return []
         return await asyncio.to_thread(self._embed, ts)
 
     async def consulta(self, texto: str) -> list[float]:
-        return (await asyncio.to_thread(self._embed, [PREFIJO_CONSULTA + texto]))[0]
+        pref = PREFIJO_CONSULTA if _usa_prefijos(self.model) else ""
+        return (await asyncio.to_thread(self._embed, [pref + texto]))[0]
 
 
 _INSTANCIA: Embedder | None = None

@@ -495,15 +495,12 @@ class ListingChunk(Base):
 
     __tablename__ = "listing_chunks"
     __table_args__ = (
-        # HNSW sobre IVFFlat por recall/latencia a esta escala (ADR-004), con
-        # los defaults de pgvector. A esta escala la búsqueda exacta sobre lo
-        # filtrado alcanza; el índice se mide aparte (doc 18 §3.4).
-        Index(
-            "idx_listing_chunks_hnsw",
-            "embedding",
-            postgresql_using="hnsw",
-            postgresql_ops={"embedding": "vector_cosine_ops"},
-        ),
+        # SIN índice vectorial, a propósito. La búsqueda es exacta sobre el
+        # pool filtrado (cientos de avisos): milisegundos y recall 100%
+        # (ADR-012). Un HNSW exige dimensión fija en la columna, y la columna
+        # es `vector` sin dimensión para que convivan modelos de 384 y 1024 d
+        # mientras se comparan. Cuando se fije el modelo de producción, el
+        # índice es una migración de tres líneas.
         Index("idx_listing_chunks_tsv", "tsv", postgresql_using="gin"),
         Index("idx_listing_chunks_listing", "listing_id"),
         {"schema": "corpus"},
@@ -518,7 +515,7 @@ class ListingChunk(Base):
     text: Mapped[str] = mapped_column(Text, nullable=False)
     token_count: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    embedding: Mapped[list[float]] = mapped_column(Vector(1024), nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(Vector(), nullable=False)
     tsv: Mapped[Any] = mapped_column(
         TSVECTOR, Computed("to_tsvector('spanish', text)", persisted=True), nullable=True
     )

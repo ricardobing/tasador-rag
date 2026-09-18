@@ -522,21 +522,32 @@ mientras que `listings` es *el hecho*. Cuando mejore el extractor, se reprocesa
 
 `needs_review` marca extracciones de baja confianza para la pantalla de curaduría.
 
-### 4.5 `listing_embeddings`
+### 4.5 `listing_chunks` — fragmentos embebidos (reemplaza a `listing_embeddings`)
 
 ```sql
-create table corpus.listing_embeddings (
-  listing_id  uuid primary key references corpus.listings(id) on delete cascade,
-  embedding   vector(1024) not null,
-  model       text not null,
-  created_at  timestamptz not null default now()
+create table corpus.listing_chunks (
+  listing_id      uuid references corpus.listings(id) on delete cascade,
+  chunk_ix        smallint,
+  chunker_version text,          -- 'C-oraciones-100-v1': el tamaño va en la versión
+  model           text,          -- el modelo de embeddings
+  text            text not null, -- lo que se embebió: encabezado + fragmento
+  token_count     smallint not null,
+  content_hash    char(64) not null,   -- identidad del trabajo hecho
+  embedding       vector not null,     -- SIN dimensión: conviven modelos
+  tsv             tsvector generated always as (to_tsvector('spanish', text)) stored,
+  created_at      timestamptz not null default now(),
+  primary key (listing_id, chunk_ix, chunker_version, model)
 );
-create index idx_listing_emb on corpus.listing_embeddings
-  using hnsw (embedding vector_cosine_ops);
+create index idx_listing_chunks_tsv on corpus.listing_chunks using gin (tsv);
 ```
 
-`bge-m3` produce 1024 dimensiones y anda bien en español. Índice HNSW: mejor
-recall/latencia que IVFFlat a esta escala y no requiere reentrenar al crecer.
+Versión y modelo en la clave: un embedding es una interpretación, igual que
+`listing_features`, y dos modelos se comparan sin reindexar. **Sin índice
+vectorial a propósito**: la búsqueda es exacta sobre el pool que deja el filtro
+duro (cientos de avisos) y un HNSW exige dimensión fija (ADR-010, ADR-012). El
+diseño original (un vector `bge-m3` por aviso con HNSW) quedó en la migración
+inicial y se reemplazó el 18/09/2026: `bge-m3` no lo sirve la librería, y un
+vector por aviso truncaba el 28% del corpus.
 
 ### 4.6 `listing_clusters` — el mismo inmueble en varios portales
 

@@ -10,8 +10,8 @@ Por qué versión y modelo en la clave: un embedding es una interpretación,
 igual que `listing_features`. Con la versión en la clave conviven dos modelos
 indexados y se comparan sin reindexar, que es justo lo que el eval necesita.
 
-El índice HNSW se declara también en el ORM (ver el aviso en `models.py`
-sobre `alembic check`).
+Sin índice vectorial: la columna no tiene dimensión fija (conviven modelos
+mientras se comparan) y la búsqueda es exacta sobre el pool filtrado (ADR-012).
 
 Revision ID: 7a1d4e9c2b58
 Revises: 5f2a9c31be47
@@ -47,7 +47,10 @@ def upgrade() -> None:
         sa.Column("text", sa.Text(), nullable=False),
         sa.Column("token_count", sa.SmallInteger(), nullable=False),
         sa.Column("content_hash", sa.String(length=64), nullable=False),
-        sa.Column("embedding", pgvector.sqlalchemy.Vector(dim=1024), nullable=False),
+        # Sin dimensión: conviven modelos de 384 y 1024 d mientras se comparan
+        # (ADR-010). Sin HNSW: exige dimensión fija y a esta escala la búsqueda
+        # exacta sobre el pool filtrado alcanza (ADR-012).
+        sa.Column("embedding", pgvector.sqlalchemy.Vector(), nullable=False),
         sa.Column(
             "tsv",
             postgresql.TSVECTOR(),
@@ -79,18 +82,9 @@ def upgrade() -> None:
         schema="corpus",
         postgresql_using="gin",
     )
-    op.create_index(
-        "idx_listing_chunks_hnsw",
-        "listing_chunks",
-        ["embedding"],
-        schema="corpus",
-        postgresql_using="hnsw",
-        postgresql_ops={"embedding": "vector_cosine_ops"},
-    )
 
 
 def downgrade() -> None:
-    op.drop_index("idx_listing_chunks_hnsw", table_name="listing_chunks", schema="corpus")
     op.drop_index("idx_listing_chunks_tsv", table_name="listing_chunks", schema="corpus")
     op.drop_index("idx_listing_chunks_listing", table_name="listing_chunks", schema="corpus")
     op.drop_table("listing_chunks", schema="corpus")

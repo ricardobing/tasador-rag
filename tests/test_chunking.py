@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from tasador.rag.chunking import (
-    CHUNKERS,
     Oraciones,
     Truncar,
     Ventana,
+    chunkers,
     contar_palabras,
     encabezado,
     oraciones,
@@ -86,15 +86,18 @@ def test_una_oracion_mas_larga_que_el_maximo_se_parte_por_palabras_y_no_tira_el_
 
 
 def test_texto_vacio_produce_un_chunk_con_solo_el_encabezado():
-    for ch in CHUNKERS.values():
+    for ch in chunkers().values():
         out = ch.chunk("", "Departamento · 3 ambientes", contar_palabras)
         assert len(out) == 1 and out[0].text.startswith("Departamento")
 
 
-def test_las_versiones_son_distintas_y_se_resuelven_por_nombre():
-    versiones = {c.version for c in CHUNKERS.values()}
+def test_las_versiones_son_distintas_llevan_el_tamano_y_se_resuelven_por_nombre():
+    ch = chunkers(objetivo=100, maximo=120)
+    versiones = {c.version for c in ch.values()}
     assert len(versiones) == 3
-    assert por_version("C-oraciones-v1") is CHUNKERS["C"]
+    assert ch["C"].version == "C-oraciones-100-v1"
+    assert chunkers(objetivo=320, maximo=480)["C"].version != ch["C"].version
+    assert por_version(chunkers()["C"].version).version == chunkers()["C"].version
 
 
 def test_el_encabezado_redondea_el_usd_m2_a_la_centena_y_omite_lo_que_falta():

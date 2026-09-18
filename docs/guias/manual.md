@@ -375,6 +375,30 @@ siempre.
 
 ---
 
+### 7.1 La recuperación y el RAG (doc 18)
+
+Tres comandos, en este orden la primera vez:
+
+```powershell
+# 1. Indexar el corpus (descarga el modelo la primera vez, 2,2 GB; después es
+#    incremental: sin cambios escribe 0 filas). En CPU tarda cerca de una hora
+#    por cada 8.000 avisos.
+uv run python scripts/embed_corpus.py --chunker C
+uv run python scripts/embed_corpus.py --chunker A       # la línea de base "truncar"
+
+# 2. La tabla de ablación: A es lo de hoy; B-F son las variantes semánticas.
+#    --juzgar hace que el propio pipeline juzgue el pool (nodos 4 a 7).
+uv run python scripts/eval_retrieval.py --sistemas A,B,C,D,E,F --juzgar --avisos 60 --guardar
+
+# 3. «Preguntale al informe»: rechazo, citas y cifras, sobre el último informe
+uv run python scripts/eval_qa.py --corridas 3 --detalle
+```
+
+La recuperación semántica está **apagada** en `config/agents.yaml`
+(`semantic.enabled: false`) hasta que la tabla cumpla el criterio de doc 18
+§4.4. Encenderla sin haber indexado no rompe nada: los avisos sin chunks
+quedan detrás de los puntuados, por recencia.
+
 ## 8. Cuando algo no anda
 
 | Síntoma | Qué es |

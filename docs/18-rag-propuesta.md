@@ -427,3 +427,52 @@ repo. R3 es independiente y se puede hacer antes si lo que más interesa mostrar
 | **El corpus real no se puede publicar** | Doc 19 §4: corpus sintético para el repo público. Los resultados se reportan sobre el real y se dice |
 | **Que el RAG contamine el precio** | Test de arquitectura: `valuation/` no importa `rag/`; el nodo 7 sigue sin `task` |
 | **Inflar la arquitectura** | Doc 00 §6 lo prohíbe y sigue vigente: nada de base vectorial dedicada, nada de framework de RAG. Son ~7 archivos sobre el Postgres que ya está |
+
+---
+
+## 9. Estado de implementación (17/09/2026, en curso)
+
+| Fase | Estado | Dónde |
+|---|---|---|
+| 0 Publicación | ✅ | `ops/auditar_publicacion.py`, corpus demo, historial nuevo |
+| 1 La vara | ✅ | `eval/retrieval.py` (nDCG, recall, MRR, bpref, bootstrap apareado) · `eval/juicios.py` (pooling juzgado por el pipeline) · `scripts/eval_retrieval.py` |
+| 2 Índice | ✅ código · ⏳ indexando | `rag/chunking.py` (A/B/C + encabezado) · `rag/embedder.py` · `rag/indexer.py` · migración `listing_chunks` · `scripts/embed_corpus.py` |
+| 3 Híbrido | ✅ código · ⏳ medición | `rag/retriever.py` · `rag/queries.py` · nodo 2 detrás de `semantic.enabled` |
+| 4 Rerank | ✅ código · ⏳ medición | `rag/rerank.py` (bge-reranker-base MIT · jina-v2 CC-BY-NC) |
+| 5 Veredicto | ⏳ | la tabla de §4.3, con la decisión de §4.4 |
+| 6 R3 | ✅ código · ⏳ eval | `rag/qa.py` · `POST /v1/reports/{id}/ask` · caja en la ficha · `scripts/eval_qa.py` |
+| 7 Cierre | ⏳ | ADR-010 a 013 escritos en doc 01 §4 |
+
+### 9.1 Lo que la medición ya corrigió de esta propuesta
+
+- **§3.1**: `bge-m3` no lo sirve `fastembed` 0.8.0. Y `multilingual-e5-large`,
+  la alternativa propuesta, embebe a **0,4–0,8 pasajes por segundo en esta CPU**:
+  indexar 17.500 chunks son entre 6 y 12 horas, y comparar tres chunkers deja de
+  ser posible en una tarde. Se mide con `paraphrase-multilingual-MiniLM-L12-v2`
+  (384 d, 128 tokens, ~13 pasajes/s, Apache) y el modelo queda en la clave del
+  índice para poder comparar con e5-large sobre un subconjunto (ADR-010).
+- **§3.3**: la columna `embedding` no tiene dimensión fija y no lleva HNSW:
+  conviven modelos de 384 y 1024 d mientras se comparan, y la búsqueda es exacta
+  sobre el pool filtrado (ADR-012). El HNSW vuelve como migración de tres líneas
+  cuando se fije el modelo de producción.
+- **§3.2, la estimación "entre un cuarto y un tercio no entra en 512 tokens"**:
+  medido con el tokenizador real, sin truncar, sobre 8.514 avisos vigentes —
+  **28,1% supera los 512 tokens** (p50 374 · p90 710 · p99 1.176 · máx 2.400).
+  La estimación por caracteres estaba bien. La PRIMERA medición, en cambio, dio
+  p90 = p99 = máx = 512: el tokenizador con el que `fastembed` embebe trunca, y
+  contar con él responde "ninguno" por construcción. Se cuenta con una copia sin
+  truncación.
+- **§3.6**: `listings.content_hash` no cubre la descripción; la identidad del
+  trabajo hecho es el hash del texto del chunk.
+- **§4.1, los juicios de informes pasados**: son relativos al pool de aquel
+  momento. La escalera cambió el 15/08 y el corpus creció: sobre 23 consultas,
+  `juzgados@25` dio 0,27 y en 17 fue cero. Se pasó a **pooling juzgado por el
+  propio pipeline** (nodos 4-7 sobre la unión del top-60 de los sistemas), con
+  53 informes + 60 avisos del corpus como consultas (`eval/juicios.py`).
+- **§3.5, el costo de contar tokens**: la primera versión del chunker re-tokenizaba
+  el candidato entero en cada paso —O(n²)— y tardó 323 s solo en contar sobre
+  8.500 avisos. Cada oración se cuenta una vez y el chunk es la suma.
+- **§3.2 con 128 tokens de contexto**: el chunking deja de ser opcional. Con
+  MiniLM el objetivo por chunk es 100 tokens (`chunk_objetivo`), y "truncar" (A)
+  descarta la mayor parte del texto de casi todos los avisos. Es la comparación
+  que la tabla de ablación tiene que mostrar.

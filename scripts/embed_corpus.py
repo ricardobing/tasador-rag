@@ -21,7 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from tasador.cli import run
-from tasador.rag.chunking import CHUNKERS
+from tasador.rag.chunking import chunkers
 from tasador.rag.embedder import Embedder
 from tasador.rag.indexer import indexar
 
@@ -29,7 +29,7 @@ from tasador.rag.indexer import indexar
 async def _main(args: argparse.Namespace) -> int:
     from tasador.db.base import get_session_factory
 
-    chunker = CHUNKERS[args.chunker]
+    chunker = chunkers()[args.chunker]
     embedder = Embedder(args.modelo) if args.modelo else Embedder()
     t0 = time.perf_counter()
     await embedder.precargar()
@@ -68,7 +68,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    ap.add_argument("--chunker", choices=sorted(CHUNKERS), default="C")
+    ap.add_argument("--chunker", choices=["A", "B", "C"], default="C")
     ap.add_argument("--modelo", default=None, help="por defecto, settings.embedding_model")
     ap.add_argument("--barrio", default=None)
     ap.add_argument("--limite", type=int, default=None)

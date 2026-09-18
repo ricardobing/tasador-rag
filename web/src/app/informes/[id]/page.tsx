@@ -8,6 +8,7 @@ import {
   type Informe,
 } from "@/lib/api";
 import { Compartir, Regenerar } from "./acciones";
+import { Preguntar } from "./preguntar";
 
 export const dynamic = "force-dynamic";
 
@@ -201,6 +202,8 @@ function Resultado({ i }: { i: Informe }) {
           )}
         </section>
       )}
+
+      <Preguntar id={i.report_id} />
 
       {/* Nunca colapsado (doc 07 §6.6). */}
       <div className="tarjeta" style={{ marginTop: "1.8rem", background: "transparent" }}>

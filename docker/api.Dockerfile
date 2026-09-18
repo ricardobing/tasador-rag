@@ -44,6 +44,8 @@ COPY --chown=app:app prompts/ ./prompts/
 # TemplateNotFound solo dentro del contenedor: en Windows el path
 # resolvia al repo y parecia andar.
 COPY --chown=app:app templates/ ./templates/
+# La metodología es corpus del QA (doc 18 §5); el resto de docs/ no viaja.
+COPY --chown=app:app docs/05-metodologia-de-valuacion.md ./docs/
 
 # WeasyPrint (fontconfig) y CrewAI (appdirs) escriben en $HOME, que en esta
 # imagen no es escribible. Las XDG son la palanca real —`CREWAI_STORAGE_DIR`,

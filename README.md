@@ -107,10 +107,17 @@ Guía completa: [docs/guias/puesta-en-marcha.md](docs/guias/puesta-en-marcha.md)
   de 198 avisos con un test que afirmaba el bug; el worker "vivo y sordo" por un
   timeout de conexión de 1 segundo.
 - [**Recuperación estructurada, y el RAG que se está midiendo**](docs/18-rag-propuesta.md):
-  hoy la recuperación es SQL con relajación progresiva; la capa vectorial (pgvector,
-  1024 d, HNSW) está migrada y apagada por configuración. El doc 18 propone
-  embeddings, chunking, búsqueda híbrida, reranking y su evaluación, con el criterio
-  de aceptación escrito antes de medir.
+  hoy la recuperación es SQL con relajación progresiva y el cupo se llena por
+  recencia. Sobre eso hay construido un recuperador híbrido —embeddings locales con
+  chunking por oraciones y encabezado estructurado, búsqueda léxica en español,
+  fusión por RRF, reranking con cross-encoder— **apagado por configuración** hasta que
+  la tabla de ablación cumpla el criterio escrito antes de medir (doc 18 §4.4). La
+  vara se construyó primero: nDCG, recall, MRR y bpref con bootstrap apareado, sobre
+  juicios que produce el propio pipeline por *pooling* (ADR-010 a 013).
+- [**«Preguntale al informe»**](docs/06-api-contrato.md): un RAG chico sobre los hechos
+  del informe y la metodología, con citas obligatorias verificadas sin LLM —la misma
+  función que verifica las cifras del crítico— y rechazo sin llamar al modelo cuando
+  no hay evidencia.
 
 ## Stack
 
@@ -144,7 +151,7 @@ modelos abiertos de bajo costo vía API compatible con OpenAI. Cambiar cualquier
 | [04 Pipeline nodo por nodo](docs/04-pipeline-de-agentes.md) · [05 Metodología de valuación](docs/05-metodologia-de-valuacion.md) · [17 Arquitectura viva](docs/17-arquitectura-viva.md) | El grafo y la matemática |
 | [06 API](docs/06-api-contrato.md) · [07 Pantallas](docs/07-pantallas.md) · [08 Infra](docs/08-infra-y-despliegue.md) · [10 Seguridad y legal](docs/10-seguridad-y-legal.md) · [11 Costos](docs/11-costos.md) | Producto y operación |
 | [09 Evaluación y backtest](docs/09-evaluacion-y-backtest.md) · [auditoría](docs/auditoria/00-resumen.md) · [informes](docs/informes/) | Cómo se mide |
-| [18 Propuesta RAG](docs/18-rag-propuesta.md) | Lo que sigue |
+| [18 Propuesta RAG](docs/18-rag-propuesta.md) · [ESTADO 18/09](docs/ESTADO-2026-09-18.md) | Lo que sigue, y dónde quedó |
 
 ## Licencia
 

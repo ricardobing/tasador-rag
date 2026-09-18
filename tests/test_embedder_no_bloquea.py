@@ -57,12 +57,20 @@ async def test_el_loop_sigue_respondiendo_mientras_se_embebe():
 
 
 @pytest.mark.skipif(not _modelo_descargado(), reason="modelo de embeddings no descargado")
-async def test_consulta_y_pasaje_llevan_los_prefijos_de_e5():
+async def test_consulta_y_pasaje_son_del_mismo_espacio():
+    from tasador.rag.embedder import _usa_prefijos
+
     e = Embedder()
     await e.precargar()
     q = await e.consulta("3 ambientes a refaccionar")
     p = (await e.pasajes(["3 ambientes a refaccionar"]))[0]
     assert len(q) == len(p) == e.dim
-    # Mismo texto con distinto prefijo: parecidos, pero no idénticos.
-    coseno = sum(x * y for x, y in zip(q, p, strict=True))
-    assert 0.8 < coseno < 0.999
+    num = sum(x * y for x, y in zip(q, p, strict=True))
+    den = sum(x * x for x in q) ** 0.5 * sum(y * y for y in p) ** 0.5
+    coseno = num / den
+    if _usa_prefijos(e.model):
+        # Mismo texto con distinto prefijo: parecidos, pero no idénticos.
+        assert 0.8 < coseno < 0.999
+    else:
+        # Sin prefijos, consulta y pasaje del mismo texto son el mismo vector.
+        assert coseno == pytest.approx(1.0, abs=1e-4)

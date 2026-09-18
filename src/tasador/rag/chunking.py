@@ -19,6 +19,11 @@ El conteo de tokens se inyecta (`contar`). En producción es el tokenizador del
 modelo de embeddings; en los tests, contar palabras. Así las reglas de corte
 se prueban sin cargar 2 GB de modelo.
 
+Cada oración se tokeniza UNA vez y el largo de un chunk es la suma (más el
+encabezado). Es una aproximación por arriba de ±1 token por oración, y evita
+re-tokenizar el candidato entero en cada paso: con 8.500 avisos, esa versión
+O(n²) tardó 323 s solo en contar.
+
 **El aviso es el documento padre.** Ningún chunk mezcla texto de dos avisos,
 y la recuperación devuelve avisos, no chunks (`retriever.py`).
 """
@@ -87,14 +92,16 @@ class Truncar:
         frases = oraciones(texto)
         if not frases:
             return [Chunk(0, _con_encabezado(encabezado, ""), contar(encabezado))]
+        base = contar(encabezado) if encabezado else 0
         cuerpo: list[str] = []
+        total = base
         for f in frases:
-            candidato = _con_encabezado(encabezado, " ".join([*cuerpo, f]))
-            if cuerpo and contar(candidato) > self.max_tokens:
+            n = contar(f)
+            if cuerpo and total + n > self.max_tokens:
                 break
             cuerpo.append(f)
-        t = _con_encabezado(encabezado, " ".join(cuerpo))
-        return [Chunk(0, t, contar(t))]
+            total += n
+        return [Chunk(0, _con_encabezado(encabezado, " ".join(cuerpo)), total)]
 
 
 @dataclass(slots=True, frozen=True)
@@ -137,28 +144,28 @@ class Oraciones:
         frases = oraciones(texto)
         if not frases:
             return [Chunk(0, _con_encabezado(encabezado, ""), contar(encabezado))]
+        base = contar(encabezado) if encabezado else 0
         out: list[Chunk] = []
-        actual: list[str] = []
+        actual: list[tuple[str, int]] = []  # (oración, tokens)
+
+        def largo(piezas: list[tuple[str, int]]) -> int:
+            return base + sum(n for _, n in piezas)
 
         def cerrar() -> None:
-            t = _con_encabezado(encabezado, " ".join(actual))
-            out.append(Chunk(len(out), t, contar(t)))
+            texto_chunk = _con_encabezado(encabezado, " ".join(p for p, _ in actual))
+            out.append(Chunk(len(out), texto_chunk, largo(actual)))
 
         for f in frases:
+            n = contar(f)
             # Una oración sola que no entra en el máximo se parte por palabras:
             # es raro (un párrafo sin puntos) y no puede tirar el aviso entero.
-            piezas = (
-                [f]
-                if contar(_con_encabezado(encabezado, f)) <= self.maximo
-                else _partir(f, encabezado, contar, self.maximo)
-            )
+            piezas = [(f, n)] if base + n <= self.maximo else _partir(f, contar, self.maximo - base)
             for pieza in piezas:
-                candidato = _con_encabezado(encabezado, " ".join([*actual, pieza]))
-                if actual and contar(candidato) > self.objetivo:
+                if actual and largo([*actual, pieza]) > self.objetivo:
                     cerrar()
                     # Solape: la última oración del chunk que se cerró.
                     actual = [actual[-1], pieza]
-                    if contar(_con_encabezado(encabezado, " ".join(actual))) > self.maximo:
+                    if largo(actual) > self.maximo:
                         actual = [pieza]
                 else:
                     actual.append(pieza)
@@ -167,32 +174,51 @@ class Oraciones:
         return out
 
 
-def _partir(frase: str, encabezado: str, contar: Contar, maximo: int) -> list[str]:
-    ws = frase.split()
-    piezas: list[str] = []
+def _partir(frase: str, contar: Contar, maximo: int) -> list[tuple[str, int]]:
+    """Una oración más larga que el máximo, en piezas de palabras que entran."""
+    piezas: list[tuple[str, int]] = []
     actual: list[str] = []
-    for w in ws:
-        if actual and contar(_con_encabezado(encabezado, " ".join([*actual, w]))) > maximo:
-            piezas.append(" ".join(actual))
-            actual = [w]
+    total = 0
+    for w in frase.split():
+        n = contar(w)
+        if actual and total + n > maximo:
+            piezas.append((" ".join(actual), total))
+            actual, total = [w], n
         else:
             actual.append(w)
+            total += n
     if actual:
-        piezas.append(" ".join(actual))
+        piezas.append((" ".join(actual), total))
     return piezas
 
 
 Chunker = Truncar | Ventana | Oraciones
 
-CHUNKERS: dict[str, Chunker] = {
-    "A": Truncar(),
-    "B": Ventana(),
-    "C": Oraciones(),
-}
+
+def chunkers(objetivo: int | None = None, maximo: int | None = None) -> dict[str, Chunker]:
+    """Las tres estrategias, dimensionadas para el contexto del modelo.
+
+    El tamaño va en la VERSIÓN: un chunk de 100 tokens y uno de 320 son
+    índices distintos y no pueden compartir filas en `listing_chunks`.
+    """
+    from tasador.settings import get_settings
+
+    s = get_settings()
+    obj = objetivo or s.chunk_objetivo
+    mx = maximo or s.chunk_maximo
+    # Ventana por palabras: ~1,4 tokens por palabra en castellano con XLM-R.
+    palabras = max(20, int(obj / 1.4))
+    return {
+        "A": Truncar(max_tokens=mx, version=f"A-truncar-{mx}-v1"),
+        "B": Ventana(
+            palabras=palabras, solape=max(4, palabras // 6), version=f"B-ventana-{palabras}-v1"
+        ),
+        "C": Oraciones(objetivo=obj, maximo=mx, version=f"C-oraciones-{obj}-v1"),
+    }
 
 
 def por_version(version: str) -> Chunker:
-    for c in CHUNKERS.values():
+    for c in chunkers().values():
         if c.version == version:
             return c
     raise KeyError(f"chunker desconocido: {version}")

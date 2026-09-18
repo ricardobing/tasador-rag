@@ -62,6 +62,8 @@ async def _main(args: argparse.Namespace) -> int:
             consultas += await juicios.consultas_de_avisos(
                 session, n=args.avisos, semilla=args.semilla
             )
+        if args.desde:
+            consultas = consultas[args.desde :]
         if args.limite:
             consultas = consultas[: args.limite]
         if not consultas:
@@ -132,6 +134,7 @@ def main() -> int:
     ap.add_argument("--min-juicios", type=int, default=5)
     ap.add_argument("--avisos", type=int, default=0, help="N avisos del corpus como consultas")
     ap.add_argument("--semilla", type=int, default=7)
+    ap.add_argument("--desde", type=int, default=0, help="saltear las primeras N consultas")
     ap.add_argument("--limite", type=int, default=0, help="solo las primeras N consultas")
     ap.add_argument("--juzgar", action="store_true", help="juzgar el pool con el pipeline")
     ap.add_argument("--rejuzgar", action="store_true", help="aunque el pool no haya cambiado")

@@ -185,5 +185,9 @@ def write_bundle_lock(path: Path | None = None) -> dict[str, Any]:
     }
     destino = path or (PROMPTS_DIR / "bundle.lock.json")
     destino.parent.mkdir(parents=True, exist_ok=True)
-    destino.write_text(json.dumps(lock, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    # `newline=""`: en Windows `write_text` escribiría CRLF y el archivo cambiaría
+    # en cada corrida sin que cambie ningún prompt.
+    destino.write_text(
+        json.dumps(lock, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline=""
+    )
     return lock

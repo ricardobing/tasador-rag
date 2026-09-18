@@ -59,6 +59,7 @@ para reproducir el pipeline, no las cifras.
 | Tiempo por informe | 12–31 s con el corpus caliente; ~5 min el primer informe de un barrio (extracción de 60 avisos) | ídem |
 | Extracción (golden set, 24 avisos) | mediana 76% en 5 corridas, **17,6 pp de amplitud entre corridas idénticas** | por eso ninguna decisión de prompt se toma con una corrida |
 | Aporte de la extracción al MdAPE | **no distinguible del ruido** (−0,33 pp contra 1,83 pp entre semillas) | 3 semillas × 300 casos; con una sola semilla parecía +0,6 pp |
+| Recuperación léxica contra recencia (18/09) | nDCG@25 **0,821 contra 0,747** · descartes en curaduría 22% contra 29% · MdAPE 21,2% contra 23,6% | 113 consultas juzgadas por *pooling*, bootstrap apareado; backtest 600 casos × 3 semillas ([resultados](docs/informes/2026-09-18-rag-resultados.md)) |
 
 La última fila es la más importante para leer las demás: este proyecto midió su propia
 hipótesis central y la publicó como salió.
@@ -120,14 +121,18 @@ Guía completa: [docs/guias/puesta-en-marcha.md](docs/guias/puesta-en-marcha.md)
   el prompt que medía mejor y extraía cero en el 96% del corpus; el cluster transitivo
   de 198 avisos con un test que afirmaba el bug; el worker "vivo y sordo" por un
   timeout de conexión de 1 segundo.
-- [**Recuperación estructurada, y el RAG que se está midiendo**](docs/18-rag-propuesta.md):
-  hoy la recuperación es SQL con relajación progresiva y el cupo se llena por
-  recencia. Sobre eso hay construido un recuperador híbrido —embeddings locales con
-  chunking por oraciones y encabezado estructurado, búsqueda léxica en español,
-  fusión por RRF, reranking con cross-encoder— **apagado por configuración** hasta que
-  la tabla de ablación cumpla el criterio escrito antes de medir (doc 18 §4.4). La
-  vara se construyó primero: nDCG, recall, MRR y bpref con bootstrap apareado, sobre
-  juicios que produce el propio pipeline por *pooling* (ADR-010 a 013).
+- [**El RAG que se midió, y lo que encendió**](docs/informes/2026-09-18-rag-resultados.md):
+  sobre el filtro SQL con relajación progresiva se construyó un recuperador con
+  embeddings locales (chunking por oraciones y encabezado estructurado), búsqueda
+  léxica en español, fusión por RRF y reranking con cross-encoder, y **se midió todo
+  contra la recencia** con nDCG, recall, MRR, bpref y la tasa de descarte de la
+  curaduría, con bootstrap apareado sobre 113 consultas juzgadas por el propio
+  pipeline (*pooling*). Ganó el más simple: el **léxico solo** (nDCG@25 0,821 contra
+  0,747 de la recencia y 0,781 del híbrido, fuera del intervalo), que descarta menos
+  en la curaduría (22% del top-30 contra 29%) y baja 2 pp el MdAPE del backtest.
+  Está encendido (`semantic.modo: lexico`); el denso y el reranker quedan
+  construidos, medidos y apagados, con los números que lo justifican
+  ([propuesta](docs/18-rag-propuesta.md), ADR-010 a 013).
 - [**«Preguntale al informe»**](docs/06-api-contrato.md): un RAG chico sobre los hechos
   del informe y la metodología, con citas obligatorias verificadas sin LLM —la misma
   función que verifica las cifras del crítico— y rechazo sin llamar al modelo cuando
@@ -138,7 +143,7 @@ Guía completa: [docs/guias/puesta-en-marcha.md](docs/guias/puesta-en-marcha.md)
 Python 3.12+ · FastAPI · SQLAlchemy 2 async · Alembic · PostgreSQL 16 + pgvector +
 pg_trgm · Redis + arq · LangGraph (checkpoint en Postgres) · CrewAI (un solo nodo) ·
 instructor + Pydantic v2 · LiteLLM · fastembed · WeasyPrint · Next.js 15 · Docker Compose ·
-pytest (429 tests, incluidos tests de arquitectura) · Playwright · mypy --strict · ruff.
+pytest (492 tests, incluidos tests de arquitectura) · Playwright · mypy --strict · ruff.
 
 Modelos: extracción, juicio, redacción y crítica sobre modelos abiertos de bajo costo vía API
 compatible con OpenAI. El crítico corrió sobre Claude Sonnet 4.5 hasta el 18/09/2026 y pasó

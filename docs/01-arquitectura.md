@@ -436,9 +436,15 @@ aparte, porque H-33 ya enseñó que un índice que "debería ayudar" puede no us
 hiperparámetro menos contra un set chico —y este proyecto midió 17,6 pp de ruido
 en sus evals de componente.
 
-**Apagado por default.** `semantic.enabled: false` en `agents.yaml` hasta que la
-tabla de ablación de doc 18 §4.3 cumpla el criterio escrito en §4.4. Cualquiera de
-los dos resultados es publicable.
+**Encendido el 18/09/2026, en modo léxico.** La tabla de ablación (doc 18 §4.3,
+113 consultas, [resultados](informes/2026-09-18-rag-resultados.md) §3) cumplió el
+criterio de §4.4 para E, F y H, pero el sistema que más gana es el más simple:
+`ts_rank_cd` en español sobre los chunks (D), nDCG@25 0,821 contra 0,747 de la
+recencia, mejor que el híbrido (0,781, Δ apareada −0,041 [−0,059, −0,024]) y que la
+fusión con el denso truncado (0,799, −0,022 [−0,037, −0,008]); descarta menos en la
+curaduría (21,7% del top-30 contra 29,2%) y el MdAPE mejora 2 pp sobre A. El
+híbrido gana solo en bpref. `semantic.modo: lexico`; el denso y el reranker quedan
+construidos, medidos y apagados —con `modo: hibrido` se encienden—.
 
 ---
 

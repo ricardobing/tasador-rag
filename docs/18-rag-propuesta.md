@@ -438,10 +438,10 @@ repo. R3 es independiente y se puede hacer antes si lo que más interesa mostrar
 | 1 La vara | ✅ | `eval/retrieval.py` (nDCG, recall, MRR, bpref, `descartados@30`, bootstrap apareado) · `eval/juicios.py` (pooling incremental juzgado por el pipeline; corta sin guardar si el juez no responde) · `scripts/eval_retrieval.py` |
 | 2 Índice | ✅ | chunker C 83.063 chunks · chunker A 8.514 · MiniLM-L12 (ADR-010) |
 | 3 Híbrido | ✅ medido | 112 consultas: D 0,821 · B 0,805 · E 0,780 · C 0,759 · A 0,748 en nDCG@25; MdAPE 600 casos: D/E/H 21,2-21,7% contra A 23,6% ([resultados](informes/2026-09-18-rag-resultados.md) §3) |
-| 4 Rerank | ⏳ midiendo | `rag/rerank.py` · F sobre las 112 con pooling incremental (el tope de 15 s degradaba F a E: en el eval, 300 s) |
-| 5 Veredicto | ⏳ | (a), (b) y (c) de §4.4 cumplidos por E; el `modo` y el chunker los deciden F y H (B + D) |
+| 4 Rerank | ✅ medido | F 0,790: +0,009 sobre E (ruido), MRR 0,935, ~30 s más por informe en CPU (el tope de 15 s degradaba F a E: en el eval, 300 s) |
+| 5 Veredicto | ✅ | (a), (b) y (c) de §4.4 cumplidos; **`semantic.enabled: true`, `modo: lexico`**: D 0,821 le gana al híbrido (0,781) y a B + D (0,799) por fuera del intervalo; el híbrido gana solo bpref |
 | 6 R3 | ✅ medido | `rag/qa.py` · `POST /v1/reports/{id}/ask` · caja en la ficha · rechazo 0,96 · citas 0,89 · cifras 0,94 (3 corridas sin caché); probado desde una base vacía |
-| 7 Cierre | ⏳ | ADR-010 a 013 en doc 01 §4; falta el flag encendido y el README con los números |
+| 7 Cierre | ✅ | ADR-010 a 013 en doc 01 §4 (ADR-012 con la decisión); flag encendido; README con los números; demo desde una base vacía verificada |
 
 ### 9.1 Lo que la medición ya corrigió de esta propuesta
 

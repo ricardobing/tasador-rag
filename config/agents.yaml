@@ -85,8 +85,16 @@ nodes:
       # de doc 18 §4.3 lo justifique — el criterio está escrito en §4.4.
       # Requiere el corpus indexado: `scripts/embed_corpus.py`.
       semantic:
-        enabled: false
-        modo: hibrido                  # denso | lexico | hibrido
+        # Encendido el 18/09/2026 con la tabla de ablación de doc 18 §4.3 sobre
+        # 113 consultas (informes/2026-09-18-rag-resultados.md §3): el léxico
+        # (FTS spanish sobre los chunks) dio nDCG@25 0,821 contra 0,747 de la
+        # recencia, y mejor que el híbrido (0,781) y que la fusión con el denso
+        # truncado (0,799), con Δ apareada fuera del intervalo; descarta menos
+        # en la curaduría (21,7% del top-30 contra 29,2%) y el MdAPE del
+        # backtest mejora 2 pp sobre A (21,2% vs 23,6%, 3 semillas). El híbrido
+        # gana solo en bpref. Con `enabled: false` vuelve la recencia.
+        enabled: true
+        modo: lexico                   # denso | lexico | hibrido
         # Vacíos = el modelo y el tamaño de chunk de settings (ADR-010).
         chunker: ""
         model: ""

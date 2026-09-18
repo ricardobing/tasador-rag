@@ -151,8 +151,11 @@ LIMIT 60;
 > (recencia). La versión semántica existe en `rag/retriever.py` —coseno contra
 > `corpus.listing_chunks` con máximo por aviso, más `ts_rank_cd` en español,
 > fusionados con RRF— y se enciende con `semantic.enabled` en `agents.yaml`.
-> Está apagada hasta que la tabla de ablación de doc 18 §4.3 cumpla el criterio
-> de §4.4. ADR-010 a 012.
+> **Encendida el 18/09/2026 en `modo: lexico`**: la tabla de ablación de doc 18 §4.3
+> dio el léxico solo como mejor sistema (nDCG@25 0,821 contra 0,747 de la recencia y
+> 0,781 del híbrido), con menos descartes en la curaduría y 2 pp menos de MdAPE. El
+> pool filtrado se ordena por `ts_rank_cd` sobre los chunks; el denso y el reranker
+> quedan medidos y apagados. ADR-010 a 012.
 
 **Relajación progresiva:** si con esos filtros hay < 25 candidatos, se relajan por
 etapas y **se registra qué se relajó** (impacta la confianza del informe):

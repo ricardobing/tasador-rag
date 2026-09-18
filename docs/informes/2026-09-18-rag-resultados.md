@@ -54,36 +54,59 @@ bootstrap sobre las consultas; Δ apareada contra A. `descartados@30` es la frac
 top-30 juzgado que la curaduría no usa —el criterio (b) de doc 18 §4.4—.
 
 ```
-112 consultas · k=25 · juzgados@25 = 1,00 en todos
+113 consultas · k=25 · juicios completos (pool de A-H) · juzgados@25 ≥ 0,994 en todos
 
                                   nDCG@25              Δ vs A (95%)          recall@30  MRR    bpref  descartados@30
-A  SQL + recencia (hoy)           0,748 [0,719–0,774]       —                  0,314     0,649  0,390  0,292
-B  A + denso, truncar 120         0,805 [0,782–0,827]  +0,057 [+0,033, +0,081]  0,346     0,905  0,441  0,218
-C  A + denso, oraciones+encab.    0,759 [0,730–0,783]  +0,012 [−0,010, +0,031]  0,333     0,753  0,444  0,247
-D  A + léxico (FTS spanish)       0,821 [0,795–0,845]  +0,073 [+0,049, +0,096]  0,345     0,940  0,456  0,218
-E  C + D fusionados con RRF       0,780 [0,753–0,804]  +0,032 [+0,014, +0,050]  0,336     0,795  0,534  0,241
-F  E + rerank bge-reranker-base   ⏳
-H  B + D fusionados con RRF       ⏳  (no estaba en el plan: la agregó la fila B)
-G  E + rerank jina-v2             ⏳  (CC-BY-NC; solo para comparar)
+A  SQL + recencia (hoy)           0,747 [0,718–0,773]       —                  0,294     0,647  0,372  0,292
+B  A + denso, truncar 120         0,805 [0,780–0,827]  +0,058                  0,324     0,905  0,442  0,219
+C  A + denso, oraciones+encab.    0,760 [0,733–0,784]  +0,013 (roza el cero)   0,311     0,755  0,443  0,246
+D  A + léxico (FTS spanish)       0,821 [0,797–0,845]  +0,074                  0,323     0,940  0,463  0,217
+E  C + D fusionados con RRF       0,781 [0,755–0,803]  +0,033 [+0,016, +0,052]  0,315     0,800  0,544  0,240
+F  E + rerank bge-reranker-base   0,790 [0,766–0,812]  +0,042 [+0,024, +0,059]  0,310     0,935  0,543  0,247
+H  B + D fusionados con RRF       0,799 [0,775–0,822]  +0,052 [+0,034, +0,072]  0,313     0,801  0,511  0,233
+G  E + rerank jina-v2             no se midió (CC-BY-NC: no puede ir a producción, y F ya contesta la pregunta del rerank)
 ```
+
+Las Δ de B, C y D contra A vienen de la corrida sobre 112 consultas con los juicios de
+entonces (B +0,057 [+0,033, +0,081] · C +0,012 [−0,010, +0,031] · D +0,073 [+0,049,
++0,096]); los valores absolutos de arriba son de la corrida final y coinciden al
+milésimo. La comparación apareada entre D, E, H, B y F está en §3.1.
 
 Lo que dice la tabla, en orden de sorpresa:
 
 1. **Todo puntaje le gana a la recencia** salvo el chunking por oraciones solo (C), que
-   roza el cero. B, D y E están fuera del intervalo en nDCG@25, y **descartan menos**:
-   la curaduría tira el 29% del top-30 de A y el 22-24% del de B, D y E.
-2. **El léxico solo (D) es el mejor sistema individual**, y el denso con *truncar* (B) le
-   sigue de cerca. Con un modelo de 128 tokens, quedarse con el encabezado estructurado
-   + el arranque de la descripción (B) rinde más que partir la descripción en oraciones
-   (C): los chunks de oraciones traen avisos que hablan de lo mismo pero no son
-   comparables. Es exactamente lo contrario de lo que decía doc 18 §3.2.
-3. **La fusión (E) hereda lo peor de C en nDCG pero tiene el mejor bpref por lejos**
-   (0,534 contra 0,44-0,46): pone arriba más de lo juzgado relevante en relación con
-   lo juzgado irrelevante, aunque el orden fino sea peor. De ahí la fila H: fusionar
-   el denso que funciona (B) con el léxico.
-4. Las 34 consultas de informes pasados (sin texto libre) y las 59 de avisos (con la
+   roza el cero. B, D, E, F y H están fuera del intervalo en nDCG@25, y **descartan
+   menos**: la curaduría tira el 29% del top-30 de A y el 22-25% del de los demás.
+2. **El léxico solo (D) es el mejor sistema**, y el denso con *truncar* (B) le sigue.
+   Con un modelo de 128 tokens, quedarse con el encabezado estructurado + el arranque
+   de la descripción (B) rinde más que partir la descripción en oraciones (C): los
+   chunks de oraciones traen avisos que hablan de lo mismo pero no son comparables.
+   Es exactamente lo contrario de lo que decía doc 18 §3.2.
+3. **La fusión hereda lo peor del denso en nDCG pero gana bpref por lejos** (E 0,544 ·
+   F 0,543 · H 0,511 contra 0,463 de D): pone arriba más de lo juzgado relevante en
+   relación con lo juzgado irrelevante, aunque el orden fino sea peor. H (B + D)
+   recupera parte del nDCG que E pierde (0,799) sin alcanzar a D.
+4. **El reranker compra el primer lugar y nada más.** F contra E: +0,009 en nDCG@25
+   (dentro del ruido), bpref idéntico, descartados igual, y **MRR 0,935 contra 0,800**.
+   D llega a MRR 0,940 sin reranker. A 1,7 pares/s en CPU son ~30 s más por informe
+   (sobre 12-31 s de informe) para un primer puesto que la curaduría filtra igual.
+5. Las 34 consultas de informes pasados (sin texto libre) y las 59 de avisos (con la
    descripción como notas) cuentan la misma historia: no es un artefacto del tipo de
    consulta.
+
+### 3.1 Apareada contra D: ¿se distinguen entre sí?
+
+```
+113 consultas · Δ apareada contra D, intervalo del 95%
+
+                    nDCG@25                  recall@30                bpref                    descartados@30
+E  híbrido C+D      −0,041 [−0,059, −0,024]  −0,008 [−0,012, −0,004]  +0,081 [+0,074, +0,088]  +0,023 [+0,013, +0,033]
+H  híbrido B+D      −0,022 [−0,037, −0,008]  −0,010 [−0,016, −0,004]  +0,048 [+0,037, +0,059]  +0,016 [+0,005, +0,028]
+B  denso truncar    −0,017 [−0,040, +0,005]  +0,001 [−0,008, +0,010]  −0,021 [−0,035, −0,006]  +0,002 [−0,017, +0,021]
+```
+
+D es mejor que E y que H en nDCG, recall y descartados por fuera del intervalo; B no
+se distingue de D en nada salvo bpref. Los híbridos ganan bpref, y solo bpref.
 
 **Criterio (c), el MdAPE.** El backtest de `VIGENTES` no pasaba por el nodo 2 (elegía
 comparables por superficie), así que ningún recuperador podía moverle el número. Se
@@ -123,10 +146,26 @@ suficientes comparables buenos alcanza, y los tres lo hacen. Lo que sí distingu
 ellos es el orden (nDCG, MRR) y cuánto tira la curaduría: eso lo dice la tabla de
 arriba.
 
-**Criterio (doc 18 §4.4), leído contra la tabla:** (a) E supera a A en nDCG@25 fuera
-del intervalo ✓; (b) el % descartado baja (29% → 24%, intervalo de la Δ sin cero) ✓;
-(c) el MdAPE no empeora ✓ (mejora en las tres semillas). **`semantic.enabled` pasa a
-`true`.** Con qué `modo` y qué chunker lo dice el resto de la tabla (F, H): ⏳.
+**Criterio (doc 18 §4.4), leído contra la tabla:** (a) E, F y H superan a A en nDCG@25
+fuera del intervalo ✓; (b) el % descartado baja (29% → 23-25%, intervalo de la Δ sin
+cero) ✓; (c) el MdAPE no empeora ✓ (mejora en las tres semillas, más que la amplitud
+entre semillas). **`semantic.enabled` pasa a `true`.**
+
+**Con qué modo.** El criterio se escribió pensando en el híbrido, y el híbrido lo
+cumple; pero la tabla dice que el léxico solo (D) es mejor que el híbrido en lo que
+el informe usa —nDCG, recall, descartes, MRR— por fuera del intervalo (§3.1), empata
+en MdAPE, y es el más barato: sin embeddings en la consulta, sin reranker, un
+`ts_rank_cd` sobre un índice GIN. Lo único que el híbrido gana es bpref. La decisión
+es **`modo: lexico`**, y es la decisión menos vistosa: el proyecto construyó un
+recuperador denso, un chunker por oraciones y un reranker, los midió, y el que
+enciende es el que no usa ninguno de los tres. El denso y el reranker quedan
+construidos y medidos; `modo: hibrido` los enciende si un corpus con más texto libre
+—o un modelo de embeddings mejor que el que entra en una tarde de CPU— da vuelta
+esta tabla. Es la fila que falta: e5-large sobre un subconjunto.
+
+Lo que cambia para el informe: el pool de 60 se ordena por puntaje léxico en vez de
+por fecha. Nada más. La escalera de relajación, la curaduría, el motor de valuación y
+el crítico siguen iguales; con `enabled: false` vuelve la recencia.
 
 ## 4. «Preguntale al informe»
 

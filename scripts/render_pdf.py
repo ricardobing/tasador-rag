@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import uuid
 from pathlib import Path
 
 from sqlalchemy import select
@@ -25,7 +26,7 @@ from tasador.agents.nodes.render import html_a_pdf, informe_html
 from tasador.agents.state import estado_inicial
 from tasador.cli import run
 from tasador.db.base import get_session_factory
-from tasador.db.models import Organization, Report, SubjectProperty
+from tasador.db.models import Listing, Neighborhood, Organization, Report, SubjectProperty
 
 
 async def _armar(report_id: str | None) -> tuple[str, str, str]:
@@ -49,11 +50,51 @@ async def _armar(report_id: str | None) -> tuple[str, str, str]:
             await s.execute(select(Organization.name).where(Organization.id == informe.org_id))
         ).scalar_one_or_none()
 
+        barrio = None
+        if sujeto.neighborhood_id is not None:
+            barrio = (
+                await s.execute(
+                    select(Neighborhood.name).where(Neighborhood.id == sujeto.neighborhood_id)
+                )
+            ).scalar_one_or_none()
+        # Las direcciones de los comparables: la plantilla las toma de los
+        # candidatos del nodo 2, que acá no existen; se rearman desde el corpus.
+        ids = [
+            uuid.UUID(str(d["listing_id"]))
+            for d in (informe.methodology or {}).get("detail", [])
+            if d.get("listing_id")
+        ]
+        candidatos = []
+        if ids:
+            filas = (
+                await s.execute(select(Listing.id, Listing.address_raw).where(Listing.id.in_(ids)))
+            ).all()
+            candidatos = [{"listing_id": str(i), "address": a} for i, a in filas]
+
     estado = estado_inicial(str(informe.id), str(informe.org_id), str(informe.subject_property_id))
+    # La ficha completa de la propiedad, con las mismas claves que usa el grafo
+    # (v1 de la plantilla solo mostraba la dirección; v2 imprime todo, y lo que
+    # falta lo dice).
     estado["subject"] = {
         "address_raw": sujeto.address_raw,
-        "neighborhood_name": None,
+        "neighborhood_name": barrio,
+        "property_type": sujeto.property_type,
+        "rooms": sujeto.rooms,
+        "bedrooms": sujeto.bedrooms,
+        "bathrooms": sujeto.bathrooms,
+        "surface_total": str(sujeto.surface_total) if sujeto.surface_total is not None else None,
+        "surface_covered": (
+            str(sujeto.surface_covered) if sujeto.surface_covered is not None else None
+        ),
+        "age_years": sujeto.age_years,
+        "floor_number": sujeto.floor_number,
+        "has_elevator": sujeto.has_elevator,
+        "condition": sujeto.condition,
+        "orientation": sujeto.orientation,
+        "parking_spaces": sujeto.parking_spaces,
+        "expenses_ars": str(sujeto.expenses_ars) if sujeto.expenses_ars is not None else None,
     }
+    estado["candidates"] = candidatos  # type: ignore[typeddict-item]
     # `methodology` es la traza completa del cálculo: alcanza para rearmar el
     # documento sin recalcular nada.
     estado["valuation"] = informe.methodology or {}

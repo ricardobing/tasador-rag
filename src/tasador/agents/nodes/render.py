@@ -46,6 +46,14 @@ def _plata(v: Any) -> str:
         return "—"
 
 
+def _decimal2(v: Any) -> str | None:
+    """0.775 → "0,78": el score de confianza es una fracción, no un importe."""
+    try:
+        return f"{Decimal(str(v)):.2f}".replace(".", ",")
+    except (InvalidOperation, TypeError, ValueError):
+        return None
+
+
 def _num(v: Any) -> str | None:
     try:
         return f"{Decimal(str(v)):,.0f}".replace(",", ".")
@@ -71,16 +79,74 @@ def markdown_a_html(md: str) -> str:
     return html
 
 
-def informe_html(state: ReportState, *, org: str = "Tasador", template: str = "informe/v1") -> str:
+_ESTADOS = {
+    "a_estrenar": "a estrenar",
+    "excelente": "excelente",
+    "muy_bueno": "muy bueno",
+    "bueno": "bueno",
+    "regular": "regular",
+    "a_refaccionar": "a refaccionar",
+}
+
+
+def _datos_propiedad(subject: dict[str, Any]) -> list[dict[str, Any]]:
+    """La ficha de la propiedad tasada, en el orden en que la lee una persona.
+
+    Un dato que el agente no declaró se imprime como «sin declarar», no se
+    omite: el propietario tiene que ver qué se usó y qué no (v1 empezaba por
+    la cifra sin decir siquiera cuántos ambientes tenía la propiedad).
+    """
+
+    def m2(v: Any) -> str | None:
+        n = _num(v)
+        return f"{n} m²" if n else None
+
+    def si_no(v: Any) -> str | None:
+        if v is None:
+            return None
+        return "sí" if v else "no"
+
+    piso = subject.get("floor_number")
+    condicion = subject.get("condition")
+    estado = _ESTADOS.get(str(condicion or ""), condicion) if condicion else None
+    edad = subject.get("age_years")
+    antiguedad = f"{edad} años" if edad is not None else None
+    cocheras = subject.get("parking_spaces")
+    expensas = subject.get("expenses_ars")
+    return [
+        {"k": "Tipo", "v": subject.get("property_type") or None},
+        {"k": "Ambientes", "v": subject.get("rooms")},
+        {"k": "Dormitorios", "v": subject.get("bedrooms")},
+        {"k": "Baños", "v": subject.get("bathrooms")},
+        {"k": "Superficie total", "v": m2(subject.get("surface_total"))},
+        {"k": "Superficie cubierta", "v": m2(subject.get("surface_covered"))},
+        {"k": "Estado", "v": estado},
+        {"k": "Orientación", "v": subject.get("orientation")},
+        {"k": "Piso", "v": (f"{piso}" if piso not in (None, "") else None)},
+        {"k": "Ascensor", "v": si_no(subject.get("has_elevator"))},
+        {"k": "Antigüedad", "v": antiguedad},
+        {"k": "Cocheras", "v": (str(cocheras) if cocheras else None)},
+        {"k": "Expensas", "v": (f"ARS {_plata(expensas)}" if expensas else None)},
+    ]
+
+
+def informe_html(state: ReportState, *, org: str = "Tasador", template: str = "informe/v2") -> str:
     """Arma el HTML del informe. Función pura: sin base, sin red, sin GTK."""
     v = state.get("valuation") or {}
     subject = state.get("subject") or {}
     s = get_settings()
 
+    # La dirección del comparable vive en el candidato (nodo 2), no en el
+    # detalle de la valuación: sin este mapa la tabla imprimía ids.
+    direcciones = {
+        str(c.get("listing_id")): c.get("address") for c in state.get("candidates") or []
+    }
     comparables = [
         {
             "source": d.get("source"),
-            "direccion": d.get("direccion") or d.get("listing_id", "")[:8],
+            "direccion": d.get("direccion")
+            or direcciones.get(str(d.get("listing_id")))
+            or d.get("listing_id", "")[:8],
             "precio": _plata(d.get("snapshot_price")),
             "superficie": _num(d.get("snapshot_surface")),
             "usd_m2": _num(d.get("raw_price_per_m2")),
@@ -104,6 +170,9 @@ def informe_html(state: ReportState, *, org: str = "Tasador", template: str = "i
 
     return plantilla.render(
         org=org,
+        datos_propiedad=_datos_propiedad(subject),
+        confianza_score=_decimal2(v.get("confidence_score")),
+        usd_m2_sugerido=_plata(v.get("price_per_m2")) if v.get("price_per_m2") else None,
         report_id=state.get("report_id", ""),
         fecha=datetime.now(UTC).strftime("%d/%m/%Y"),
         direccion=subject.get("address_raw") or "—",
@@ -166,7 +235,7 @@ async def render_pdf(state: ReportState, cfg: NodeConfig) -> NodeResult:
         ).scalar_one_or_none()
 
     html = informe_html(
-        state, org=org or "Tasador", template=str(cfg.param("template", "informe/v1"))
+        state, org=org or "Tasador", template=str(cfg.param("template", "informe/v2"))
     )
 
     try:
@@ -194,7 +263,7 @@ async def render_pdf(state: ReportState, cfg: NodeConfig) -> NodeResult:
             "pdf_path": str(ruta),
             "pdf_bytes": len(pdf),
             "sha256": sha,
-            "template_version": str(cfg.param("template", "informe/v1")),
+            "template_version": str(cfg.param("template", "informe/v2")),
         }
         if fila is None:
             session.add(ReportArtifact(report_id=state["report_id"], **datos))

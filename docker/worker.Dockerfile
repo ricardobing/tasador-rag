@@ -17,14 +17,18 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 FROM base AS runtime
 
-ARG SUPERCRONIC_VERSION=v0.2.33
-ARG SUPERCRONIC_SHA=71b0d58cc53f6bd72cf2f293e09e294b79c666d8
+ARG SUPERCRONIC_VERSION=v0.2.49
+ARG SUPERCRONIC_SHA=e63c11a9726b775a6a11801e81af4f3fb926aa68
 
 # `postgresql-client` para `ops/backup.sh`: el servicio `ingest` corre
 # supercronic con esta imagen y el cron del backup invoca `pg_dump`. Sin esto la
 # línea del crontab fallaba en silencio dentro del contenedor — que es la peor
 # forma posible de no tener backup, porque se cree que está.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# `upgrade` antes de instalar: la imagen base de Python trae Debian con
+# parches de seguridad pendientes (18/09/2026: tres HIGH en pcre2) y trivy
+# corta el CI por eso. Lo que se instala tiene que ser lo que Debian ya arregló.
+RUN apt-get update && apt-get upgrade -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends \
       libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libfribidi0 \
       libcairo2 libgdk-pixbuf-2.0-0 fonts-dejavu-core curl ca-certificates \
       postgresql-client \

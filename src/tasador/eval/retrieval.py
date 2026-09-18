@@ -188,12 +188,25 @@ def juzgados_at(ranking: list[str], juicios: dict[str, int], k: int) -> float:
     return sum(1 for lid in top if lid in juicios) / len(top) if top else 0.0
 
 
+def descartados_at(ranking: list[str], juicios: dict[str, int], k: int) -> float:
+    """Fracción del top-k juzgado que la curaduría NO usa (grado < 2).
+
+    Es el criterio (b) de doc 18 §4.4 —"¿se dejó de gastar en lo que se iba a
+    tirar?"— leído directamente de los juicios del pooling: el juez es el mismo
+    nodo 6 que descarta en producción. Cuenta solo los juzgados, como las
+    demás métricas condensadas.
+    """
+    top = [lid for lid in ranking[:k] if lid in juicios]
+    return sum(1 for lid in top if juicios[lid] < COMPARABLE) / len(top) if top else 0.0
+
+
 def evaluar(ranking: list[str], juicios: dict[str, int], k: int) -> dict[str, float]:
     return {
         f"ndcg@{k}": ndcg_at(ranking, juicios, k),
         "recall@30": recall_at(ranking, juicios, 30),
         "mrr": mrr(ranking, juicios),
         "bpref": bpref(ranking, juicios),
+        "descartados@30": descartados_at(ranking, juicios, 30),
         f"juzgados@{k}": juzgados_at(ranking, juicios, k),
         "devueltos": float(len(ranking)),
     }
@@ -235,6 +248,17 @@ def diferencia(a: list[float], b: list[float], *, n: int = 1000, semilla: int = 
 # ── Sistemas ─────────────────────────────────────────────────────────────
 
 Sistema = Callable[[AsyncSession, dict[str, Any]], Awaitable[list[str]]]
+
+
+def sistemas_disponibles() -> dict[str, Sistema]:
+    """A siempre; B-G solo si el paquete `rag` está instalado."""
+    sistemas: dict[str, Sistema] = {"A": sistema_actual}
+    try:
+        from tasador.rag import sistemas_para_eval
+    except ImportError:
+        return sistemas
+    sistemas.update(sistemas_para_eval())
+    return sistemas
 
 
 async def sistema_actual(session: AsyncSession, subject: dict[str, Any]) -> list[str]:

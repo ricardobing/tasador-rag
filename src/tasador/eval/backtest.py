@@ -24,6 +24,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tasador.db.models import Listing, ListingCluster, ListingFeatures, Neighborhood
+from tasador.eval.juicios import sujeto_de_aviso
+from tasador.eval.retrieval import Sistema, sistemas_disponibles
 from tasador.valuation.engine import value
 from tasador.valuation.models import Comparable, Condition, Orientation, Property
 
@@ -39,6 +41,9 @@ class Case:
     actual_price: Decimal
     surface: Decimal
     rooms: int | None
+    # El aviso como sujeto del nodo 2 (solo VIGENTES con features): lo que
+    # necesita la selección por recuperador (`seleccion != "superficie"`).
+    subject: dict[str, Any] | None = None
 
 
 @dataclass(slots=True)
@@ -262,6 +267,9 @@ async def load_cases_vigentes(
                 actual_price=lst.price,
                 surface=sup,
                 rooms=feat.rooms if feat else None,
+                subject=sujeto_de_aviso(lst, feat, nombres.get(nid, "?"))
+                if feat is not None and feat.rooms is not None
+                else None,
             )
         )
 
@@ -309,9 +317,42 @@ def _select_comparables(pool: list[Comparable], case: Case, k: int = 25) -> list
     return cands[:k]
 
 
+def comparables_por_ranking(
+    pool: list[Comparable], case: Case, ranking: list[str], k: int = 25
+) -> list[Comparable]:
+    """Los comparables que un recuperador devolvió, en SU orden, acotados al
+    pool del backtest (solo canónicos de cluster: la misma defensa contra la
+    fuga del leave-one-out que `_select_comparables`) y sin el propio caso."""
+    por_ref = {c.ref: c for c in pool}
+    return [por_ref[r] for r in ranking if r in por_ref and r != case.ref][:k]
+
+
 async def run_backtest(
-    session: AsyncSession, *, dataset: str = "BADATA_2020", sample: int = 500, seed: int = 42
+    session: AsyncSession,
+    *,
+    dataset: str = "BADATA_2020",
+    sample: int = 500,
+    seed: int = 42,
+    seleccion: str = "superficie",
 ) -> BacktestResult:
+    """`seleccion`: cómo se eligen los comparables de cada caso.
+
+    - `superficie`: el filtro por superficie y ambientes de siempre (lo que
+      este dataset permite sin el nodo 2).
+    - `A`, `E`, ...: un sistema del eval de recuperación (doc 18 §4.3), con el
+      mismo motor de valuación después. Es el criterio (c) de doc 18 §4.4: el
+      MdAPE con el recuperador nuevo no puede empeorar fuera del ruido entre
+      semillas. Solo `VIGENTES` (los casos necesitan features para ser sujeto).
+    """
+    sistema: Sistema | None = None
+    if seleccion != "superficie":
+        if not dataset.startswith("VIGENTES"):
+            raise ValueError("la selección por recuperador solo existe sobre VIGENTES")
+        sistemas = sistemas_disponibles()
+        if seleccion not in sistemas:
+            raise ValueError(f"sistema desconocido: {seleccion}; hay {sorted(sistemas)}")
+        sistema = sistemas[seleccion]
+
     if dataset.startswith("VIGENTES"):
         cases, pool = await load_cases_vigentes(
             session,
@@ -321,13 +362,26 @@ async def run_backtest(
         )
     else:
         cases, pool = await load_cases(session, sample=sample, seed=seed)
-    res = BacktestResult(dataset=dataset, method_version="", n_cases=len(cases))
-    log.info("backtest: casos cargados", n=len(cases), barrios=len(pool))
+    if sistema is not None:
+        # Después del sorteo, no antes: la misma semilla tiene que dar los
+        # mismos casos que `superficie`. Los que no tienen sujeto (sin
+        # features) se caen y `n_cases` lo declara.
+        cases = [c for c in cases if c.subject is not None]
+    res = BacktestResult(
+        dataset=dataset if seleccion == "superficie" else f"{dataset}·{seleccion}",
+        method_version="",
+        n_cases=len(cases),
+    )
+    log.info("backtest: casos cargados", n=len(cases), barrios=len(pool), seleccion=seleccion)
 
     for case in cases:
         barrio_pool = pool.get(case.neighborhood_id, [])
         base = _baseline(barrio_pool, case)
-        comps = _select_comparables(barrio_pool, case)
+        if sistema is not None and case.subject is not None:
+            ranking = await sistema(session, case.subject)
+            comps = comparables_por_ranking(barrio_pool, case, ranking)
+        else:
+            comps = _select_comparables(barrio_pool, case)
 
         subject = Property(surface_covered=case.surface, rooms=case.rooms)
         v = value(subject, comps)

@@ -14,6 +14,7 @@ from tasador.eval.retrieval import (
     Resultado,
     bootstrap,
     bpref,
+    descartados_at,
     diferencia,
     evaluar,
     grado_de,
@@ -76,6 +77,13 @@ def test_bpref_a_mano():
     assert bpref(["d", "e", "a", "b"], JUICIOS) == pytest.approx(0.0)
 
 
+def test_descartados_cuenta_lo_que_la_curaduria_no_usa_entre_los_juzgados():
+    # top-4: a (2), c (1), d (0), x (sin juicio): de 3 juzgados, 2 no se usan.
+    assert descartados_at(["a", "c", "d", "x"], JUICIOS, 4) == pytest.approx(2 / 3)
+    assert descartados_at(["a", "b"], JUICIOS, 2) == 0.0
+    assert descartados_at(["x", "y"], JUICIOS, 2) == 0.0
+
+
 def test_juzgados_at_k_mide_cuanto_del_top_se_esta_evaluando():
     assert juzgados_at(["a", "x", "b", "y"], JUICIOS, 4) == 0.5
     assert juzgados_at([], JUICIOS, 4) == 0.0
@@ -83,7 +91,15 @@ def test_juzgados_at_k_mide_cuanto_del_top_se_esta_evaluando():
 
 def test_evaluar_devuelve_todas_las_metricas_con_el_k_en_el_nombre():
     m = evaluar(["a", "b"], JUICIOS, 25)
-    assert set(m) == {"ndcg@25", "recall@30", "mrr", "bpref", "juzgados@25", "devueltos"}
+    assert set(m) == {
+        "ndcg@25",
+        "recall@30",
+        "mrr",
+        "bpref",
+        "descartados@30",
+        "juzgados@25",
+        "devueltos",
+    }
     assert m["devueltos"] == 2
 
 

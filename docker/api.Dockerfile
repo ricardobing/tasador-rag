@@ -25,7 +25,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM base AS runtime
 
 # WeasyPrint necesita estas libs de sistema para renderizar el PDF.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# `upgrade` antes de instalar: la imagen base de Python trae Debian con
+# parches de seguridad pendientes (18/09/2026: tres HIGH en pcre2) y trivy
+# corta el CI por eso. Lo que se instala tiene que ser lo que Debian ya arregló.
+RUN apt-get update && apt-get upgrade -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends \
       libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libfribidi0 \
       libcairo2 libgdk-pixbuf-2.0-0 fonts-dejavu-core curl \
     && rm -rf /var/lib/apt/lists/*

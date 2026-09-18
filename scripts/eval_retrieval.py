@@ -31,18 +31,12 @@ from tasador.cli import run
 from tasador.eval import juicios, retrieval
 from tasador.eval.memoria import esperar_memoria
 
-SISTEMAS: dict[str, retrieval.Sistema] = {
-    "A": retrieval.sistema_actual,
-}
+SISTEMAS: dict[str, retrieval.Sistema] = {}
 
 
 def _registrar_sistemas_rag() -> None:
     """Los sistemas B-G existen solo si el paquete `rag` está; A no depende de él."""
-    try:
-        from tasador.rag import sistemas_para_eval
-    except ImportError:
-        return
-    SISTEMAS.update(sistemas_para_eval())
+    SISTEMAS.update(retrieval.sistemas_disponibles())
 
 
 async def _main(args: argparse.Namespace) -> int:

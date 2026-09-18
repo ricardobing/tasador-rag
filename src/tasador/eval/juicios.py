@@ -140,36 +140,45 @@ async def consultas_de_avisos(
     candidatas = list(filas)
     rng = random.Random(semilla)  # noqa: S311 — muestreo, no criptografía
     rng.shuffle(candidatas)
-    out: list[Consulta] = []
-    for li, ft, barrio in candidatas[:n]:
-        sujeto = {
-            "address_raw": li.address_raw or "",
-            "city": "CABA",
-            "province": "CABA",
-            "neighborhood_id": str(li.neighborhood_id),
-            "neighborhood_name": barrio,
-            "property_type": ft.property_type or "departamento",
-            "rooms": ft.rooms,
-            "bedrooms": ft.bedrooms,
-            "bathrooms": ft.bathrooms,
-            "surface_total": str(ft.surface_total) if ft.surface_total is not None else None,
-            "surface_covered": str(ft.surface_covered)
-            if ft.surface_covered is not None
-            else str(li.surface_weighted),
-            "age_years": ft.age_years,
-            "floor_number": ft.floor_number,
-            "has_elevator": ft.has_elevator,
-            "condition": ft.condition,
-            "orientation": ft.orientation,
-            "amenities": list(ft.amenities or []),
-            "parking_spaces": ft.parking_spaces or 0,
-            "expenses_ars": str(ft.expenses_ars) if ft.expenses_ars is not None else None,
-            # Lo único que un formulario no tiene y un aviso sí: su texto. Es
-            # la entrada de la consulta semántica (doc 18 §3.4).
-            "notes": li.description or "",
-        }
-        out.append(Consulta(f"aviso:{li.id}", sujeto, {}, excluir={str(li.id)}))
-    return out
+    return [
+        Consulta(f"aviso:{li.id}", sujeto_de_aviso(li, ft, barrio), {}, excluir={str(li.id)})
+        for li, ft, barrio in candidatas[:n]
+    ]
+
+
+def sujeto_de_aviso(li: Listing, ft: ListingFeatures, barrio: str) -> dict[str, Any]:
+    """Un aviso con features, en el contrato del sujeto que recibe el nodo 2.
+
+    Lo usan el eval de recuperación (consultas *leave-one-out*) y el backtest
+    con selección por recuperador: el mismo aviso tiene que ser el mismo
+    sujeto en los dos.
+    """
+    return {
+        "address_raw": li.address_raw or "",
+        "city": "CABA",
+        "province": "CABA",
+        "neighborhood_id": str(li.neighborhood_id),
+        "neighborhood_name": barrio,
+        "property_type": ft.property_type or "departamento",
+        "rooms": ft.rooms,
+        "bedrooms": ft.bedrooms,
+        "bathrooms": ft.bathrooms,
+        "surface_total": str(ft.surface_total) if ft.surface_total is not None else None,
+        "surface_covered": str(ft.surface_covered)
+        if ft.surface_covered is not None
+        else str(li.surface_weighted),
+        "age_years": ft.age_years,
+        "floor_number": ft.floor_number,
+        "has_elevator": ft.has_elevator,
+        "condition": ft.condition,
+        "orientation": ft.orientation,
+        "amenities": list(ft.amenities or []),
+        "parking_spaces": ft.parking_spaces or 0,
+        "expenses_ars": str(ft.expenses_ars) if ft.expenses_ars is not None else None,
+        # Lo único que un formulario no tiene y un aviso sí: su texto. Es
+        # la entrada de la consulta semántica (doc 18 §3.4).
+        "notes": li.description or "",
+    }
 
 
 async def consultas_de_avisos_fijas(

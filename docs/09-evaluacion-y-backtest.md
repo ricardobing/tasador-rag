@@ -113,6 +113,20 @@ cierre, y el stock vigente de un barrio es más heterogéneo que BA Data — los
 números NO son comparables con los de `BADATA_2015_2020`; cada dataset se
 compara solo contra su propia serie.
 
+**Selección por recuperador** *(agregado 18/09)*: `--seleccion A|E|F…` reemplaza el
+filtro por superficie por un sistema del eval de recuperación (doc 18 §4.3), con el
+mismo motor de valuación después, y `--seeds 42,43,44` imprime el MdAPE por semilla y
+la amplitud. Es el criterio (c) de doc 18 §4.4 medido de verdad: el MdAPE con el
+recuperador nuevo contra el de hoy, sobre los mismos casos. Los comparables que el
+recuperador trae se acotan al pool del backtest (solo canónicos de cluster) y se
+toman los primeros 25 en SU orden; la curaduría LLM del nodo 6 no corre en el
+backtest, ni acá ni en la selección por superficie.
+
+```bash
+uv run python scripts/run_backtest.py --dataset VIGENTES --sample 300 --seleccion A --seeds 42,43,44
+uv run python scripts/run_backtest.py --dataset VIGENTES --sample 300 --seleccion E --seeds 42,43,44
+```
+
 ### 3.3 `GOLDEN_SET` — evaluación de componentes
 
 ~120 casos curados a mano, con la respuesta correcta anotada por mí:

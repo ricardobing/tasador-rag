@@ -59,9 +59,16 @@ class Reranker:
     async def precargar(self) -> None:
         await asyncio.to_thread(self._cargar)
 
+    # Lotes chicos a propósito. Con el `batch_size=64` por defecto, 60 pares de
+    # hasta 512 tokens entran en UN lote y ONNX reserva la memoria de activación
+    # de todo el lote de una vez: el proceso del eval llegó a 5,6 GB (18/09) y
+    # dejó la máquina sin RAM. Con 8, el pico es un octavo y el tiempo total no
+    # cambia en CPU (el cuello es el cómputo, no el paralelismo del lote).
+    BATCH = 8
+
     def _puntuar(self, consulta: str, pasajes: list[str]) -> list[float]:
         m = self._cargar()
-        return [float(s) for s in m.rerank(consulta, pasajes)]
+        return [float(s) for s in m.rerank(consulta, pasajes, batch_size=self.BATCH)]
 
     async def puntuar(self, consulta: str, pasajes: list[str]) -> list[float]:
         if not pasajes:

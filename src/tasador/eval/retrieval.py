@@ -301,9 +301,25 @@ async def correr(
     out = {nombre: Resultado(nombre, k) for nombre in sistemas}
     for c in consultas:
         for nombre, sistema in sistemas.items():
-            ranking = [lid for lid in await sistema(session, c.subject) if lid not in c.excluir]
+            ranking = await _ranking(session, nombre, sistema, c)
             out[nombre].por_consulta[c.report_id] = evaluar(ranking, c.juicios, k)
     return out
+
+
+# Un ranking por (sistema, consulta) y por proceso. El script juzga el pool con
+# `rankings_de` y después mide con `correr`: sin esto, cada sistema corre dos
+# veces por consulta, y con el reranker (30 s por consulta en CPU) la segunda
+# pasada sobre 113 consultas es una hora entera (18/09). Dentro de un proceso
+# el índice no cambia, así que el ranking tampoco.
+_RANKINGS: dict[tuple[str, str], list[str]] = {}
+
+
+async def _ranking(session: AsyncSession, nombre: str, sistema: Sistema, c: Consulta) -> list[str]:
+    clave = (nombre, c.report_id)
+    if clave not in _RANKINGS:
+        ids = await sistema(session, c.subject)
+        _RANKINGS[clave] = [lid for lid in ids if lid not in c.excluir]
+    return _RANKINGS[clave]
 
 
 async def rankings_de(
@@ -311,8 +327,7 @@ async def rankings_de(
 ) -> dict[str, list[str]]:
     """El ranking de cada sistema para una consulta, ya sin lo excluido."""
     return {
-        nombre: [lid for lid in await sistema(session, c.subject) if lid not in c.excluir]
-        for nombre, sistema in sistemas.items()
+        nombre: await _ranking(session, nombre, sistema, c) for nombre, sistema in sistemas.items()
     }
 
 

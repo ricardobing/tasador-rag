@@ -106,7 +106,8 @@ verdad **por construcción**, no por anotación. Incluye a propósito pozos, per
 mismo inmueble en dos portales con la altura aproximada.
 
 Guía completa: [docs/guias/puesta-en-marcha.md](docs/guias/puesta-en-marcha.md) ·
-[manual de uso](docs/guias/manual.md).
+[manual de uso](docs/guias/manual.md) · [cómo probar la app](docs/guias/probar-la-app.md)
+(a mano, por API, tests, Playwright y el CI entero en local con `make ci`).
 
 ## Decisiones que vale la pena leer
 

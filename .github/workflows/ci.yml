@@ -200,6 +200,55 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
 
+  # Las pantallas, contra el STACK REAL: Docker Compose con el override de
+  # desarrollo, el corpus demo y Playwright. No se mockea la API (ver
+  # web/playwright.config.ts). Sin clave de modelo en el runner, así que los
+  # informes que necesitan IA no se generan acá y los tests que piden un
+  # informe SUCCEEDED se saltean; el alta, el listado, la ficha de un informe
+  # sin comparables, /comparables, /calidad y la consola sin errores sí corren.
+  # Hasta el 19/09 esta suite solo corría a mano: un test que el CI no corre es
+  # un test que se pudre.
+  pantallas:
+    name: Pantallas (Playwright contra el stack)
+    runs-on: ubuntu-latest
+    needs: [quality]
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: .env para el runner (sin secretos reales)
+        run: |
+          cp .env.example .env
+          sed -i             -e 's/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=ci-postgres/'             -e 's#^DATABASE_URL=.*#DATABASE_URL=postgresql+psycopg://tasador:ci-postgres@postgres:5432/tasador#'             -e 's/^REDIS_PASSWORD=.*/REDIS_PASSWORD=ci-redis/'             -e 's#^REDIS_URL=.*#REDIS_URL=redis://:ci-redis@redis:6379/0#'             -e 's/^SECRET_KEY=.*/SECRET_KEY=ci-secret-key-que-no-vale-fuera-del-runner-0123456789abcdef/'             -e 's/^ENCRYPTION_KEY=.*/ENCRYPTION_KEY=ci-encryption-key-que-no-vale-fuera-del-runner-0123456789/'             -e 's/^LITELLM_MASTER_KEY=.*/LITELLM_MASTER_KEY=sk-ci-local/'             -e 's/^OPENROUTER_API_KEY=.*/OPENROUTER_API_KEY=sk-or-sin-clave-en-el-ci/'             -e 's/^PORTALES=.*/PORTALES=demo-a=PORTAL_A,demo-b=PORTAL_B/'             .env
+      - name: Levantar el stack de desarrollo
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build --wait --wait-timeout 900
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml ps
+      - name: Corpus demo (seed, ingesta, usuario)
+        run: |
+          C="docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm api python"
+          $C scripts/seed.py --offline
+          $C scripts/ingest_csv.py --carpeta /data/raw/demo
+          $C scripts/crear_usuario.py --email ci@inmo-demo.com.ar --rol owner --generar-password
+      - name: Playwright
+        working-directory: web
+        env:
+          E2E_BASE_URL: http://127.0.0.1:3000
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npx playwright test --project=escritorio --reporter=list
+      - name: Logs del stack si algo falló
+        if: failure()
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml logs --tail 150
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-evidencia
+          path: web/test-results
+          if-no-files-found: ignore
+
   # Gate de calidad del modelo: si cambian los prompts, los coeficientes o el
   # motor de valuación, hay que probar que no empeoró (doc 09 §5).
   eval-gate:

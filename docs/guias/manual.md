@@ -458,6 +458,9 @@ la única forma de saber que el archivo sirve.
 
 ## Referencia rápida
 
+Para probar la app (a mano, por API, tests, Playwright, el CI en local): [probar-la-app.md](probar-la-app.md).
+
+
 ```powershell
 # Prender / apagar
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build

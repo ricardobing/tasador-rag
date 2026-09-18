@@ -12,7 +12,7 @@ param(
     [Parameter(Position = 0)]
     [ValidateSet('help','setup','dev','up','down','logs','ps','test','lint','fmt',
                  'typecheck','migrate','revision','seed','eval','eval-hist','backup',
-                 'build','clean','shell','psql')]
+                 'build','clean','shell','psql','ci','ci-imagenes','e2e')]
     [string]$Target = 'help'
 )
 
@@ -34,6 +34,9 @@ Tasador — objetivos disponibles
   logs        Sigue los logs
   ps          Estado de los contenedores
   test        Corre los tests (sin tocar internet)
+  ci          TODO el CI en local, contra el Postgres del stack (ops/ci-local.sh)
+  ci-imagenes Lo mismo, mas las tres imagenes con trivy
+  e2e         Playwright contra el stack levantado (WEB_PORT, E2E_CON_AUTH=1 para login real)
   lint        ruff check
   fmt         ruff format
   typecheck   mypy --strict
@@ -83,7 +86,16 @@ Tasador — objetivos disponibles
         uv run pytest -m "not live"
     }
 
-    'lint'      { uv run ruff check src tests scripts }
+    # Git Bash viene con Git for Windows; el script es el mismo que corre el CI.
+    'ci'          { bash ops/ci-local.sh }
+    'ci-imagenes' { bash ops/ci-local.sh --imagenes }
+    'e2e' {
+        $port = if ($env:WEB_PORT) { $env:WEB_PORT } else { '3000' }
+        $env:E2E_BASE_URL = "http://127.0.0.1:$port"
+        Push-Location web; try { npx playwright test --project=escritorio } finally { Pop-Location }
+    }
+
+    'lint'      { uv run ruff check src tests scripts migrations ops }
     'fmt'       { uv run ruff format src tests scripts; uv run ruff check --fix src tests scripts }
     'typecheck' { uv run mypy src }
 

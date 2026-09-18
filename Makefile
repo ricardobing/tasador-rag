@@ -5,7 +5,7 @@ COMPOSE     := docker compose
 COMPOSE_DEV := docker compose -f docker-compose.yml -f docker-compose.dev.yml
 
 .DEFAULT_GOAL := help
-.PHONY: help setup dev up down logs ps test lint fmt typecheck migrate seed eval build verificar-imagen clean shell psql backup
+.PHONY: help setup dev up down logs ps test lint fmt typecheck migrate seed eval build verificar-imagen clean shell psql backup ci ci-imagenes e2e
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -45,6 +45,20 @@ test:       ## Tests — sin tocar internet (fixtures + VCR). Necesita DATABASE_
 # ⚠️ Los tres tienen que correr EXACTAMENTE lo mismo que .github/workflows/ci.yml.
 # `migrations/` estaba afuera del lint del Makefile —el CI sí lo incluye desde
 # el 14/08— y ahí es donde se habían acumulado 11 errores que nadie veía.
+# El CI entero, en tu máquina y contra el Postgres del stack de desarrollo:
+# los mismos pasos y en el mismo orden que .github/workflows/ci.yml. Pushear
+# es confirmar, no descubrir. `--rapido` deja solo lint, formato, tipos y tests.
+ci:         ## Todo el CI en local (lint · formato · tipos · tests · migraciones · aislamiento · gitleaks · auditoría)
+	bash ops/ci-local.sh
+
+ci-imagenes: ## Lo mismo, más las tres imágenes: build, "la imagen es el repo" y trivy
+	bash ops/ci-local.sh --imagenes
+
+# Contra el STACK REAL levantado (no se mockea la API, ver web/playwright.config.ts).
+# WEB_PORT es el del override de desarrollo; E2E_CON_AUTH=1 prueba el login real.
+e2e:        ## Playwright contra el stack levantado (make dev antes)
+	cd web && E2E_BASE_URL=http://127.0.0.1:$${WEB_PORT:-3000} npx playwright test --project=escritorio
+
 lint:       ## ruff check (mismo alcance que el CI)
 	uv run ruff check src tests scripts migrations ops
 

@@ -2,9 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { CamposDeVisita, leerCamposDeVisita } from "@/components/campos-propiedad";
+import { Icono } from "@/components/iconos";
+import { Aviso, PageHeader } from "@/components/ui";
 
 /**
- * Alta de la propiedad a tasar — doc 07 §4.
+ * Alta de la propiedad a tasar (doc 07 §4).
  *
  * Dos bloques, con el segundo colapsado. No es una decisión estética: refleja
  * el flujo real. **Antes de la visita se sabe poco, después se sabe todo**, y
@@ -35,7 +38,6 @@ export default function Nuevo() {
     setError(null);
     setEnviando(true);
     const datos = new FormData(e.currentTarget);
-
     const numero = (k: string) => {
       const v = datos.get(k);
       return v === null || v === "" ? undefined : Number(v);
@@ -50,15 +52,9 @@ export default function Nuevo() {
             address_raw: datos.get("address_raw"),
             property_type: datos.get("property_type"),
             rooms: numero("rooms"),
-            bedrooms: numero("bedrooms"),
-            bathrooms: numero("bathrooms"),
             surface_total: numero("surface_total"),
             surface_covered: numero("surface_covered"),
-            age_years: numero("age_years"),
-            floor_number: numero("floor_number"),
-            condition: datos.get("condition") || undefined,
-            orientation: datos.get("orientation") || undefined,
-            notes: datos.get("notes") || undefined,
+            ...(mas ? leerCamposDeVisita(datos) : {}),
           },
         }),
       });
@@ -72,11 +68,19 @@ export default function Nuevo() {
   }
 
   return (
-    <>
-      <h1>Nuevo informe</h1>
-      <form onSubmit={enviar}>
-        <div className="tarjeta" style={{ display: "grid", gap: "0.9rem" }}>
-          <div>
+    <div className="contenido-formulario">
+      <PageHeader
+        titulo="Nuevo informe"
+        bajada="Con la dirección y el tipo alcanza. Con más datos el rango es más ajustado."
+        migas={[{ href: "/informes", texto: "Informes" }]}
+      />
+
+      <form onSubmit={enviar} noValidate={false}>
+        <section className="tarjeta pila" aria-labelledby="propiedad-titulo">
+          <h2 id="propiedad-titulo" style={{ marginBottom: 0 }}>
+            La propiedad
+          </h2>
+          <div className="campo">
             <label htmlFor="address_raw">Dirección *</label>
             <input
               id="address_raw"
@@ -84,11 +88,13 @@ export default function Nuevo() {
               required
               minLength={3}
               placeholder="Av. Cabildo 2530"
+              autoComplete="off"
             />
+            <span className="ayuda">Calle y altura. El barrio se deduce de la dirección.</span>
           </div>
 
-          <div style={{ display: "grid", gap: "0.9rem", gridTemplateColumns: "repeat(4, 1fr)" }}>
-            <div>
+          <div className="grilla-campos">
+            <div className="campo">
               <label htmlFor="property_type">Tipo *</label>
               <select id="property_type" name="property_type" defaultValue="departamento">
                 <option value="departamento">Departamento</option>
@@ -96,7 +102,7 @@ export default function Nuevo() {
                 <option value="ph">PH</option>
               </select>
             </div>
-            <div>
+            <div className="campo">
               <label htmlFor="rooms">Ambientes</label>
               <input
                 id="rooms"
@@ -108,7 +114,7 @@ export default function Nuevo() {
                 onChange={(e) => setAmbientes(e.target.value)}
               />
             </div>
-            <div>
+            <div className="campo">
               <label htmlFor="surface_total">Sup. total (m²)</label>
               <input
                 id="surface_total"
@@ -119,7 +125,7 @@ export default function Nuevo() {
                 onChange={(e) => setTotal(e.target.value)}
               />
             </div>
-            <div>
+            <div className="campo">
               <label htmlFor="surface_covered">Sup. cubierta (m²)</label>
               <input
                 id="surface_covered"
@@ -130,95 +136,60 @@ export default function Nuevo() {
                 onChange={(e) => setCubierta(e.target.value)}
                 aria-invalid={errorSuperficie}
               />
+              {errorSuperficie && (
+                <p className="error" role="alert" style={{ margin: 0 }}>
+                  La superficie cubierta no puede ser mayor que la total.
+                </p>
+              )}
             </div>
           </div>
 
-          {errorSuperficie && (
-            <p style={{ color: "#b3261e", margin: 0 }} role="alert">
-              La superficie cubierta no puede ser mayor que la total.
-            </p>
-          )}
           {avisoSuperficie && !errorSuperficie && (
-            <p style={{ color: "var(--ambar)", margin: 0 }}>
-              {(nTotal / nAmb).toFixed(1)} m² por ambiente es poco habitual. Se puede generar
-              igual.
+            <p className="advertencia" style={{ margin: 0, fontSize: "0.82rem", color: "var(--alerta)" }}>
+              {(nTotal / nAmb).toFixed(1)} m² por ambiente es poco habitual. Se puede generar igual.
             </p>
           )}
-        </div>
+        </section>
 
         <p style={{ margin: "1rem 0" }}>
-          <button type="button" onClick={() => setMas(!mas)} style={{ background: "transparent", color: "var(--acento)", padding: 0 }}>
-            {mas ? "▾" : "▸"} Tengo más datos
+          <button
+            type="button"
+            className="boton-terciario"
+            onClick={() => setMas(!mas)}
+            aria-expanded={mas}
+            aria-controls="bloque-visita"
+          >
+            <Icono nombre="flecha" tamano={16} />
+            {mas ? "Ocultar los datos de la visita" : "Tengo más datos"}
           </button>
         </p>
 
         {mas && (
-          <div
-            className="tarjeta"
-            style={{ display: "grid", gap: "0.9rem", gridTemplateColumns: "repeat(3, 1fr)" }}
-          >
-            <div>
-              <label htmlFor="bedrooms">Dormitorios</label>
-              <input id="bedrooms" name="bedrooms" type="number" min={0} max={12} />
-            </div>
-            <div>
-              <label htmlFor="bathrooms">Baños</label>
-              <input id="bathrooms" name="bathrooms" type="number" min={0} max={10} />
-            </div>
-            <div>
-              <label htmlFor="age_years">Antigüedad (años)</label>
-              <input id="age_years" name="age_years" type="number" min={0} max={200} />
-            </div>
-            <div>
-              <label htmlFor="floor_number">Piso</label>
-              <input id="floor_number" name="floor_number" type="number" min={-5} max={200} />
-            </div>
-            <div>
-              <label htmlFor="condition">Estado</label>
-              <select id="condition" name="condition" defaultValue="">
-                <option value="">Sin dato</option>
-                <option value="a_estrenar">A estrenar</option>
-                <option value="excelente">Excelente</option>
-                <option value="muy_bueno">Muy bueno</option>
-                <option value="bueno">Bueno</option>
-                <option value="a_refaccionar">A refaccionar</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="orientation">Orientación</label>
-              <select id="orientation" name="orientation" defaultValue="">
-                <option value="">Sin dato</option>
-                <option value="frente">Frente</option>
-                <option value="contrafrente">Contrafrente</option>
-                <option value="lateral">Lateral</option>
-                <option value="interno">Interno</option>
-              </select>
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label htmlFor="notes">Notas</label>
-              <input id="notes" name="notes" maxLength={4000} />
-            </div>
-          </div>
+          <section className="tarjeta pila" id="bloque-visita" aria-labelledby="visita-titulo">
+            <h2 id="visita-titulo" style={{ marginBottom: 0 }}>
+              Lo que se sabe de la visita
+            </h2>
+            <CamposDeVisita />
+          </section>
         )}
 
         {error && (
-          <p style={{ color: "#b3261e" }} role="alert">
-            {error}
-          </p>
+          <div style={{ marginTop: "1rem" }}>
+            <Aviso tono="peligro" titulo="No se pudo generar">
+              {error}
+            </Aviso>
+          </div>
         )}
 
-        <p style={{ marginTop: "1.4rem" }}>
+        <div className="acciones-formulario">
           <button type="submit" disabled={enviando || errorSuperficie}>
             {enviando ? "Generando…" : "Generar informe"}
           </button>
-        </p>
-        {/* El microcopy que importa (doc 07 §4): dice que se puede empezar con
-            poco, que es exactamente cómo se usa. */}
-        <p className="tenue" style={{ fontSize: "0.88rem" }}>
-          Con más datos el rango es más ajustado. Podés generar ahora y regenerar después de la
-          visita.
-        </p>
+          {/* El microcopy que importa (doc 07 §4): dice que se puede empezar
+              con poco, que es exactamente cómo se usa. */}
+          <span className="ayuda">Podés generar ahora y regenerar después de la visita.</span>
+        </div>
       </form>
-    </>
+    </div>
   );
 }

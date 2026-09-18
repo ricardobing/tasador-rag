@@ -447,11 +447,11 @@ test.describe("/admin/usuarios — el alta", () => {
 
   test("el formulario explica qué puede cada rol", async ({ page }) => {
     // Un selector que dice "agent" a secas obliga a adivinar; el que dice
-    // "agent — genera informes" enseña el modelo de permisos en el lugar donde
+    // "agent: genera informes" enseña el modelo de permisos en el lugar donde
     // se usa.
     await page.goto("/admin/usuarios");
-    await expect(page.getByText(/agent — genera informes/)).toBeAttached();
-    await expect(page.getByText(/admin — administra el tenant/)).toBeAttached();
+    await expect(page.getByText(/agent: genera informes/)).toBeAttached();
+    await expect(page.getByText(/admin: administra el tenant/)).toBeAttached();
   });
 });
 
@@ -572,6 +572,7 @@ const RUTAS = [
   "/admin/fuentes",
   "/admin/usuarios",
   "/admin/organizacion",
+  "/cuenta",
 ];
 
 async function camposSinLabel(page: import("@playwright/test").Page): Promise<string[]> {

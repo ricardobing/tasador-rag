@@ -171,7 +171,7 @@ crítico, que no usa ningún modelo. Cambiar cualquiera es editar `config/litell
 |---|---|
 | [00 Visión y alcance](docs/00-vision-y-alcance.md) · [01 Arquitectura y ADRs](docs/01-arquitectura.md) · [02 Fuentes](docs/02-fuentes-de-datos.md) · [03 Modelo de datos](docs/03-modelo-de-datos.md) | Qué es y cómo está hecho |
 | [04 Pipeline nodo por nodo](docs/04-pipeline-de-agentes.md) · [05 Metodología de valuación](docs/05-metodologia-de-valuacion.md) · [17 Arquitectura viva](docs/17-arquitectura-viva.md) | El grafo y la matemática |
-| [06 API](docs/06-api-contrato.md) · [07 Pantallas](docs/07-pantallas.md) · [08 Infra](docs/08-infra-y-despliegue.md) · [10 Seguridad y legal](docs/10-seguridad-y-legal.md) · [11 Costos](docs/11-costos.md) | Producto y operación |
+| [06 API](docs/06-api-contrato.md) · [07 Pantallas](docs/07-pantallas.md) · [20 Frontend: auditoría y sistema visual](docs/20-frontend-rediseno.md) · [08 Infra](docs/08-infra-y-despliegue.md) · [10 Seguridad y legal](docs/10-seguridad-y-legal.md) · [11 Costos](docs/11-costos.md) | Producto y operación |
 | [09 Evaluación y backtest](docs/09-evaluacion-y-backtest.md) · [auditoría](docs/auditoria/00-resumen.md) · [informes](docs/informes/) | Cómo se mide |
 | [18 Propuesta RAG](docs/18-rag-propuesta.md) · [resultados](docs/informes/2026-09-18-rag-resultados.md) · [ESTADO 18/09](docs/ESTADO-2026-09-18.md) | Lo que sigue, lo medido, y dónde quedó |
 

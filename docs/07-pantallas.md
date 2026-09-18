@@ -1,6 +1,12 @@
 # 07 — Pantallas
 
-**Stack:** Next.js 15 App Router + TypeScript + Tailwind + shadcn/ui + TanStack Table.
+> **19/09/2026.** Lo que se construyó difiere del stack de abajo: Next.js 15 con CSS
+> plano y un kit propio, sin Tailwind ni shadcn. La auditoría endpoint ↔ pantalla, el
+> sistema visual (tokens, kit, patrones) y lo implementado están en
+> [doc 20](20-frontend-rediseno.md). Este documento sigue valiendo por las decisiones
+> de producto (qué ve el usuario y por qué); doc 20 dice cómo se ve.
+
+**Stack (plan original):** Next.js 15 App Router + TypeScript + Tailwind + shadcn/ui + TanStack Table.
 **Criterio:** se reusan las decisiones de UI que ya funcionaron en el panel de
 la inmobiliaria (DataTable compartida, drawer en vez de navegación, skeletons en vez de
 spinners, mobile-first porque los agentes usan el celular).

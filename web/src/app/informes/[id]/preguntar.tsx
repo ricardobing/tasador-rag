@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { Icono } from "@/components/iconos";
 
 /**
  * «Preguntale al informe» (doc 18 §5). La respuesta viene con las citas que
- * la sostienen —cada una es un hecho del informe o un párrafo de la
- * metodología— o viene rechazada: cuando no hay evidencia, la API no llama
- * al modelo y lo dice. Nada de lo que se muestra acá es una cifra nueva.
+ * la sostienen, cada una un hecho del informe o un párrafo de la metodología,
+ * o viene rechazada: cuando no hay evidencia, la API no llama al modelo y lo
+ * dice. Nada de lo que se muestra acá es una cifra nueva.
  */
 type Cita = { id: string; texto: string; fuente: string };
 type Respuesta = {
@@ -53,18 +54,22 @@ export function Preguntar({ id }: { id: string }) {
   }
 
   return (
-    <section style={{ marginTop: "1.5rem" }} aria-labelledby="preguntar-titulo">
-      <h2 id="preguntar-titulo">Preguntale al informe</h2>
-      <p className="tenue" style={{ marginTop: 0 }}>
-        Responde solo con lo que está en este informe y en la metodología, y cita de dónde lo
-        sacó. Si no está, lo dice.
-      </p>
+    <section className="seccion" aria-labelledby="preguntar-titulo" style={{ marginTop: "2rem" }}>
+      <div className="seccion-titulo">
+        <div>
+          <h2 id="preguntar-titulo">Preguntale al informe</h2>
+          <p className="ayuda">
+            Responde solo con lo que está en este informe y en la metodología, y cita de dónde lo
+            sacó. Si no está, lo dice.
+          </p>
+        </div>
+      </div>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           void enviar(pregunta);
         }}
-        style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}
+        className="preguntar-caja"
       >
         <label htmlFor="pregunta" className="visualmente-oculto">
           Pregunta
@@ -75,56 +80,54 @@ export function Preguntar({ id }: { id: string }) {
           onChange={(e) => setPregunta(e.target.value)}
           placeholder="¿Por qué no se usó el aviso de…?"
           maxLength={500}
-          style={{ flex: "1 1 20rem" }}
           disabled={ocupado}
         />
         <button type="submit" disabled={ocupado || pregunta.trim().length < 3}>
+          {ocupado ? <Icono nombre="cargando" tamano={18} /> : <Icono nombre="pregunta" tamano={18} />}
           {ocupado ? "Buscando…" : "Preguntar"}
         </button>
       </form>
-      <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginTop: "0.5rem" }}>
+      <div className="fila" style={{ marginTop: "0.6rem" }}>
         {EJEMPLOS.map((e) => (
           <button
             key={e}
             type="button"
-            className="secundario"
+            className="boton-secundario boton-chico"
             onClick={() => void enviar(e)}
             disabled={ocupado}
-            style={{ fontSize: "0.85rem" }}
           >
             {e}
           </button>
         ))}
       </div>
       {error && (
-        <p role="alert" style={{ color: "var(--ambar)" }}>
+        <p role="alert" style={{ color: "var(--peligro)", fontSize: "0.85rem" }}>
           {error}
         </p>
       )}
       {historial.map(({ pregunta: q, r }, i) => (
-        <div key={i} className="tarjeta" style={{ marginTop: "0.8rem" }}>
-          <p style={{ marginTop: 0 }}>
-            <strong>{q}</strong>
-          </p>
+        <div key={i} className={`tarjeta respuesta${r.rechazada ? " rechazada" : ""}`}>
+          <p style={{ marginTop: 0, fontWeight: 600, color: "var(--texto-fuerte)" }}>{q}</p>
           <p style={{ marginBottom: r.citas.length ? "0.5rem" : 0 }}>
             {r.rechazada ? <em>{r.respuesta}</em> : r.respuesta}
           </p>
           {r.citas.length > 0 && (
             <details>
-              <summary className="tenue">
+              <summary className="tenue" style={{ cursor: "pointer", fontSize: "0.85rem" }}>
                 {r.citas.length} {r.citas.length === 1 ? "cita" : "citas"}
               </summary>
-              <ul style={{ marginBottom: 0, fontSize: "0.9rem" }}>
-                {r.citas.map((c) => (
-                  <li key={c.id}>
-                    <code>[{c.id}]</code> {c.texto}
-                  </li>
-                ))}
-              </ul>
+              {r.citas.map((c) => (
+                <p key={c.id} className="cita">
+                  <code>[{c.id}]</code> {c.texto}
+                </p>
+              ))}
             </details>
           )}
           <p className="tenue" style={{ fontSize: "0.75rem", marginBottom: 0 }}>
-            {r.rechazada ? `Rechazada: ${r.motivo ?? "sin evidencia"}` : "Verificada: cada cifra existe en las citas"} ·{" "}
+            {r.rechazada
+              ? `Rechazada: ${r.motivo ?? "sin evidencia"}`
+              : "Verificada: cada cifra existe en las citas"}
+            {" · "}
             {(r.duration_ms / 1000).toFixed(1)} s · USD {r.cost_usd.toFixed(4)}
           </p>
         </div>

@@ -1,14 +1,15 @@
+import { Icono } from "@/components/iconos";
+import { BloqueDeValor, FichaDePropiedad, Limitaciones, Narrativa } from "@/components/documento";
+import { Aviso } from "@/components/ui";
 import { getCompartido } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-const usd = (v: number | null | undefined) =>
-  v === null || v === undefined ? "—" : `USD ${Math.round(v).toLocaleString("es-AR")}`;
-
 /**
  * Lo que ve el PROPIETARIO con el link firmado. Sin sesión, sin navegación de
  * la app: el token es la credencial y esta pantalla es el producto entregado,
- * no la herramienta.
+ * no la herramienta. Mismo orden que el PDF: propiedad, valor, narrativa,
+ * limitaciones.
  */
 export default async function Compartido({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -16,68 +17,73 @@ export default async function Compartido({ params }: { params: Promise<{ token: 
 
   if (!informe) {
     return (
-      <div className="aviso" style={{ margin: "2rem auto", maxWidth: "34rem" }}>
-        <h1 style={{ marginTop: 0 }}>Este link no existe o venció</h1>
-        <p>Pedile a tu inmobiliaria que te genere uno nuevo.</p>
+      <div className="contenido-documento" style={{ padding: "3rem 1rem" }}>
+        <Aviso tono="alerta" titulo="Este link no existe o venció">
+          Pedile a tu inmobiliaria que te genere uno nuevo.
+        </Aviso>
       </div>
     );
   }
 
   const v = informe.valuation;
   return (
-    <div style={{ maxWidth: "44rem", margin: "0 auto" }}>
-      <p className="tenue" style={{ fontSize: "0.85rem" }}>
-        Informe de Mercado Comparativo
-        {informe.generated_at &&
-          ` · ${new Date(informe.generated_at).toLocaleDateString("es-AR")}`}
-      </p>
-      <h1 style={{ marginBottom: "0.2rem" }}>{informe.address}</h1>
-      <p className="tenue" style={{ marginTop: 0 }}>
-        {informe.property_type}
-        {informe.rooms ? ` · ${informe.rooms} amb` : ""}
-        {informe.surface_total ? ` · ${informe.surface_total} m²` : ""}
-        {informe.neighborhood ? ` · ${informe.neighborhood}` : ""}
-      </p>
-
-      <div className="tarjeta">
-        <div style={{ fontSize: "1.7rem", fontWeight: 700, letterSpacing: "-0.02em" }}>
-          {usd(v.suggested_listing_price.low)} —{" "}
-          <strong>{usd(v.suggested_listing_price.mid)}</strong> —{" "}
-          {usd(v.suggested_listing_price.high)}
+    <div className="contenido-documento" style={{ padding: "1.5rem 1rem 4rem" }}>
+      <header className="encabezado">
+        <div>
+          <div className="etiqueta">Informe de mercado comparativo</div>
+          <h1 style={{ marginTop: "0.2rem" }}>{informe.address}</h1>
+          {informe.generated_at && (
+            <p>Generado el {new Date(informe.generated_at).toLocaleDateString("es-AR")}</p>
+          )}
         </div>
-        <div className="tenue" style={{ marginTop: "0.2rem" }}>
-          {v.price_per_m2 ? `USD ${Math.round(v.price_per_m2).toLocaleString("es-AR")} /m²` : ""}
-          {"  ·  "}Confianza{" "}
-          <span className={`chip chip-${informe.confidence.level}`}>{informe.confidence.level}</span>
+        <div className="encabezado-acciones">
+          <a href={`/compartido/${encodeURIComponent(token)}/pdf`} className="boton">
+            <Icono nombre="pdf" tamano={18} />
+            Descargar PDF
+          </a>
         </div>
-        <p style={{ marginBottom: 0 }}>
-          Rango esperado de cierre:{" "}
-          <strong>
-            {usd(v.expected_closing_range.low)} – {usd(v.expected_closing_range.high)}
-          </strong>
-        </p>
-      </div>
+      </header>
 
-      <p>
-        <a href={`/compartido/${encodeURIComponent(token)}/pdf`}>
-          <button>Descargar PDF</button>
-        </a>
-      </p>
+      <FichaDePropiedad
+        p={
+          informe.property ?? {
+            address: informe.address,
+            neighborhood: informe.neighborhood,
+            property_type: informe.property_type,
+            rooms: informe.rooms,
+            bedrooms: null,
+            bathrooms: null,
+            surface_total: informe.surface_total,
+            surface_covered: null,
+            age_years: null,
+            floor_number: null,
+            has_elevator: null,
+            condition: null,
+            orientation: null,
+            parking_spaces: null,
+            expenses_ars: null,
+            notes: null,
+          }
+        }
+      />
 
-      {informe.narrative_md && (
-        <section style={{ marginTop: "1.5rem" }}>
-          <div style={{ whiteSpace: "pre-wrap" }}>{informe.narrative_md}</div>
-        </section>
-      )}
+      <BloqueDeValor
+        moneda={v.currency}
+        medio={v.suggested_listing_price.mid}
+        bajo={v.suggested_listing_price.low}
+        alto={v.suggested_listing_price.high}
+        cierreBajo={v.expected_closing_range.low}
+        cierreAlto={v.expected_closing_range.high}
+        confianza={informe.confidence.level}
+        usados={undefined}
+        encontrados={undefined}
+        usdM2={v.price_per_m2}
+        sinRespaldo
+      />
 
-      <div className="tarjeta" style={{ marginTop: "1.8rem", background: "transparent" }}>
-        <strong>Limitaciones</strong>
-        <ul style={{ marginBottom: 0 }}>
-          {informe.limitations.map((l) => (
-            <li key={l}>{l}</li>
-          ))}
-        </ul>
-      </div>
+      <Narrativa md={informe.narrative_md} />
+
+      <Limitaciones items={informe.limitations} />
     </div>
   );
 }

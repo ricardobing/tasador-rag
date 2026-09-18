@@ -235,3 +235,40 @@ pasó y qué hacer. Cero rayas largas en texto visible; cero emoji como ícono.
     ausencia de `window.confirm`).
 16. Lista de verificación de §2 (cero hexadecimales en `.tsx`, cero rayas largas
     visibles, cuatro estados, 44px táctil, AA, 360px).
+
+---
+
+## 4. Lo que se implementó (19/09/2026)
+
+Las cuatro fases del plan están hechas. Lo que quedó distinto del plan, y por qué:
+
+- **Nombres del kit en castellano**, como el resto del código: `PageHeader`, `Seccion`,
+  `Chip`, `Stat`, `KeyValue`, `Aviso`, `Vacio`, `Esqueleto`, `BotonLink`, `Confirmar`,
+  `Icono`, `AppShell`, `Salir` (`web/src/components/`). El documento (ficha y
+  compartido) vive en `documento.tsx`: `FichaDePropiedad`, `BloqueDeValor`, `Narrativa`,
+  `Limitaciones`, `Respaldo`, `Trazabilidad`. Los campos de la visita, que comparten el
+  alta y «Regenerar», en `campos-propiedad.tsx`.
+- **Tipografía self-hosted** (`web/src/fonts/`, Bricolage Grotesque, subset latino,
+  créditos al lado): el build no depende de la red y no hay pedidos a terceros.
+- **Salir** es un botón client que hace `DELETE /login/api` (la API borra la cookie);
+  el plan lo tenía como formulario y eso no mataba la sesión del lado del servidor.
+- **El texto de los roles** en el alta de usuarios pasó de «agent — genera informes» a
+  «agent: genera informes» (cero rayas largas también en `<option>`); el test e2e se
+  ajustó.
+- **`/compartido`** no muestra la tabla de comparables: `GET /shared/{token}` no la
+  devuelve, y el propietario la tiene en el PDF. Se agrega si el cliente la pide.
+- **Regenerar** manda lo que el informe ya sabía más lo que se cambió: la API solo pisa
+  lo que viene, así que desde el formulario no se puede «borrar» un dato. Es a
+  propósito: un dato que se aprendió en la visita no se desaprende.
+
+Verificación: `npm run typecheck` y `npm run build` en verde; Playwright completo
+(`pantallas.spec.ts` + `rediseno.spec.ts`, escritorio y celular) contra el stack local.
+
+Dos cosas del entorno que conviene saber para tocar el front:
+
+1. **`.next` es compartido con el contenedor de desarrollo** (`./web:/app`). Un
+   `npm run build` en el host mientras `next dev` corre en Docker pisa la carpeta y el
+   build falla con `Cannot find module for page`. Parar `web`, compilar, borrar `.next`
+   y volver a levantar. `make ci` no lo sufre porque construye la imagen.
+2. **El hot reload sobre el bind mount de Windows no siempre dispara.** Si un cambio
+   no aparece, `docker compose restart web`.

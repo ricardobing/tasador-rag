@@ -44,10 +44,48 @@ export interface Paso {
   detail: Record<string, unknown>;
 }
 
+/** La propiedad tasada, completa; lo no declarado viene `null` (doc 06). */
+export interface Propiedad {
+  address: string | null;
+  neighborhood: string | null;
+  property_type: string | null;
+  rooms: number | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  surface_total: number | null;
+  surface_covered: number | null;
+  age_years: number | null;
+  floor_number: number | null;
+  has_elevator: boolean | null;
+  condition: string | null;
+  orientation: string | null;
+  parking_spaces: number | null;
+  expenses_ars: number | null;
+  notes: string | null;
+}
+
+export interface ComparableDelInforme {
+  source: string;
+  url: string | null;
+  address: string | null;
+  price: number | null;
+  currency: string | null;
+  surface_weighted: number | null;
+  rooms: number | null;
+  raw_price_per_m2: number | null;
+  adjusted_price_per_m2: number | null;
+  adjustments: Record<string, unknown> | null;
+  distance_m: number | null;
+  days_published: number | null;
+  included: boolean;
+  exclusion_reason: string | null;
+}
+
 export interface Informe {
   report_id: string;
   status: EstadoInforme;
   external_ref: string | null;
+  property?: Propiedad;
   progress: {
     current_node: string | null;
     completed: number;
@@ -65,8 +103,14 @@ export interface Informe {
     price_per_m2: number | null;
     weighted_surface: number | null;
   };
-  confidence?: { level: Confianza | null; score: number | null };
-  comparables?: { found: number | null; used: number | null };
+  confidence?: { level: Confianza | null; score: number | null; notes?: string[] };
+  comparables?: {
+    found: number | null;
+    used: number | null;
+    excluded?: number;
+    items?: ComparableDelInforme[];
+  };
+  market_context?: Record<string, unknown> | null;
   narrative_md?: string | null;
   /** El mismo markdown, ya pasado por el renderer del PDF (CommonMark sin HTML
       embebido). Ver el comentario en `reports.py`. */
@@ -149,11 +193,15 @@ export class ErrorDeApi extends Error {
   }
 }
 
-export const getInforme = (id: string) => pedir<Informe>(`/v1/reports/${id}`);
+/** Con `descartados`, la tabla completa: usados y descartados con su motivo. */
+export const getInforme = (id: string, opciones?: { descartados?: boolean }) =>
+  pedir<Informe>(`/v1/reports/${id}` + (opciones?.descartados ? "?incluir=descartados" : ""));
 
-export const listarInformes = (cursor?: string, limite = 25) =>
+export const listarInformes = (cursor?: string, limite = 25, estado?: string) =>
   pedir<ListadoInformes>(
-    `/v1/reports?limit=${limite}` + (cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""),
+    `/v1/reports?limit=${limite}` +
+      (cursor ? `&cursor=${encodeURIComponent(cursor)}` : "") +
+      (estado ? `&estado=${encodeURIComponent(estado)}` : ""),
   );
 
 export const crearInforme = (body: unknown, idempotencyKey?: string) =>
@@ -398,6 +446,7 @@ export interface Compartido {
   property_type: string;
   rooms: number | null;
   surface_total: number | null;
+  property?: Propiedad;
   generated_at: string | null;
   valuation: {
     currency: string | null;

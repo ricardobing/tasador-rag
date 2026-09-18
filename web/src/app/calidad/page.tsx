@@ -1,15 +1,13 @@
+import { Aviso, PageHeader, Seccion, Stat, Vacio, fecha } from "@/components/ui";
 import { ErrorDeApi, getCalidad, type Backtest, type CorridaDeComponente } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
 const pct = (v: number | null | undefined, dec = 1) =>
-  v === null || v === undefined ? "—" : `${(v * 100).toFixed(dec)}%`;
-
-const fecha = (iso: string) =>
-  new Date(iso).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  v === null || v === undefined ? "sin dato" : `${(v * 100).toFixed(dec).replace(".", ",")} %`;
 
 /**
- * doc 07 §9 — la pantalla que hace el proyecto demostrable.
+ * doc 07 §9: la pantalla que hace el proyecto demostrable.
  *
  * No hay botón "correr backtest": tarda minutos y corre por CLI
  * (`python -m tasador.eval.run`). Un botón que dispara un job largo merece
@@ -22,9 +20,11 @@ export default async function Calidad() {
   } catch (e) {
     if (e instanceof ErrorDeApi && e.status === 403) {
       return (
-        <div className="aviso">
-          <h2 style={{ marginTop: 0 }}>Solo para administradores</h2>
-          <p>Esta pantalla muestra las métricas internas del motor.</p>
+        <div className="contenido-panel">
+          <PageHeader titulo="Calidad del motor" />
+          <Aviso tono="info" titulo="Solo para administradores">
+            Esta pantalla muestra las métricas internas del motor.
+          </Aviso>
         </div>
       );
     }
@@ -34,71 +34,78 @@ export default async function Calidad() {
   const ultimo = datos.backtests[0];
 
   return (
-    <>
-      <h1>Calidad del motor</h1>
+    <div className="contenido-panel">
+      <PageHeader
+        titulo="Calidad del motor"
+        bajada="Lo que el motor mide de sí mismo: el error contra ventas reales y la salud de cada componente."
+      />
 
       {!ultimo ? (
-        <p className="tenue">
-          Todavía no hay backtests guardados. Corré{" "}
-          <code>python -m tasador.eval.run --dataset BADATA_2015_2020 --sample 300</code>.
-        </p>
+        <Vacio
+          icono="calidad"
+          titulo="Todavía no hay backtests guardados"
+          texto={
+            <>
+              Corré <code>python -m tasador.eval.run --dataset BADATA_2015_2020 --sample 300</code> y
+              el resultado aparece acá.
+            </>
+          }
+        />
       ) : (
         <ComparacionQueImporta b={ultimo} />
       )}
 
       {datos.backtests.length > 0 && (
-        <>
-          <h2 style={{ marginTop: "2rem" }}>Serie de backtests</h2>
-          <div className="scroll-x">
+        <Seccion id="serie" titulo="Serie de backtests" bajada="Una fila por corrida, la más nueva arriba.">
+          <div className="tabla scroll-x">
             <table>
               <thead>
                 <tr>
                   <th scope="col">Fecha</th>
                   <th scope="col">Dataset</th>
-                  <th scope="col">Casos</th>
-                  <th scope="col">MdAPE</th>
-                  <th scope="col">Baseline</th>
-                  <th scope="col">PPE20</th>
-                  <th scope="col">Hit rate</th>
-                  <th scope="col">Cobertura</th>
-                  <th scope="col">Sesgo</th>
+                  <th scope="col" className="num">Casos</th>
+                  <th scope="col" className="num">MdAPE</th>
+                  <th scope="col" className="num">Baseline</th>
+                  <th scope="col" className="num">PPE20</th>
+                  <th scope="col" className="num">Hit rate</th>
+                  <th scope="col" className="num">Cobertura</th>
+                  <th scope="col" className="num">Sesgo</th>
                   <th scope="col">Motor</th>
                 </tr>
               </thead>
               <tbody>
                 {datos.backtests.map((b) => (
                   <tr key={b.id}>
-                    <td className="tenue">{fecha(b.created_at)}</td>
+                    <td className="tenue">{fecha(b.created_at, true)}</td>
                     <td>{b.dataset}</td>
-                    <td>{b.n_evaluated}</td>
-                    <td>
+                    <td className="num">{b.n_evaluated}</td>
+                    <td className="num">
                       <strong>{pct(b.mdape)}</strong>
                     </td>
-                    <td className="tenue">{pct(b.baseline_mdape)}</td>
-                    <td>{pct(b.ppe20)}</td>
-                    <td>{pct(b.hit_rate)}</td>
-                    <td>{pct(b.coverage)}</td>
-                    <td>{pct(b.bias)}</td>
+                    <td className="num tenue">{pct(b.baseline_mdape)}</td>
+                    <td className="num">{pct(b.ppe20)}</td>
+                    <td className="num">{pct(b.hit_rate)}</td>
+                    <td className="num">{pct(b.coverage)}</td>
+                    <td className="num">{pct(b.bias)}</td>
                     <td className="tenue">{b.engine_version}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </>
+        </Seccion>
       )}
 
       <Componentes corridas={datos.componentes} />
 
       {ultimo && Object.keys(ultimo.por_barrio).length > 0 && (
-        <>
-          <h2 style={{ marginTop: "2rem" }}>Error por barrio (último backtest)</h2>
-          <div className="scroll-x">
+        <Seccion id="barrios" titulo="Error por barrio" bajada="Del último backtest, de menor a mayor error.">
+          <div className="tabla" style={{ maxWidth: "28rem" }}>
             <table>
               <thead>
                 <tr>
                   <th scope="col">Barrio</th>
-                  <th scope="col">MdAPE</th>
+                  <th scope="col" className="num">MdAPE</th>
                 </tr>
               </thead>
               <tbody>
@@ -107,15 +114,15 @@ export default async function Calidad() {
                   .map(([barrio, mdape]) => (
                     <tr key={barrio}>
                       <td>{barrio}</td>
-                      <td>{pct(mdape)}</td>
+                      <td className="num">{pct(mdape)}</td>
                     </tr>
                   ))}
               </tbody>
             </table>
           </div>
-        </>
+        </Seccion>
       )}
-    </>
+    </div>
   );
 }
 
@@ -126,16 +133,42 @@ function ComparacionQueImporta({ b }: { b: Backtest }) {
       ? (b.baseline_mdape - b.mdape) / b.baseline_mdape
       : null;
   return (
-    <div className="tarjeta">
-      <div className="scroll-x">
-        <table style={{ marginBottom: 0 }}>
+    <section className="tarjeta pila" aria-labelledby="comparacion-titulo">
+      <div>
+        <h2 id="comparacion-titulo" style={{ marginBottom: "0.2rem" }}>
+          Sistema contra baseline
+        </h2>
+        <p className="ayuda" style={{ margin: 0 }}>
+          {b.dataset} · {b.n_evaluated} casos · semilla {b.seed} · motor {b.engine_version} · método{" "}
+          {b.method_version}
+        </p>
+      </div>
+      <div className="stats">
+        <Stat etiqueta="MdAPE del sistema" valor={pct(b.mdape)} detalle="error mediano contra ventas reales" />
+        <Stat etiqueta="MdAPE del baseline" valor={pct(b.baseline_mdape)} detalle="mediana del barrio, sin motor" />
+        <Stat etiqueta="PPE20" valor={pct(b.ppe20)} detalle="casos con error menor al 20 %" />
+        <Stat etiqueta="Hit rate" valor={pct(b.hit_rate)} detalle="ventas dentro del rango" />
+        <Stat etiqueta="Cobertura" valor={pct(b.coverage)} detalle="casos que sí pudo tasar" />
+      </div>
+      {mejora !== null && (
+        <div>
+          {mejora > 0 ? (
+            <Aviso tono="exito">{pct(mejora, 0)} mejor que el baseline.</Aviso>
+          ) : (
+            // Si el sistema no le gana al baseline, se ve inmediatamente.
+            <Aviso tono="alerta">El sistema NO le gana al baseline ({pct(-mejora, 0)} peor).</Aviso>
+          )}
+        </div>
+      )}
+      <div className="tabla scroll-x">
+        <table>
           <thead>
             <tr>
-              <th scope="col"></th>
-              <th scope="col">MdAPE</th>
-              <th scope="col">PPE20</th>
-              <th scope="col">Hit rate</th>
-              <th scope="col">Cobertura</th>
+              <th scope="col">Serie</th>
+              <th scope="col" className="num">MdAPE</th>
+              <th scope="col" className="num">PPE20</th>
+              <th scope="col" className="num">Hit rate</th>
+              <th scope="col" className="num">Cobertura</th>
             </tr>
           </thead>
           <tbody>
@@ -143,40 +176,24 @@ function ComparacionQueImporta({ b }: { b: Backtest }) {
               <td>
                 <strong>Sistema</strong>
               </td>
-              <td>
+              <td className="num">
                 <strong>{pct(b.mdape)}</strong>
               </td>
-              <td>{pct(b.ppe20)}</td>
-              <td>{pct(b.hit_rate)}</td>
-              <td>{pct(b.coverage)}</td>
+              <td className="num">{pct(b.ppe20)}</td>
+              <td className="num">{pct(b.hit_rate)}</td>
+              <td className="num">{pct(b.coverage)}</td>
             </tr>
             <tr className="tenue">
               <td>Baseline (mediana del barrio)</td>
-              <td>{pct(b.baseline_mdape)}</td>
-              <td>{pct(b.baseline_ppe20)}</td>
-              <td>—</td>
-              <td>—</td>
+              <td className="num">{pct(b.baseline_mdape)}</td>
+              <td className="num">{pct(b.baseline_ppe20)}</td>
+              <td className="num">no aplica</td>
+              <td className="num">no aplica</td>
             </tr>
           </tbody>
         </table>
       </div>
-      {mejora !== null && (
-        <p style={{ marginBottom: 0 }}>
-          {mejora > 0 ? (
-            <span style={{ color: "var(--alta)" }}>▲ {pct(mejora, 0)} mejor que el baseline</span>
-          ) : (
-            // Si el sistema no le gana al baseline, se ve inmediatamente.
-            <span style={{ color: "var(--ambar)" }}>
-              ▼ el sistema NO le gana al baseline ({pct(-mejora, 0)} peor)
-            </span>
-          )}
-        </p>
-      )}
-      <p className="tenue" style={{ fontSize: "0.8rem", marginBottom: 0 }}>
-        {b.dataset} · {b.n_evaluated} casos · semilla {b.seed} · motor {b.engine_version} · método{" "}
-        {b.method_version}
-      </p>
-    </div>
+    </section>
   );
 }
 
@@ -195,21 +212,21 @@ function Componentes({ corridas }: { corridas: CorridaDeComponente[] }) {
   if (grupos.size === 0) return null;
 
   return (
-    <>
-      <h2 style={{ marginTop: "2rem" }}>Evals de componente</h2>
-      <p className="tenue" style={{ fontSize: "0.85rem" }}>
-        Se lee la mediana de las últimas 5 corridas — una corrida sola es una muestra, no un número.
-      </p>
-      <div className="scroll-x">
+    <Seccion
+      id="componentes"
+      titulo="Evals de componente"
+      bajada="Se lee la mediana de las últimas 5 corridas: una corrida sola es una muestra, no un número."
+    >
+      <div className="tabla scroll-x">
         <table>
           <thead>
             <tr>
               <th scope="col">Componente</th>
-              <th scope="col">Mediana (últ. 5)</th>
-              <th scope="col">Amplitud</th>
-              <th scope="col">Objetivo</th>
-              <th scope="col">n</th>
-              <th scope="col">Corridas</th>
+              <th scope="col" className="num">Mediana (últ. 5)</th>
+              <th scope="col" className="num">Amplitud</th>
+              <th scope="col" className="num">Objetivo</th>
+              <th scope="col" className="num">n</th>
+              <th scope="col" className="num">Corridas</th>
               <th scope="col">Última</th>
             </tr>
           </thead>
@@ -225,20 +242,20 @@ function Componentes({ corridas }: { corridas: CorridaDeComponente[] }) {
               return (
                 <tr key={clave}>
                   <td>{clave}</td>
-                  <td>
+                  <td className="num">
                     <strong>{pct(mediana)}</strong>
                   </td>
-                  <td className="tenue">{pct(amplitud)}</td>
-                  <td className="tenue">{objetivo !== null ? pct(objetivo) : "—"}</td>
-                  <td className="tenue">{primera.n}</td>
-                  <td className="tenue">{serie.length}</td>
-                  <td className="tenue">{fecha(primera.created_at)}</td>
+                  <td className="num tenue">{pct(amplitud)}</td>
+                  <td className="num tenue">{objetivo !== null ? pct(objetivo) : "sin objetivo"}</td>
+                  <td className="num tenue">{primera.n}</td>
+                  <td className="num tenue">{serie.length}</td>
+                  <td className="tenue">{fecha(primera.created_at, true)}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
-    </>
+    </Seccion>
   );
 }

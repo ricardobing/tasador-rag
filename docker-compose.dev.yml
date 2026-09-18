@@ -100,6 +100,12 @@ services:
     # producción son la misma.
     image: tasador-web:dev-local
     command: ["npm", "run", "dev"]
+    # `next dev` no es `node server.js`: compila cada ruta la primera vez que se
+    # pide y guarda el grafo en memoria. Con los 512M de producción, la suite de
+    # Playwright (dos proyectos, 27 rutas) lo llevaba al tope y Docker lo
+    # reiniciaba: en el test se veía como `net::ERR_EMPTY_RESPONSE` en la ruta
+    # que tocó justo. Medido el 19/09: 511/512 MiB y `RestartCount: 1`.
+    deploy: { resources: { limits: { memory: 1536M } } }
     volumes:
       - ./web:/app
       - /app/node_modules

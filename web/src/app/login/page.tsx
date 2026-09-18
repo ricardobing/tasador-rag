@@ -4,10 +4,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
 /**
- * `/login` — doc 07 §2.
+ * `/login` (doc 07 §2).
  *
- * Sin registro público: los usuarios los crea un admin
- * (`scripts/crear_usuario.py` mientras `/admin/usuarios` no exista).
+ * Sin registro público: los usuarios los crea un admin en `/admin/usuarios`.
  *
  * El error es genérico a propósito y del lado del servidor también: no se
  * distingue "el email no existe" de "la contraseña está mal" (doc 06 §1).
@@ -51,28 +50,31 @@ function Formulario() {
   }
 
   return (
-    <div style={{ maxWidth: "22rem", margin: "3rem auto" }}>
-      <h1>Entrar</h1>
-      {org && <p className="tenue">Organización: {org}</p>}
-
-      <form onSubmit={enviar} className="tarjeta" style={{ display: "grid", gap: "0.9rem" }}>
+    <div className="login">
+      <form onSubmit={enviar} className="tarjeta pila">
+        <div className="marca" style={{ padding: 0 }}>
+          <span className="marca-isotipo" aria-hidden="true">
+            T
+          </span>
+          Tasador
+        </div>
         <div>
+          <h1 style={{ marginBottom: "0.2rem" }}>Entrar</h1>
+          <p className="ayuda" style={{ margin: 0 }}>
+            {org ? `Organización: ${org}` : "Informes de mercado comparativo."}
+          </p>
+        </div>
+        <div className="campo">
           <label htmlFor="email">Email</label>
           <input id="email" name="email" type="email" required autoComplete="username" />
         </div>
-        <div>
+        <div className="campo">
           <label htmlFor="password">Contraseña</label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            autoComplete="current-password"
-          />
+          <input id="password" name="password" type="password" required autoComplete="current-password" />
         </div>
 
         {error && (
-          <p role="alert" style={{ color: "#b3261e", margin: 0 }}>
+          <p role="alert" style={{ color: "var(--peligro)", margin: 0, fontSize: "0.9rem" }}>
             {error}
           </p>
         )}
@@ -80,11 +82,11 @@ function Formulario() {
         <button type="submit" disabled={enviando}>
           {enviando ? "Entrando…" : "Entrar"}
         </button>
-      </form>
 
-      <p className="tenue" style={{ fontSize: "0.85rem", marginTop: "1rem" }}>
-        Los usuarios los da de alta un administrador. Si no podés entrar, escribile.
-      </p>
+        <p className="ayuda" style={{ margin: 0 }}>
+          Los usuarios los da de alta un administrador. Si no podés entrar, escribile.
+        </p>
+      </form>
     </div>
   );
 }

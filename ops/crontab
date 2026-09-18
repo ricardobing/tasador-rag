@@ -1,0 +1,65 @@
+# Crons del servicio, ejecutados por supercronic dentro del contenedor
+# `ingest`. Sin cron de sistema, sin root.
+#
+# Horarios en UTC. ART = UTC-3.
+#
+# ⚠️ TODO LO QUE ESTÉ ACTIVO TIENE QUE EXISTIR.
+#
+# Hasta el 15/08 este archivo invocaba cuatro cosas y **tres no existían**:
+#
+#     python -m tasador.ingest.run          -> ModuleNotFoundError
+#     python -m tasador.corpus.bias_check   -> ModuleNotFoundError
+#     python -m tasador.ops.retention       -> ni siquiera existe `tasador.ops`
+#     bash /app/ops/backup.sh               -> la imagen no tenía pg_dump
+#
+# Un cron que falla en silencio dentro de un contenedor es peor que uno ausente:
+# el ausente se nota cuando alguien pregunta "¿y el backup?"; el roto se cree
+# que corre. Es exactamente lo que `tests/architecture/test_entrypoints.py`
+# existe para atajar, y este archivo no estaba entre sus fuentes. Ahora sí, y el
+# test falla si se vuelve a activar una línea que apunta a la nada.
+
+# ── Lo que corre ─────────────────────────────────────────────────────────
+
+# Datasets oficiales del GCBA — lunes 04:00 ART. Este sí corre en el VPS:
+# BA Data no bloquea.
+0 7 * * 1     python scripts/load_badata.py
+
+# Backup VERIFICADO — 04:00 ART. `--verify` restaura el dump en una base
+# descartable y compara conteos: un backup no verificado no es un backup.
+# Verificado a mano el 15/08 por primera vez: 24,9 MB, 93.495 / 64 / 558 filas
+# restauradas OK.
+0 7 * * *     bash /app/ops/backup.sh --verify
+
+# Informes colgados — cada 15 minutos. `worker._marcar_fallado` cubre "el job
+# levantó una excepción"; esto cubre los dos casos que de verdad pasan: el
+# proceso murió, o el job nunca se tomó. El umbral es MAYOR que el `job_timeout`
+# de arq (1.800 s), o el cosechador mata informes vivos.
+*/15 * * * *  python scripts/cosechar_colgados.py --aplicar
+
+# ── Lo que NO corre, con el motivo ───────────────────────────────────────
+
+# Refresco del corpus — SEMANAL, lunes 03:00 ART.
+# Semanal y no diario a propósito: 10 tasaciones en una semana NO son 10
+# accesos al portal, los datos ya están en el corpus. ~72 requests/mes.
+# APAGADO: la ingesta de Portal A no corre en el VPS —una IP de datacenter
+# recibe 403, verificado el 13/08— y requiere PORTAL_A_ENABLED=true con IP
+# residencial. Hoy entra por `scripts/ingest_csv.py` desde la máquina de
+# desarrollo.
+# 0 6 * * 1   python scripts/ingest_portal_a.py
+
+# Chequeo de sesgo del corpus contra la serie oficial — 05:00 ART.
+# APAGADO: `tasador.corpus.bias_check` NO EXISTE. El cálculo sí está —lo hace
+# `market.metricas_del_barrio` como `desvio_vs_oficial_pct`, y `/admin/fuentes`
+# lo muestra— pero no hay un módulo que lo corra solo y alerte.
+# 0 8 * * *   python -m tasador.corpus.bias_check --alert
+
+# Backtest semanal completo — domingo 05:00 ART.
+# APAGADO: `--dataset ALL` y `--publish` no son flags de `tasador.eval.run`.
+# El comando que sí existe es, por dataset:
+#   python -m tasador.eval.run --dataset BADATA_2015_2020 --sample 300
+# 0 8 * * 0   python -m tasador.eval.run --dataset ALL --publish
+
+# Limpieza según política de retención (doc 03 §7) — 06:00 ART.
+# APAGADO: `tasador.ops.retention` NO EXISTE, ni el paquete `tasador.ops`.
+# La política de doc 03 §7 sigue sin implementarse.
+# 0 9 * * *   python -m tasador.ops.retention --apply

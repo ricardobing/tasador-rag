@@ -1,0 +1,1340 @@
+# GOLDEN SET SINTÉTICO — generado, no anotado. Ver scripts/generar_corpus_demo.py
+version: 1
+anotado_por: construccion
+fecha: '2026-09-17'
+fuente: SINTETICO
+nota: 'Avisos sintéticos generados por scripts/generar_corpus_demo.py. El `esperado` es el dato del que
+  se redactó el texto, verificado por frase exacta: ground truth por construcción, no anotación.'
+avisos:
+- id: demo-00263
+  ref: Ciudad de la Paz 300 — USD 262.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: a_estrenar
+    orientation: null
+    floor_number: 3
+    has_elevator: null
+    age_years: 0
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: Departamento a estrenar en Belgrano, sobre Ciudad de la Paz al 300. Se trata de un dos ambientes
+    de 49 m² cubiertos con un balcón terraza de 8 m², ubicado en el piso 3. Cuenta con un dormitorio,
+    un baño completo y una cochera, ideal para quienes buscan comodidad en un barrio tradicional. El emprendimiento
+    está en construcción, por lo que las fotos que se ven corresponden al modelo, con entrega estimada
+    para el segundo semestre. Un producto pensado para vivir desde el primer día, sin necesidad de pensar
+    en reformas, y en una zona que combina la tranquilidad de Belgrano con acceso rápido a los principales
+    accesos de la Ciudad.
+- id: demo-00084
+  ref: Gorriti 4705 — USD 137.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: a_estrenar
+    orientation: lateral
+    floor_number: 1
+    has_elevator: false
+    age_years: 0
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: 'Departamento a estrenar en pleno corazón de Palermo, sobre Gorriti al 4700. Se trata de un
+    luminoso y funcional de 1 ambiente, ideal para inversores o para quien busca su primer refugio en
+    la mejor zona de la ciudad. El inmueble se destaca por su orientación lateral, que garantiza privacidad
+    y una vista tranquila. Está ubicado en un piso 1 y, al ser un edificio de baja altura sin ascensor,
+    vas a tener el dato justo de lo que buscás: un living comedor integrado con una pequeña cocina equipada,
+    un baño completo y un balcón terraza de 2 m² para despejarse. Sin cochera, pero con un gimnasio en
+    el edificio para mantenerte en forma sin moverte de casa. El departamento cuenta con una superficie
+    cubierta de 33 m², muy bien aprovechados.
+
+
+    Es un emprendimiento en construcción con entrega estimada para el mes de diciembre. Las fotos son
+    del modelo de referencia, ya que el departamento a estrenar se entregará con la misma calidad y terminaciones.
+    La zona es inmejorable: a metros de bares, restaurantes, subte y todos los servicios que Palermo ofrece.
+    Una oportunidad única para estrenar un techo propio con la garantía de estar en un edificio nuevo.
+    Consultanos por la financiación y coordina una visita al showroom para conocer los ambientes.'
+- id: demo-00210
+  ref: Freire 5223 — USD 89.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: muy_bueno
+    orientation: interno
+    floor_number: null
+    has_elevator: true
+    age_years: 40
+  no_evaluar: []
+  descarte: permuta_o_financiacion
+  revisado: true
+  _texto: 'Departamento de un ambiente en el corazón de Belgrano, sobre la calle Freire al 5200. Se trata
+    de una unidad interna, muy luminosa y silenciosa, ideal para inversor o para quien busca refugio en
+    una de las zonas más arboladas de la ciudad. Con 34 m² cubiertos y 6 m² de balcón terraza, el living
+    comedor se integra de forma natural con la galería, generando una sensación de amplitud poco común
+    en este tipo de propiedades. El baño está completo y la cocina, equipada, aprovecha cada rincón.
+
+
+    A pesar de sus 40 años de antigüedad, el edificio está impecable y el departamento se encuentra en
+    muy buen estado, listo para habitar. Con ascensor y una ubicación privilegiada, a pasos de plazas,
+    subte y todos los servicios, esta es una oportunidad real. Se acepta permuta por otra unidad o financiación
+    en cuotas, consultá la modalidad. Un dato a tener en cuenta: no es de los que tienen balcón a la calle,
+    pero su terraza privada compensa con creces. Ideal para quienes valoran la practicidad y la buena
+    energía de Belgrano.'
+- id: demo-00201
+  ref: Echeverría 3949 — USD 466.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: null
+    orientation: null
+    floor_number: null
+    has_elevator: false
+    age_years: null
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: 'Departamento de 5 ambientes en pleno Belgrano, a metros de Echeverría al 3900. Son 145 m² cubiertos
+    distribuidos en 4 dormitorios y 3 baños, con una cochera incluida. La distribución es clásica y bien
+    pensada, con los ambientes amplios y luminosos que buscan los que quieren vivir en una de las zonas
+    más lindas de la ciudad, sin renunciar al verde y a la cercanía de los subtes y los bares de siempre.
+    Al ser un piso bajo, la entrada es directa y sin ascensor, un detalle que suma practicidad para el
+    día a día.
+
+
+    El edificio es un emprendimiento en construcción, por lo que las fotos que ves son del modelo terminado,
+    a modo de referencia. La entrega estimada es para el segundo semestre del año que viene, así que todavía
+    estás a tiempo de sumarte a la obra y personalizar algunos detalles. Ideal para familia grande o para
+    quienes buscan un buen pie para invertir en una propiedad que no pierde valor. Consultanos por la
+    operatoria y armamos la visita al showroom sin compromiso.'
+- id: demo-00102
+  ref: Cabildo 2626 — USD 353.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: a_estrenar
+    orientation: interno
+    floor_number: null
+    has_elevator: true
+    age_years: null
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: 'Departamento a estrenar en pleno Belgrano, sobre Cabildo al 2600, a pasos de todo. Se trata
+    de una unidad interna de 96 m² cubiertos, pensada para quien busca comodidad y buena ubicación sin
+    renunciar a la tranquilidad. Son 3 ambientes con 2 dormitorios y 1 baño, todo muy bien distribuido
+    y con linda luz.
+
+
+    El edificio es con ascensor y cuenta con amenities que se disfrutan de verdad: solarium con parrilla
+    y un SUM ideal para reuniones. Al ser un emprendimiento en construcción, las fotos que ves son del
+    modelo, no del edificio real, y la entrega estimada está pautada para los próximos meses. Una oportunidad
+    para estrenar en una de las zonas más buscadas de la ciudad, con todos los servicios, subtes, colectivos
+    y verde cerca. Ideal como vivienda principal o para inversor que quiera un activo en una ubicación
+    de privilegio.'
+- id: demo-00264
+  ref: Juncal 3857 — USD 172.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: null
+    orientation: null
+    floor_number: null
+    has_elevator: null
+    age_years: null
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: Departamento de 2 ambientes en Palermo, sobre Juncal al 3800, con 41 m² cubiertos más un balcón
+    terraza de 8 m². Cuenta con un dormitorio, un baño completo y acceso a parrilla y pileta. El emprendimiento
+    está en construcción; las fotos corresponden al modelo y la entrega estimada está prevista para los
+    próximos meses. Ideal para quienes buscan un dos ambientes funcional en una de las zonas más conectadas
+    de la ciudad, sin cochera pero con todos los servicios a la vuelta.
+- id: demo-00596
+  ref: Thames 2170 — USD 92.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: a_estrenar
+    orientation: frente
+    floor_number: null
+    has_elevator: true
+    age_years: 0
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: 'Departamento a estrenar en el corazón de Palermo, sobre Thames al 2100. Un uno ambientes al
+    frente, impecable y luminoso, con balcón terraza de 4 m² que suma ese aire libre que se busca para
+    arrancar o invertir. Son 26 m² bien aprovechados, con baño completo y la practicidad de un edificio
+    con ascensor y amenities de primer nivel: gimnasio, parrilla y seguridad 24 hs para que no te preocupes
+    por nada.
+
+
+    La unidad es a estrenar, y las fotos que ves son del modelo, así que te hacés una idea clara de los
+    terminaciones. El emprendimiento está en plena construcción, con una entrega estimada para el segundo
+    semestre de 2026. Ideal para alquilar o vivir cerca de todo, con la movida de Thames, los bares y
+    el verde de los parques a la vuelta. Sin cochera, pero con la ventaja de estar en una zona donde se
+    puede prescindir del auto. No dejes pasar esta oportunidad de comprar en uno de los barrios más buscados
+    de la ciudad.'
+- id: demo-00495
+  ref: Darregueyra 4642 — USD 303.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: a_estrenar
+    orientation: lateral
+    floor_number: 10
+    has_elevator: true
+    age_years: 0
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: 'Departamento a estrenar en Palermo, sobre Darregueyra al 4600, piso 10 con ascensor y orientación
+    lateral que garantiza una vista abierta y mucha luz natural. Dispone de 40 m² cubiertos más 12 m²
+    de balcón terraza, ideales para disfrutar al aire libre. La unidad es de 2 ambientes con un dormitorio
+    y un baño completo, sin cochera. El edificio cuenta con gimnasio, SUM, pileta, solarium y laundry,
+    pensados para sumar calidad de vida. Es un emprendimiento en construcción: las fotos corresponden
+    al modelo y la entrega estimada está prevista para los próximos meses. Una oportunidad única para
+    estrenar en uno de los mejores barrios de la ciudad.'
+- id: demo-00545
+  ref: Armenia 4307 — USD 214.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: null
+    orientation: frente
+    floor_number: null
+    has_elevator: true
+    age_years: 0
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: 'Departamento a estrenar en pleno corazón de Palermo, sobre la calle Armenia al 4300, y en una
+    ubicación que no tiene nada que envidiarle a las mejores zonas de Buenos Aires. Un lujo de unidad
+    al frente, con ascensor y pensada para quien busca comodidad y diseño sin perder la onda del barrio.
+    Con 43 metros cuadrados cubiertos, el layout está súper bien aprovechado: un ambiente integrado, con
+    un baño completo, y una onda moderna que invita a mudarse ya a la nueva dirección.
+
+
+    El edificio tiene amenities que van como piña para el día a día: gimnasio para no saltarte la rutina
+    y un solarium ideal para despegarse. La entrega estimada es para el primer cuatrimestre del año que
+    viene, justo para ir planeando la mudanza. Las fotos que ves son del modelo, así que la realidad puede
+    variar un poco, pero la base es esta. Un departamento a estrenar, sin cochera, pero con todo lo que
+    necesitás al lado: bares, plazas, subte y el verde de Palermo a dos pasos. Si estás buscando arrancar
+    una nueva etapa en un lugar con identidad, este es el indicado. Consultá por acá que la propiedad
+    es una joyita.'
+- id: demo-00044
+  ref: Cuba 1037 — USD 574.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: a_estrenar
+    orientation: frente
+    floor_number: 15
+    has_elevator: null
+    age_years: 0
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: 'Departamento a estrenar en el corazón de Belgrano, sobre la calle Cuba al 1000, en una de las
+    zonas más buscadas de la ciudad. Se trata de una unidad al frente, en un piso 15, con una vista despejada
+    que aprovecha al máximo la luminosidad natural durante todo el día. Con 194 metros cuadrados cubiertos,
+    la distribución es de 5 ambientes: 4 dormitorios y 2 baños, pensados para quienes buscan comodidad
+    y espacio real sin resignar estilo.
+
+
+    El edificio es un emprendimiento en construcción con entrega estimada para los próximos meses, y las
+    fotos que ves corresponden al modelo de referencia, no al estado actual de la obra. Entre los amenities
+    del complejo se destacan un sector de parrilla para disfrutar al aire libre y un laundry exclusivo,
+    ideales para la vida práctica sin depender de terceros. La propiedad no incluye cochera, pero la ubicación
+    compensa con creces: a metros de verde, comercios y transporte.
+
+
+    Un piso pensado para proyectos a largo plazo, con terminaciones modernas y un layout que separa el
+    área de día del descanso nocturno. Ideal para familias grandes o para quienes trabajan desde casa
+    y necesitan ambientes diferenciados. No dejes pasar la oportunidad de ser parte de un edificio de
+    categoría en una dirección que se posiciona como de las mejores de Belgrano.'
+- id: demo-00466
+  ref: Thames 5093 — USD 398.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: null
+    orientation: contrafrente
+    floor_number: null
+    has_elevator: null
+    age_years: 0
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: 'Departamento de 3 ambientes en Palermo, sobre Thames al 5000, al contrafrente, con 72 m² cubiertos
+    más 8 m² de balcón/terraza. Cuenta con dos dormitorios, un baño completo y parrilla en el balcón.
+    Es un emprendimiento en construcción: las fotos son del modelo y la entrega estimada es para el próximo
+    año. Se trata de una unidad a estrenar, ideal para quienes buscan un dos ambientes funcional con espacio
+    exterior, sin cochera.'
+- id: demo-00183
+  ref: Juncal 2107 — USD 274.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: null
+    orientation: null
+    floor_number: null
+    has_elevator: true
+    age_years: 0
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: Departamento de 3 ambientes en Palermo, sobre Juncal al 2100, con ascensor y a estrenar. Son
+    66 m² cubiertos más 5 m² de balcón terraza, dos dormitorios, un baño completo y un living comedor
+    amplio con integración a la cocina. El edificio cuenta con laundry, parrilla y seguridad 24 horas.
+    Sin cochera. Las imágenes corresponden al modelo del emprendimiento, que se encuentra en construcción;
+    la entrega estimada está prevista para los próximos meses. Una oportunidad única para mudarse a un
+    barrio con excelente conectividad y todos los servicios a la vuelta de la esquina.
+- id: demo-00316
+  ref: Darregueyra 3869 — USD 214.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: a_estrenar
+    orientation: null
+    floor_number: 2
+    has_elevator: null
+    age_years: 0
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: Departamento a estrenar en Palermo, sobre la calle Darregueyra al 3800. Se trata de un dos ambientes
+    de 44 metros cuadrados cubiertos, ubicado en el piso 2 de un nuevo desarrollo que está en plena etapa
+    de construcción. Cuenta con un dormitorio y un baño completo, pensado para quienes buscan un primer
+    hogar o una inversión segura en uno de los barrios más buscados de la ciudad. El edificio ofrece amenities
+    como laundry y solarium, ideales para disfrutar sin salir del complejo. La unidad se entrega a estrenar,
+    con terminaciones de calidad y distribución funcional. Las fotos que ves corresponden al modelo de
+    referencia, ya que el proyecto aún está en obra. La entrega estimada está prevista para los próximos
+    meses, así que es momento ideal para asegurar tu lugar. No incluye cochera, pero la ubicación te conecta
+    con todo lo necesario a pocos pasos.
+- id: demo-00363
+  ref: O'Higgins 5273 — USD 172.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: a_estrenar
+    orientation: contrafrente
+    floor_number: 6
+    has_elevator: true
+    age_years: 0
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: 'Departamento a estrenar en el corazón de Belgrano, sobre la calle O''Higgins al 5200. Se trata
+    de un luminoso y funcional dos ambientes (con 1 dormitorio y 1 baño completo) de 42 m² cubiertos,
+    pensado para quien busca sumarse a una zona con todo el barrio a la vuelta de la esquina. Al estar
+    en un piso 6 y al contrafrente, vas a tener mucha tranquilidad y una muy buena vista, lejos del ruido
+    de la avenida.
+
+
+    El edificio cuenta con pileta para disfrutar en los días de calor y, por supuesto, con ascensor para
+    que llegues cómodo a tu departamento. Es un emprendimiento en construcción, así que las fotos que
+    ves son del modelo, con una entrega estimada para muy pronto. Una oportunidad ideal para invertir
+    o estrenar tu primera propiedad en una de las zonas más lindas de CABA, con todos los servicios y
+    medios de transporte a pocos metros.'
+- id: demo-00163
+  ref: Malabia 1386 — USD 300.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: a_estrenar
+    orientation: interno
+    floor_number: 3
+    has_elevator: null
+    age_years: 0
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: 'Departamento a estrenar en el corazón de Palermo, sobre Malabia al 1300. Se trata de una unidad
+    interna en el piso 3, con una distribución muy bien pensada: living comedor amplio, cocina integrada,
+    dos dormitorios y un baño completo. Son 75 m² cubiertos más un balcón terraza de 3 m² que suma luz
+    y aire. El edificio es de categoría, con solarium, laundry, gimnasio, SUM y pileta, ideales para disfrutar
+    sin moverte de tu casa. Al no tener cochera, la ubicación te salva de todo: estás a metros de los
+    mejores bares y subte.
+
+
+    La obra está en pleno desarrollo y la entrega estimada es para el año que viene, así que es una oportunidad
+    clara para comprar en pozo a un valor de lanzamiento. Las fotos que ves son del modelo, no del estado
+    actual de la construcción, así que hacete una idea clara de lo que va a ser tu futuro hogar. Sin ascensor
+    no te vas a preocupar: es un piso 3 con un acceso cómodo y pensado para que cada detalle cuente. Unidad
+    interna con buena privacidad, ideal para parejas o como inversión. A estrenar, con esa combinación
+    perfecta de barrio y comodidades.'
+- id: demo-00011
+  ref: Virrey del Pino 2472 — USD 120.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: a_estrenar
+    orientation: null
+    floor_number: 6
+    has_elevator: true
+    age_years: 0
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: 'Departamento a estrenar en pleno Belgrano, sobre Virrey del Pino al 2400, en un piso 6 con
+    ascensor. Se trata de un dos ambientes muy bien resueltos, con un dormitorio y un baño completo, en
+    sus 41 m² cubiertos. Ideal para quienes buscan estrenar en una zona consolidada, con todos los servicios
+    a la vuelta de la esquina y muy bien conectado con el resto de la ciudad. Al no contar con cochera
+    ni amenities, el edificio mantiene expensas accesibles, pensado para quien valora la ubicación y la
+    funcionalidad por sobre los lujos.
+
+
+    El departamento a estrenar se encuentra en plena etapa de obra, con una entrega estimada para los
+    próximos meses. Las fotos que se ven corresponden al modelo de referencia, por lo que el resultado
+    final puede variar levemente. Es una oportunidad ideal para comprar en pozo y asegurarse un valor
+    de propiedad en una de las zonas más buscadas de la Ciudad. Consultá por planes de financiación y
+    no dejes pasar esta chance de tener tu primer departamento o una inversión con gran proyección.'
+- id: demo-00488
+  ref: Godoy Cruz 2461 — USD 722.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: a_estrenar
+    orientation: null
+    floor_number: 2
+    has_elevator: null
+    age_years: null
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: Departamento de 4 ambientes a estrenar en Palermo, sobre Godoy Cruz al 2400. Son 152 m² cubiertos
+    más 8 m² de balcón terraza, con 3 dormitorios y 2 baños completos. Está en el piso 2 de un edificio
+    en construcción que incluye laundry como amenities. Las fotos corresponden al modelo, y la entrega
+    estimada está prevista para los próximos meses. Ideal para quienes buscan un hogar moderno en una
+    de las mejores zonas de la Ciudad, sin cochera pero con todo lo necesario para disfrutar.
+- id: demo-00170
+  ref: Darregueyra 2531 — USD 204.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: a_estrenar
+    orientation: contrafrente
+    floor_number: 10
+    has_elevator: false
+    age_years: 0
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: 'Departamento a estrenar en Palermo, Darregueyra al 2500. Piso 10, al contrafrente, con 43 m²
+    cubiertos más 5 m² de balcón terraza. Dos ambientes, un dormitorio y un baño completo. Sin ascensor,
+    pero con seguridad las 24 horas y SUM de uso común. La unidad está en construcción: las fotos corresponden
+    al modelo y la entrega estimada es para el segundo semestre de 2025. Ideal para quienes buscan un
+    primer hogar o una inversión en una zona con excelente conectividad y servicios. A estrenar, con terminaciones
+    de calidad y detalles pensados para el día a día. Sin cochera. Consultá por planes de financiación
+    directa.'
+- id: demo-00477
+  ref: Honduras 1680 — USD 399.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: null
+    orientation: frente
+    floor_number: 9
+    has_elevator: true
+    age_years: 0
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: 'Departamento de 4 ambientes al frente, en el piso 9, con ascensor y a estrenar, en pleno Palermo.
+    Son 101 m² cubiertos, con 3 dormitorios y 1 baño, ideal para quien busca luminosidad y vista abierta.
+    El edificio cuenta con sum, perfecto para disfrutar sin salir de casa. Sin cochera, pero con una ubicación
+    inmejorable: Honduras al 1600, a metros de los mejores bares, plazas y medios de transporte.
+
+
+    Emprendimiento en construcción. Las fotos corresponden al modelo de referencia. La entrega estimada
+    es para fin de año, y esta unidad al frente garantiza aire y sol durante todo el día. Un piso 9 con
+    ascensor, pensado para vivir cómodo y bien conectado, en una de las zonas más buscadas de la ciudad.
+    Consultá por este 4 ambientes a estrenar, sin gastos de escritura adicionales por tiempo limitado.'
+- id: demo-00049
+  ref: Nicaragua 3934 — USD 156.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: a_estrenar
+    orientation: null
+    floor_number: 10
+    has_elevator: null
+    age_years: 0
+  no_evaluar: []
+  descarte: en_pozo_o_construccion
+  revisado: true
+  _texto: 'Departamento a estrenar en pleno corazón de Palermo, sobre la calle Nicaragua al 3900. Se trata
+    de una unidad en uno de los edificios nuevos más buscados de la zona, con excelente distribución para
+    el día a día.
+
+
+    El inmueble está en el piso 10, es un dos ambientes con un dormitorio y un baño, ideal para una pareja
+    que quiera vivir con todas las comodidades. Cuenta con 37 m² cubiertos, una cochera propia y la comodidad
+    de tener laundry en el edificio. Al ser un emprendimiento en construcción, las fotos que ves son del
+    modelo de referencia, no del departamento final.
+
+
+    La entrega estimada es para los próximos meses, y al ser a estrenar vas a ser el primer dueño. La
+    ubicación es inmejorable, a metros de bares, subte y espacios verdes. Un proyecto pensado para quienes
+    buscan calidad de vida sin dejar el barrio. Consultanos por este piso 10, es una oportunidad única
+    para invertir o mudarte ya.'
+- id: demo-00216
+  ref: Bonpland 5781 — USD 281.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: bueno
+    orientation: frente
+    floor_number: null
+    has_elevator: null
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: 'Departamento de 3 ambientes en pleno corazón de Palermo, sobre la calle Bonpland al 5700. Se
+    trata de una unidad al frente, con muy linda luminosidad durante todo el día. Son 67 metros cuadrados
+    cubiertos más un balcón terraza de 3 metros que suma ese plus para desayunar o leer al aire libre.
+    El living está bien proporcionado, con ventanal que da a la calle, y los dos dormitorios son amplios,
+    ideales para armar el hogar tal cual lo soñás. El baño es completo y la cocina tiene espacio de sobra
+    para moverte cómodo.
+
+
+    Está en buen estado general, listo para habitar o para renovar a gusto, según lo que busques. La ubicación
+    es inmejorable: a metros de avenidas importantes, con todos los servicios, bares, restaurantes y medios
+    de transporte a la vuelta. Sin cochera ni amenities, pero con ese aire de barrio porteño que tanto
+    se valora. Ideal para pareja o para quien quiera vivir en una de las zonas más codiciadas de la Ciudad.
+    Consultá por visitas.'
+- id: demo-00532
+  ref: Darregueyra 1442 — USD 130.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: excelente
+    orientation: interno
+    floor_number: 2
+    has_elevator: null
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento en venta, Palermo, sobre Darregueyra al 1400. Unidad interna en piso 2 con orientación
+    tranquila, ideal para quienes buscan privacidad sin ruidos de calle. Son 47 m² cubiertos, distribuidos
+    en un living comedor amplio, un dormitorio y un baño completo. El inmueble se encuentra en excelente
+    estado, listo para habitar, con pisos de parquet y buena iluminación natural gracias a sus ventanas
+    al contrafrente. El edificio cuenta con laundry y pileta para disfrutar los días de calor, perfecto
+    para quien valora los amenities sin necesidad de cochera. Una oportunidad en una de las zonas más
+    buscadas de Palermo, cerca de bares, restaurantes y transporte público. Contactanos para coordinar
+    una visita.
+- id: demo-00385
+  ref: Ciudad de la Paz 2800 — USD 286.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: null
+    orientation: null
+    floor_number: null
+    has_elevator: null
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de 3 ambientes en Belgrano, sobre Ciudad de la Paz al 2800, con 93 metros cuadrados
+    cubiertos bien distribuidos. Cuenta con dos dormitorios, un baño completo y un living comedor amplio.
+    El edificio ofrece seguridad las 24 horas, pileta, solarium, parrilla y sum, ideal para quienes buscan
+    comodidad y espacios comunes para disfrutar. Sin cochera. Una oportunidad para vivir en una zona con
+    buena conectividad, cerca de comercios, parques y medios de transporte. Consultá por más detalles
+    y visitas.
+- id: demo-00282
+  ref: Humboldt 2018 — USD 134.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: null
+    orientation: null
+    floor_number: 10
+    has_elevator: null
+    age_years: 40
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: 'Departamento de dos ambientes en el corazón de Palermo, sobre la avenida Humboldt al 2000.
+    En el piso 10, con 42 m² cubiertos y un balcón terraza de 3 m² que suma unos metros de aire libre
+    para despejarse. El edificio tiene 40 años de antigüedad, pero está bien plantado y con amenities
+    que se agradecen: solarium, parrilla, SUM, gimnasio y seguridad 24 horas. La zona es inmejorable,
+    con subte, bares, plazas y todo el movimiento de Palermo a la vuelta.
+
+
+    Pensado para quien busca un dos ambientes canchero, sin líos de cochera, con todo lo necesario para
+    vivir cómodo o para invertir. El living comedor es tirando a amplio, la cocina está integrada y el
+    baño completo. Al ser piso 10, la vista se despeja y se siente la amplitud. Ideal para una pareja
+    o para alquilar con buen retorno. No se detallan gastos, pero la expensa es razonable para el edificio.
+    Si te copa la idea de vivir en Palermo con amenities sin pagar de más por la zona, este es el punto
+    justo.'
+- id: demo-00509
+  ref: 3 de Febrero 5048 — USD 108.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: a_refaccionar
+    orientation: frente
+    floor_number: 12
+    has_elevator: null
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: 'Departamento de 2 ambientes en el pleno corazón de Belgrano, sobre la avenida 3 de Febrero
+    al 5000. Se presenta **al frente** y en **piso 12**, con una muy linda vista despejada que acompaña
+    todo el día la luz natural. Son 45 m² cubiertos más una terraza balcón de 12 m², ideal para armar
+    un living comedor con escritorio o un rincón de desayunos. El baño es completo y la cocina, independiente,
+    con posibilidad de integración si se animan a un proyecto de reforma.
+
+
+    La unidad está **a refaccionar**, así que le van a poner la firma con los materiales que más les gusten
+    y la dejan a nuevo, con ese sello personal que no se consigue en un edificio nuevo. El edificio cuenta
+    con gimnasio, un plus que se agradece para no mover el auto (no tiene cochera, pero en la zona hay
+    varias opciones de alquiler por mes). La ubicación es inmejorable: a media cuadra de la avenida Cabildo,
+    con todos los servicios, subtes y colectivos a la vuelta. Ideal para pareja que busca un dos ambientes
+    con potencial, o para inversores que quieran sumar un inmueble en una de las zonas más lindas de la
+    ciudad. La expensas son acordes y el edificio está bien mantenido.'
+- id: demo-00279
+  ref: Gorriti 792 — USD 219.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: a_estrenar
+    orientation: contrafrente
+    floor_number: 15
+    has_elevator: true
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Excelente oportunidad en el corazón de Palermo. Departamento a estrenar de 2 ambientes en Gorriti
+    al 700, con 44 m² cubiertos muy bien aprovechados. Ubicado en piso 15, al contrafrente, lo que garantiza
+    una tranquilidad poco común en la zona. Cuenta con un dormitorio, baño completo y living comedor con
+    cocina integrada, todo con terminaciones de primera calidad. El edificio cuenta con ascensor y acceso
+    directo a todos los servicios de Palermo, sin necesidad de cochera ni amenities. Ideal para quienes
+    buscan un primer hogar o una inversión segura en una de las zonas más buscadas de la ciudad.
+- id: demo-00489
+  ref: Nicaragua 4451 — USD 465.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: muy_bueno
+    orientation: null
+    floor_number: 2
+    has_elevator: null
+    age_years: 70
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: 'Departamento de 3 ambientes en pleno corazón de Palermo, sobre la calle Nicaragua al 4400,
+    ideal para quien busca vivir en una de las zonas más conectadas y con mejor movida de la ciudad. Se
+    trata de un piso 2, con una distribución muy bien lograda que separa el área social del sector privado.
+    Son dos dormitorios, con un baño completo, y una cocina independiente con comedor diario. La superficie
+    cubierta es de 83 m², bien aprovechados, y cuenta con una cochera fija incluida, un lujo difícil de
+    conseguir por la zona.
+
+
+    El edificio es de los clásicos de la época, con 70 años de antigüedad, pero el departamento está en
+    muy buen estado, listo para mudarse o para alquilar sin necesidad de hacer grandes reformas. No tiene
+    amenities, pero la ubicación lo compensa con creces: a metros de bares, restaurantes, subte y parques.
+    Una oportunidad concreta para quienes quieren dejar de pagar alquiler o sumar un ingreso en una dirección
+    privilegiada. Consultas al celular.'
+- id: demo-00126
+  ref: Uriarte 623 — USD 371.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: excelente
+    orientation: frente
+    floor_number: 3
+    has_elevator: null
+    age_years: 25
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de 4 ambientes en Uriarte al 600, Palermo, al frente, piso 3. Son 100 m² cubiertos
+    más 5 m² de balcón terraza, con tres dormitorios y dos baños. El edificio tiene 25 años de antigüedad
+    pero el departamento está en excelente estado, listo para habitar. Cuenta con gimnasio en el edificio
+    y muy buena distribución. Sin cochera. Ideal para quienes buscan un espacio luminoso y bien ubicado
+    en una de las zonas más buscadas de la ciudad.
+- id: demo-00293
+  ref: Charcas 4890 — USD 488.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: excelente
+    orientation: lateral
+    floor_number: 2
+    has_elevator: null
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de 5 ambientes en Palermo, sobre Charcas al 4800, con una superficie cubierta de
+    124 m² más 12 m² de balcón terraza. Está en el piso 2 y tiene orientación lateral, lo que le da muy
+    buena luz y ventilación. El inmueble está en excelente estado, listo para habitar, con 4 dormitorios
+    y un baño completo. Las instalaciones del edificio incluyen solarium, gimnasio, laundry, pileta y
+    parrilla, ideales para disfrutar sin salir de casa. Sin cochera. Una oportunidad única en una de las
+    zonas más buscadas de la ciudad, cerca de bares, restaurantes y todos los servicios. Ideal para quienes
+    buscan espacio, confort y buena ubicación.
+- id: demo-00286
+  ref: Cabrera 3290 — USD 225.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: excelente
+    orientation: null
+    floor_number: 1
+    has_elevator: true
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: 'Departamento de 2 ambientes en pleno Palermo, sobre la calle Cabrera al 3200, listo para que
+    lo disfrutes. En excelente estado, se destaca por su luminosidad y buena distribución. Estamos hablando
+    de un piso 1 con ascensor, lo que lo hace súper cómodo para el día a día. Son 56 m² cubiertos más
+    una terraza de 8 m², ideal para despejarse o tomar aire sin salir de casa. El living comedor es amplio
+    y el dormitorio tiene muy lindo tamaño; el baño está completo y prolijo.
+
+
+    El edificio cuenta con seguridad las 24 horas, así que vas a estar tranquilo siempre. Además, tiene
+    SUM y parrilla en las áreas comunes, perfecto para juntarte con amigos o familia sin moverte del edificio.
+    No tiene cochera, pero la ubicación compensa con creces: estás cerca de todo, con subtes, colectivos
+    y una movida gastronómica y comercial que es un golazo. Ideal para invertir o para vivir en una de
+    las zonas más buscadas de la ciudad. Consultanos por la visita, la vas a querer ver.'
+- id: demo-00424
+  ref: Serrano 5253 — USD 112.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: muy_bueno
+    orientation: null
+    floor_number: 6
+    has_elevator: null
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de un ambiente en Serrano al 5200, pleno Palermo. Con 32 m² cubiertos, este inmueble
+    está en muy buen estado y se encuentra en el piso 6, ofreciendo una excelente luminosidad y privacidad.
+    Cuenta con un baño completo y una distribución funcional que aprovecha cada metro. Ideal para quienes
+    buscan un primer hogar o una inversión en uno de los barrios más buscados de la Ciudad. Sin cochera
+    ni amenities, pero con todos los servicios, comercios y medios de transporte a la vuelta de la esquina.
+    Una oportunidad para vivir en una ubicación privilegiada con el confort de un espacio cuidado y listo
+    para habitar. Consultá por visitas.
+- id: demo-00299
+  ref: Freire 3056 — USD 221.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: muy_bueno
+    orientation: null
+    floor_number: 8
+    has_elevator: null
+    age_years: 8
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: 'Departamento de 3 ambientes en pleno Belgrano, sobre la calle Freire al 3000. Muy buen estado
+    y con una excelente distribución para aprovechar cada metro cuadrado de sus 81 metros cubiertos. Son
+    dos dormitorios bien separados del living, con un baño completo y una cocina integradora que invita
+    a recibir. Al estar en el piso 8, la luminosidad natural es un punto a favor, y desde los ventanales
+    se respira una onda bien de barrio pero con la practicidad de vivir cerca de todo.
+
+
+    La unidad es de 8 años de antigüedad, lo que la convierte en una propiedad joven y sin los dolores
+    de cabeza de las construcciones viejas. Incluye cochera fija para el auto, un lujo en la zona, y el
+    edificio cuenta con amenities que suman calidad de vida: parrilla para los findes con amigos, laundry
+    para olvidarte de los lavaderos y un gimnasio para mantener la rutina sin salir de casa. Todo en un
+    solo complejo, con gastos razonables y una ubicación estratégica cerca de colegios, subte y los bosques
+    de Palermo. Ideal para parejas o familias chicas que buscan confort y seguridad. Consultá sin compromiso.'
+- id: demo-00383
+  ref: Sucre 3466 — USD 169.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: excelente
+    orientation: frente
+    floor_number: 8
+    has_elevator: true
+    age_years: 70
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de 3 ambientes en Sucre al 3400, Belgrano, pleno corazón del barrio. Está al frente,
+    piso 8, con ascensor, y se destaca por su excelente estado. Son 66 m² cubiertos más 5 m² de balcón
+    terraza, ideal para disfrutar al aire libre. Cuenta con dos dormitorios, un baño completo y buena
+    distribución. El edificio tiene 70 años de antigüedad, pero el departamento fue muy bien mantenido.
+    Sin cochera ni amenities, pero con todos los servicios cerca y una ubicación privilegiada. Una oportunidad
+    para quienes buscan un hogar clásico de Belgrano con carácter y en óptimas condiciones.
+- id: demo-00233
+  ref: Juramento 3158 — USD 95.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: null
+    orientation: null
+    floor_number: null
+    has_elevator: null
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: 'Departamento de 2 ambientes en Belgrano, sobre Juramento al 3100, CABA. Cuenta con living comedor,
+    1 dormitorio, 1 baño y una superficie cubierta de 42 m². Sin cochera y sin amenities, es una opción
+    ideal para quienes buscan una propiedad práctica y bien ubicada en uno de los barrios más tradicionales
+    de la Ciudad. Aprovechá la oportunidad de vivir en una zona con mucho movimiento y todos los servicios
+    cerca.
+
+
+    Este dos ambientes se destaca por su funcionalidad y por estar en una dirección muy buscada de Belgrano.
+    Perfecto como primera vivienda o para sumar un ingreso en alquiler. Si querés conocerlo, escribinos
+    y coordinamos una visita. Una oportunidad concreta para hacerte de una propiedad en una de las mejores
+    ubicaciones de CABA.'
+- id: demo-00426
+  ref: Humboldt 999 — USD 134.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: excelente
+    orientation: null
+    floor_number: 10
+    has_elevator: true
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento en Humboldt al 900, Palermo, una ubicación que combina tranquilidad con todos los
+    servicios cerca. Está en **piso 10**, **con ascensor**, y se encuentra en **excelente estado**. Es
+    un dos ambientes bien distribuidos, con un dormitorio y un baño completo. La superficie cubierta es
+    de 36 m², ideal para quienes buscan un espacio funcional y cómodo en el corazón del barrio. Sin cochera
+    ni amenities, pero con la practicidad de un edificio bien mantenido. Una oportunidad para vivir en
+    una de las zonas más lindas de la ciudad, con buena luz y vista despejada.
+- id: demo-00530
+  ref: Cabrera 3952 — USD 313.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: excelente
+    orientation: null
+    floor_number: 3
+    has_elevator: null
+    age_years: 0
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de tres ambientes en Cabrera al 3900, Palermo, en piso 3, a estrenar y en excelente
+    estado. Cuenta con dos dormitorios, un baño completo y una superficie cubierta de 68 m² más un balcón
+    terraza de 3 m², ideal para disfrutar al aire libre. El edificio ofrece solarium como espacio común,
+    sumando un plus de confort. Sin cochera. Una oportunidad única para vivir en una de las zonas más
+    buscadas de la Ciudad, con todos los servicios y la cercanía a bares, restaurantes y comercios que
+    caracterizan a Palermo.
+- id: demo-00284
+  ref: Gurruchaga 1002 — USD 227.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: muy_bueno
+    orientation: contrafrente
+    floor_number: 3
+    has_elevator: null
+    age_years: 30
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: 'Departamento de 2 ambientes en pleno Palermo, sobre Gurruchaga al 1000, en una ubicación que
+    combina la tranquilidad de un edificio de **piso 3** con la movida constante del barrio. La unidad
+    está **al contrafrente**, lo que garantiza silencio y luminosidad durante todo el día. Con **47 m²
+    cubiertos** más una terraza/balcón de **12 m²**, el ambiente se siente amplio y aprovechable. El living
+    comedor se integra a la perfección con la parrilla del solarium, ideal para recibir amigos o simplemente
+    relajarse. La cocina es práctica y el baño completo, todo conservado en **muy buen estado** pese a
+    sus **30 años de antigüedad**, con detalles que hablan de un edificio bien mantenido.
+
+
+    El complejo ofrece seguridad las 24 horas, lo que suma tranquilidad en una zona cada vez más buscada.
+    La ubicación es inmejorable: a metros de bares, restaurantes, subte y espacios verdes, con la ventaja
+    de tener todo a pie. Al no contar con cochera, es perfecto para quienes prefieren moverse en transporte
+    público o simplemente no necesitan vehículo. Una gran oportunidad para quienes buscan un departamento
+    canchero, con buena impronta y en uno de los barrios más vibrantes de Buenos Aires, sin resignar comodidad
+    ni estética. Ideal para parejas o como inversión.'
+- id: demo-00469
+  ref: Fitz Roy 5804 — USD 359.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: null
+    orientation: frente
+    floor_number: 15
+    has_elevator: null
+    age_years: 12
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: 'Departamento de 4 ambientes al frente, en pleno Palermo, sobre Fitz Roy al 5800. Son 94 metros
+    cuadrados cubiertos más 12 de balcón terraza que suman un lindo pulmón al aire libre, con una vista
+    que acompaña el día a día. Estamos hablando de un piso 15, así que la luminosidad y el aire corren
+    por todos los ambientes.
+
+
+    El layout es cómodo y bien pensado: 3 dormitorios, 2 baños y un living comedor amplio que se integra
+    a la cocina, ideal para vivir sin vueltas. El edificio tiene gimnasio, un plus para no moverte de
+    casa. Son 12 años de antigüedad, con buena construcción, y la zona es de lo mejor: lleno de bares,
+    plazas y subtes cerca. No incluye cochera, pero en Palermo te manejás igual. Una oportunidad para
+    los que buscan meterse en un departamento con carácter, bien iluminado y con ese aire de Buenos Aires
+    que tanto se disfruta.'
+- id: demo-00337
+  ref: Scalabrini Ortiz 664 — USD 218.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: muy_bueno
+    orientation: null
+    floor_number: 4
+    has_elevator: true
+    age_years: 30
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: 'Departamento de 3 ambientes en pleno Palermo, sobre la avenida Scalabrini Ortiz al 600, en
+    una ubicación que no tiene desperdicio. Se trata de una unidad en **muy buen estado**, en **piso 4**
+    y **con ascensor**, ideal para quien busca mudarse sin pensar en nada. Tiene 74 m² cubiertos más 3
+    m² de balcón/terraza, con una distribución que se aprovecha muy bien. Los dos dormitorios son amplios
+    y el baño está completo. La construcción es de aproximadamente **30 años de antigüedad**, pero se
+    nota que se ha mantenido con esmero. Cuenta con seguridad las 24 horas, lo que suma mucha tranquilidad,
+    sobre todo para los que viajan seguido o pasan largas horas fuera de casa. Sin cochera, pero en esta
+    zona no hace falta: hay de todo cerca, subte, colectivos y mucha vida comercial. La cocina es independiente
+    y el balcón le da una linda luz al living. Ideal como vivienda principal o para invertir en alquiler.
+    Los ambientes son prolijos y no hay que hacer reformas estructurales. Un dato a favor: al ser piso
+    4, el ascensor se agradece todos los días. Si estás buscando un departamento en Palermo con buena
+    conectividad y sin sorpresas, este puede ser el indicado.'
+- id: demo-00365
+  ref: Juncal 5603 — USD 188.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: excelente
+    orientation: frente
+    floor_number: 3
+    has_elevator: null
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de 2 ambientes en Palermo, sobre Juncal al 5600, en excelente estado. Es al frente
+    y está en piso 3, con una muy buena distribución que aprovecha los 42 m² cubiertos más un balcón terraza
+    de 3 m² ideal para sumar un espacio al aire libre. El living comedor es amplio y luminoso, la cocina
+    está integrada, el dormitorio tiene buena dimensión y el baño completo está bien resuelto. El edificio
+    cuenta con solarium, pileta y parrilla, perfecto para disfrutar los días de calor o juntarse con amigos.
+    Sin cochera, pero la zona tiene todos los servicios a mano, bares, restaurantes y transporte. Una
+    oportunidad para quienes buscan un dos ambientes bien ubicado, con amenities y en condiciones impecables
+    para entrar a vivir.
+- id: demo-00242
+  ref: Malabia 2622 — USD 119.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: bueno
+    orientation: null
+    floor_number: 6
+    has_elevator: true
+    age_years: 40
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: 'Se vende departamento de 1 ambiente en Malabia al 2600, Palermo. Con 40 m² cubiertos, se encuentra
+    en buen estado general, listo para habitar. Está en piso 6 con ascensor, y el edificio tiene 40 años
+    de antigüedad, lo que le da carácter y solidez. Cuenta con un baño completo y amenities destacados:
+    sum, pileta, parrilla, solarium y seguridad 24 h. Sin cochera. Ideal tanto para quienes buscan su
+    primer hogar como para inversores, en una zona con excelente conectividad y vida de barrio. El monoambiente
+    ofrece la comodidad de tener todo a mano, con espacios bien aprovechados y la posibilidad de disfrutar
+    las áreas comunes del edificio. Un muy buen punto de partida en Palermo.'
+- id: demo-00435
+  ref: Costa Rica 5368 — USD 287.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: null
+    orientation: null
+    floor_number: null
+    has_elevator: true
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de 3 ambientes en alquiler sobre la calle Costa Rica al 5300, pleno corazón de
+    Palermo. Con 92 metros cuadrados cubiertos, cuenta con 2 dormitorios, un baño completo y un living
+    comedor de buena proporción. La cocina está separada y el inmueble incluye una cochera fija y acceso
+    directo con ascensor. El edificio ofrece amenities destacados como pileta, gimnasio y laundry, ideales
+    para quienes buscan comodidad sin salir de casa. Muy bien ubicado, cerca de bares, tiendas y transporte
+    público, con todo lo necesario para disfrutar el barrio. Una oportunidad que no te podés perder.
+- id: demo-00433
+  ref: Thames 2310 — USD 147.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: muy_bueno
+    orientation: frente
+    floor_number: 7
+    has_elevator: null
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de 1 ambiente en Palermo, sobre Thames al 2300, al frente y en un piso 7 con muy
+    buen estado. Son 36 m² cubiertos, ideales para quienes buscan practicidad y confort en una zona llena
+    de vida. Cuenta con un baño completo y espacios bien aprovechados. El edificio ofrece pileta, SUM,
+    seguridad las 24 horas, laundry y solarium, todo pensado para sumar calidad de vida sin moverte de
+    tu casa. Sin cochera, pero con todo lo necesario para disfrutar el barrio. Una oportunidad para vivir
+    en uno de los mejores puntos de Palermo.
+- id: demo-00405
+  ref: Serrano 1467 — USD 137.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: bueno
+    orientation: interno
+    floor_number: null
+    has_elevator: null
+    age_years: 60
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento en Serrano al 1400, pleno Palermo. Es una unidad interna de 51 m² cubiertos, con
+    2 ambientes que incluyen un dormitorio y un baño completo. A pesar de tener 60 años de antigüedad,
+    el inmueble se conserva en buen estado general y está listo para habitar o para ponerle tu toque personal.
+    El edificio cuenta con gimnasio, ideal para quienes buscan comodidad sin moverse de casa. Sin cochera,
+    pero con todos los servicios y la movida del barrio a la vuelta. Una oportunidad para invertir en
+    una zona que nunca pierde su encanto.
+- id: demo-00113
+  ref: Ciudad de la Paz 4811 — USD 255.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: muy_bueno
+    orientation: contrafrente
+    floor_number: 15
+    has_elevator: null
+    age_years: 40
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: "Departamento de 3 ambientes en pleno Belgrano, sobre Ciudad de la Paz al 4800, a metros de\
+    \ todo. Son 82 m² cubiertos más 12 m² de balcón/terraza, en un piso 15, al contrafrente, con una vista\
+    \ que acompaña el día a día. El edificio tiene 40 años de antigüedad, pero el departamento está en\
+    \ muy buen estado, con la distribución clásica de los edificios de esa época: living comedor amplio,\
+    \ cocina con lavadero integrado, dos dormitorios bien separados y un baño completo. \n\nLa orientación\
+    \ al contrafrente garantiza silencio, que es un lujo en la ciudad. El balcón/terraza suma metros para\
+    \ desayunar o leer, y el gimnasio del edificio te salva de pagar un gimnasio aparte. La seguridad\
+    \ 24 horas es de las que se agradecen, sobre todo para viajar tranquilo o llegar tarde a casa. No\
+    \ tiene cochera, pero en la zona hay varias opciones de garage a la vuelta. Ideal para pareja o para\
+    \ quien busca un primer piso con buena superficie y sin sorpresas. Consultá por visitas, se atiende\
+    \ sin compromiso."
+- id: demo-00443
+  ref: Nicaragua 497 — USD 237.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: bueno
+    orientation: interno
+    floor_number: 4
+    has_elevator: null
+    age_years: 70
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: 'Departamento de 4 ambientes en pleno corazón de Palermo, sobre la calle Nicaragua al 400. Se
+    trata de una unidad interna muy luminosa, en buen estado general, ideal para quien busca un lugar
+    tranquilo y bien conectado. Con 114 m² cubiertos más 5 m² de balcón terraza, el living se destaca
+    por su amplitud y la cocina conserva detalles de época que le dan un toque especial.
+
+
+    Son 3 dormitorios y 2 baños, todos en el piso 4, con una distribución que aprovecha cada rincón sin
+    desperdiciar metros. Al tener 70 años de antigüedad, el edificio mantiene la impronta clásica de la
+    zona, con un hall de entrada que ya dice que estás en Palermo. La zona es inmejorable: a metros de
+    bares, plazas y subtes, con la vida barrial bien porteña. No tiene cochera ni amenities, pero la ubicación
+    lo compensa con creces. Un dos ambientes con receso, para que sepas que el valor está en el barrio
+    y en la planta.'
+- id: demo-00597
+  ref: Ravignani 1875 — USD 351.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: excelente
+    orientation: null
+    floor_number: null
+    has_elevator: true
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de 3 ambientes en Palermo, sobre Ravignani al 1800. Con una superficie cubierta
+    de 91 m² más un balcón terraza de 5 m², el inmueble se encuentra en excelente estado y cuenta con
+    ascensor, lo que lo hace muy cómodo para el día a día. Dispone de dos dormitorios, un baño completo
+    y un living comedor amplio con buena distribución. El edificio ofrece solarium, ideal para aprovechar
+    los días de sol sin salir de casa. Sin cochera, pero con fácil acceso a transporte y todos los servicios
+    del barrio. Una oportunidad para quienes buscan un departamento bien ubicado, luminoso y en condiciones
+    óptimas para mudarse sin preocupaciones.
+- id: demo-00308
+  ref: Cuba 3056 — USD 388.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: muy_bueno
+    orientation: lateral
+    floor_number: null
+    has_elevator: null
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de cuatro ambientes en Belgrano, sobre la calle Cuba al 3000, en muy buen estado
+    y con una orientación lateral que le da una luz espectacular durante todo el día. Cuenta con tres
+    dormitorios, dos baños completos, amplio living comedor y cocina independiente. La superficie cubierta
+    es de 139 m² más un balcón terraza de 12 m², ideal para armar un sillón o la parrilla. El edificio
+    ofrece solarium, seguridad 24 horas, gimnasio, pileta y parrilla, todo pensado para no salir de casa
+    cuando querés disfrutar. Sin cochera, pero con fácil acceso a colectivos, subte y todos los servicios
+    del barrio. Una propiedad pensada para quienes buscan espacio, confort y buena ubicación en una de
+    las zonas
+- id: demo-00053
+  ref: Guatemala 4990 — USD 146.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: bueno
+    orientation: null
+    floor_number: null
+    has_elevator: true
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de 1 ambiente en Guatemala al 4900, Palermo. Con 32 m² cubiertos más un balcón
+    terraza de 2 m², este inmueble se destaca por su buen estado general y la practicidad que ofrece para
+    quienes buscan una primera vivienda o una inversión en uno de los barrios más buscados de la ciudad.
+    El edificio cuenta con ascensor, lo que suma comodidad en el día a día. La distribución es funcional
+    y el espacio interior está bien aprovechado, con un baño completo. Al estar sin cochera y sin amenities,
+    los gastos mensuales se mantienen acotados. La ubicación es ideal, rodeada de comercios, bares y muy
+    cerca de grandes parques, con buena conectividad. Un punto justo para arrancar o para mudarse a Palermo
+    sin pagar de más por extras que no se necesitan.
+- id: demo-00262
+  ref: Blanco Encalada 4106 — USD 64.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: null
+    orientation: frente
+    floor_number: 0
+    has_elevator: null
+    age_years: 0
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de 1 ambiente en Blanco Encalada al 4100, Belgrano, pleno corazón de uno de los
+    barrios más buscados de la Ciudad. Es planta baja, al frente, con 27 m² cubiertos y baño completo.
+    A estrenar, ideal para quienes buscan su primer hogar o una inversión segura en una zona con todos
+    los servicios. El edificio cuenta con seguridad las 24 horas y salón de usos múltiples para eventos
+    o reuniones. Sin cochera, pero con excelente conectividad y cercanía a subtes, colectivos y comercios.
+    Un espacio luminoso, bien distribuido y listo para habitar desde el primer día.
+- id: demo-00395
+  ref: Freire 3469 — USD 155.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: excelente
+    orientation: null
+    floor_number: 3
+    has_elevator: true
+    age_years: 0
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: 'Departamento de 2 ambientes y 1 dormitorio en pleno Belgrano, sobre la calle Freire al 3400,
+    a estrenar y en excelente estado. Se trata de un piso 3 con ascensor, ideal para quienes buscan estrenar
+    sin perder la onda del barrio, con todo lo necesario para vivir cómodo desde el día uno.
+
+
+    Con una superficie cubierta de 50 m², el layout está muy bien aprovechado: un living comedor amplio
+    que se integra a la cocina, un dormitorio con buena privacidad y un baño completo. Al no tener cochera
+    ni amenities, el costo de expensas se mantiene acotado, algo que se agradece. La ubicación es inmejorable,
+    con verde, subte cerca y todos los servicios a la vuelta. Perfecto como primera vivienda o para inversor
+    que busque algo listo para alquilar. Un lindo momento para agendar la visita.'
+- id: demo-00145
+  ref: Gorriti 1587 — USD 395.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: bueno
+    orientation: interno
+    floor_number: 6
+    has_elevator: null
+    age_years: 50
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de 4 ambientes en Gorriti al 1500, Palermo. Con 98 m² cubiertos, cuenta con 3 dormitorios
+    y 2 baños completos. Es una unidad interna en piso 6, con 50 años de antigüedad pero en buen estado
+    general. El edificio ofrece amenities como laundry, parrilla, SUM, gimnasio y solarium. No incluye
+    cochera. Ideal para quienes buscan un hogar en una de las zonas más buscadas de la ciudad, con todo
+    lo necesario para vivir cómodamente.
+- id: demo-00472
+  ref: Echeverría 4781 — USD 107.000
+  estrato: sintetico
+  fuente: PORTAL_B
+  esperado:
+    condition: a_estrenar
+    orientation: null
+    floor_number: null
+    has_elevator: false
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento a estrenar en Belgrano, sobre Echeverría al 4700. Ideal para quienes buscan un
+    primer hogar o una inversión con buena ubicación. Cuenta con 33 m² cubiertos más un balcón/terraza
+    de 4 m², perfecto para disfrutar al aire libre. El ambiente es amplio y luminoso, con baño completo
+    y cocina integrada. Incluye una cochera propia, un plus en la zona. El edificio es sin ascensor, pero
+    de construcción reciente y muy bien terminado. Sin amenities, lo que mantiene las expensas bajas.
+    Una oportunidad única en uno de los barrios más buscados de la Ciudad, cerca de comercios, transportes
+    y espacios verdes. No dejes pasar este departamento a estrenar.
+- id: demo-00050
+  ref: Darregueyra 1988 — USD 218.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: a_refaccionar
+    orientation: null
+    floor_number: null
+    has_elevator: null
+    age_years: 0
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de 3 ambientes en Palermo, sobre Darregueyra al 1900. Cuenta con 2 dormitorios,
+    un baño completo y 85 m² cubiertos más un balcón terraza de 3 m². El inmueble se entrega a estrenar,
+    aunque se encuentra a refaccionar, ideal para quienes quieren dejar el espacio a su gusto desde cero.
+    El edificio dispone de SUM para reuniones o eventos. Sin cochera. Una oportunidad única en una zona
+    con excelente conectividad y cercanía a comercios, bares y espacios verdes. Consultanos por la visita.
+- id: demo-00052
+  ref: 3 de Febrero 2872 — USD 75.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: muy_bueno
+    orientation: null
+    floor_number: null
+    has_elevator: true
+    age_years: 60
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de 1 ambiente en Belgrano, sobre 3 de Febrero al 2800, con muy buen estado y una
+    superficie de 34 m² cubiertos. El edificio cuenta con ascensor y tiene 60 años de antigüedad, lo que
+    le da ese carácter clásico que tanto se busca en la zona. Disfruta de amenities como gimnasio, SUM
+    y laundry, ideales para aprovechar al máximo el espacio sin salir de casa. Sin cochera, pero con todos
+    los servicios y la ubicación privilegiada que ofrece el barrio. Ideal para inversores o para quienes
+    buscan un primer departamento funcional y bien ubicado en uno de los barrios más tradicionales de
+    la Ciudad.
+- id: demo-00389
+  ref: Thames 5349 — USD 198.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: null
+    orientation: contrafrente
+    floor_number: 15
+    has_elevator: null
+    age_years: 50
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de 2 ambientes en Thames al 5300, Palermo. Está al contrafrente, así que se disfruta
+    de un silencio poco común en la zona. Es piso 15, con buena luz natural y una vista abierta. Tiene
+    50 m² cubiertos, un dormitorio y un baño completo. La distribución es funcional, con cocina integrada
+    al living. El edificio tiene 50 años de antigüedad, pero el departamento se mantiene en condiciones
+    sólidas y con potencial para personalizarlo a gusto. Sin cochera ni amenities, ideal para quienes
+    buscan un dos ambientes bien ubicado a un precio de entrada en el barrio.
+- id: demo-00583
+  ref: Costa Rica 1550 — USD 320.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: null
+    orientation: frente
+    floor_number: null
+    has_elevator: false
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento de 4 ambientes en el corazón de Palermo, sobre Costa Rica al 1500. Son 89 m² cubiertos
+    más 5 m² de balcón terraza, al frente y con tres dormitorios, dos baños completos. Sin ascensor, pero
+    el edificio cuenta con parrilla y pileta de uso común. Una excelente oportunidad para quienes buscan
+    un piso amplio y luminoso en una de las zonas más convocantes de la Ciudad, con todos los servicios
+    a la vuelta.
+- id: demo-00503
+  ref: Freire 3412 — USD 295.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: excelente
+    orientation: null
+    floor_number: 3
+    has_elevator: null
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: 'Departamento de 3 ambientes en Belgrano, sobre Freire al 3400. Piso 3, con una superficie cubierta
+    de 85 m² más un balcón terraza de 5 m², ideal para quienes buscan un hogar luminoso y funcional. Cuenta
+    con dos dormitorios, un baño completo y una distribución que se destaca por su excelente estado, listo
+    para habitar sin necesidad de reformas. El edificio ofrece seguridad las 24 horas, solarium, pileta,
+    gimnasio y parrilla, perfecto para disfrutar del día a día sin salir de casa.
+
+
+    Ubicado en una zona con todos los servicios y muy bien conectada, este departamento es una oportunidad
+    para quienes valoran la comodidad y la calidad de vida en la Ciudad. Sin cochera, pero con acceso
+    a todos los amenities que hacen la diferencia.'
+- id: demo-00230
+  ref: Costa Rica 339 — USD 147.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: null
+    orientation: null
+    floor_number: 15
+    has_elevator: null
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: Departamento en Palermo, sobre la calle Costa Rica al 300, en un edificio con buena presencia.
+    Es un dos ambientes de 38 metros cuadrados cubiertos, con un dormitorio y un baño completo. Se destaca
+    por estar ubicado en **piso 15**, lo que le da una vista abierta y mucha luz natural durante el día.
+    La distribución es funcional, con living comedor que se integra a la cocina, ideal para quienes buscan
+    un espacio práctico y bien aprovechado. Sin cochera ni amenities, pero con la ventaja de estar en
+    una zona llena de vida, con bares, restaurantes y comercios a la vuelta, además de muy cerca de plazas
+    y del subte. Un departamento pensado para quienes quieren vivir en Palermo sin pagar extras que no
+    necesitan. Consultános para coordinar una visita.
+- id: demo-00246
+  ref: Conde 2641 — USD 110.000
+  estrato: sintetico
+  fuente: PORTAL_A
+  esperado:
+    condition: muy_bueno
+    orientation: null
+    floor_number: 7
+    has_elevator: null
+    age_years: null
+  no_evaluar: []
+  descarte: null
+  revisado: true
+  _texto: 'Excelente oportunidad en Belgrano: departamento de dos ambientes en Conde al 2600, piso 7,
+    con muy buen estado. Cuenta con un dormitorio, un baño completo y una superficie cubierta de 40 m²
+    más 12 m² de balcón terraza, ideal para disfrutar al aire libre. El edificio ofrece amenities de primer
+    nivel: gimnasio, parrilla, pileta, laundry y seguridad las 24 horas. Sin cochera. Una opción práctica
+    y bien ubicada, perfecta para quienes buscan comodidad y calidad de vida en uno de los barrios más
+    buscados de CABA.'

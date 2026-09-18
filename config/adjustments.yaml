@@ -1,0 +1,137 @@
+# Coeficientes de ajuste de comparables — doc 05 §4.
+#
+# ⚠️ ORIGEN DE ESTOS NÚMEROS: práctica de mercado y criterio, NO regresión.
+# Está declarado así en el informe que se le entrega al cliente y en la doc.
+# La calibración empírica (regresión hedónica sobre BA Data) es la tarea 6.6.
+#
+# Tocar este archivo incrementa `method_version` y OBLIGA a correr el backtest
+# antes de mergear (gate del CI).
+
+version: "2026.08.1"
+
+# El comparable se ajusta para llevarlo a las condiciones del sujeto:
+#   usd_m2_ajustado = usd_m2_crudo / Π(coeficientes)
+
+condition:
+  a_estrenar:      1.15
+  excelente:       1.08
+  muy_bueno:       1.00      # referencia
+  bueno:           0.94
+  a_refaccionar:   0.82
+
+age_years:
+  - { max: 5,    coef: 1.06 }
+  - { max: 15,   coef: 1.00 }   # referencia
+  - { max: 30,   coef: 0.96 }
+  - { max: 50,   coef: 0.92 }
+  - { max: 999,  coef: 0.90 }
+
+orientation:
+  frente:          1.03
+  lateral:         1.00      # referencia
+  contrafrente:    0.98
+  interno:         0.93
+
+floor:
+  # el castigo más real del mercado porteño
+  high_no_elevator:  { min_floor: 3, has_elevator: false, coef: 0.88 }
+  ground_with_patio: { coef: 1.02 }
+  high_with_view:    { min_floor: 8, coef: 1.04 }
+  default:           { coef: 1.00 }
+
+amenities:
+  full:            1.05      # sum + pileta + gimnasio + seguridad
+  basic:           1.00      # referencia
+  none:            1.00
+
+expenses:
+  # expensas > N veces la mediana del barrio deprimen el precio de venta
+  high_multiplier: 2.0
+  coef:            0.96
+
+listing_age:
+  # precio de oferta no convalidado por el mercado
+  - { max_days: 90,  coef: 1.00 }
+  - { max_days: 999, coef: 0.97 }
+
+# Valores absolutos: se suman al total, no al m².
+# Una cochera no vale proporcionalmente más en un depto caro (doc 13, Q12).
+absolute_usd:
+  parking_space:   12000
+
+rules:
+  # Si Π(coeficientes) sale de este rango, el comparable se DESCARTA.
+  # Ajustar un 40% no es ajustar, es inventar.
+  max_total_adjustment: 1.25
+  min_total_adjustment: 0.75
+  # Sin dato -> coeficiente 1.00. Nunca se imputa un default optimista ni
+  # pesimista.
+  missing_data_coef: 1.00
+
+closing_discount:
+  # Precios de portal vs. precio de escrituración.
+  # Fuente: práctica de mercado (5-15%). Se cita en el informe.
+  low:  0.85
+  high: 0.95
+
+statistics:
+  # ⚠️ RECORTE POR PERCENTIL, antes del winsorizado. Estaba en el código y no
+  # acá, y doc 05 §5 no lo mencionaba — peor: argumentaba en contra
+  # ("por qué winsorizar EN VEZ de eliminar: con 8 comparables, eliminar los 2
+  # extremos tira el 25% de la muestra"). Con n=8 el motor eliminaba
+  # exactamente 2. Medido: 88 exclusiones reales en los informes ya emitidos.
+  #
+  # `0` lo apaga. El valor se decidió midiendo, no opinando — ver doc 05 §5.
+  trim_pct: 5
+  winsorize_lower_pct: 10
+  winsorize_upper_pct: 90
+  range_lower_pct: 25
+  range_upper_pct: 75
+  min_range_width_pct: 8      # un rango de ±1% mentiría sobre la precisión
+
+  # ⚠️ CORRECCIÓN METODOLÓGICA (backtest del 13/08, 1.500 casos).
+  #
+  # El p25-p75 de los comparables mide la DISPERSIÓN DEL MERCADO, no la
+  # INCERTIDUMBRE DE NUESTRA ESTIMACIÓN. Son cosas distintas: con un MdAPE
+  # del 15%, un rango de ±4-8% falla 2 de cada 3 veces. Medido: hit rate
+  # 36,6% contra un objetivo de 70-85%.
+  #
+  # El rango tiene que reflejar cuánto nos equivocamos de verdad. Se toma el
+  # mayor entre el p25-p75 y una semi-amplitud calibrada contra el error
+  # observado. Este número SALE DEL BACKTEST y se recalibra cuando cambie.
+  uncertainty_half_width_pct: 20
+
+# ⚠️ QUÉ CUENTA COMO UN AVISO PLAUSIBLE. Una sola vez, para los tres que lo
+# preguntan (H-16):
+#
+#   · `capture.ingest.motivo_descarte`  — descarte al ENTRAR al corpus
+#   · `agents.nodes.curate.reglas_duras` — nodo 6, antes de gastar en el juez
+#   · `valuation.engine`                 — exclusión del cálculo
+#
+# Estaban escritos tres veces, con el mismo valor y sin nada que los
+# sincronizara. Subir el máximo a 15.000 acá habría movido el nodo 7 dejando a
+# la ingesta y al nodo 6 descartando con el valor viejo, en silencio y sin que
+# nada fallara. Es el patrón que más caro salió en este proyecto.
+#
+# `ingest/badata.py` usa un rango más ancho ([200, 20.000]) y NO lee de acá: son
+# series históricas del GCBA, otro criterio a propósito.
+plausibility:
+  usd_m2_min: 300
+  usd_m2_max: 12000
+  surface_min: 15             # menos que un monoambiente: error de carga
+  surface_max: 2000
+  # Doc 04, nodo 6. Un aviso de más de medio año es un precio de otro mercado.
+  max_days_published: 180
+
+confidence:
+  weights:
+    count:        0.35
+    dispersion:   0.30
+    freshness:    0.15
+    relaxation:   0.10
+    completeness: 0.10
+  thresholds:
+    alta:  0.75
+    media: 0.50
+  # un set con mayoría de comparables manuales baja un escalón (doc 14 §7)
+  manual_majority_penalty: true

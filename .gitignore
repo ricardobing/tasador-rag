@@ -1,0 +1,84 @@
+# Secretos — jamás
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+ops/secrets/
+
+# Datos descargados: se regeneran con los scripts.
+# Se versionan SOLO los checksums y los fixtures chicos de test.
+data/raw/
+data/cache/
+# Cache de geocodificación y artefactos de corrida: se regeneran solos y
+# `data/artifacts/` tiene los PDF de informes reales, con direcciones de
+# clientes adentro. Se colaron cuatro json en el commit Q.
+data/geocode/
+data/artifacts/
+data/crewai/
+!data/raw/.gitkeep
+!data/checksums.json
+
+# Golden sets con texto de avisos REALES: contenido de terceros, no se publica.
+# Se cargan igual desde `privado/` (ver tasador.eval.golden).
+tests/golden/privado/
+
+# Artefactos generados
+artifacts/
+*.pdf
+!docs/**/*.pdf
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Sesión guardada de los tests e2e: es una credencial real, aunque sea de
+# un usuario de prueba. Nunca al repo.
+web/e2e/.sesion.json
+web/test-results/
+web/playwright-report/
+
+# Salidas de corridas: los .err y .last-run.json que dejan los scripts y
+# Playwright al pie del repo. Estaba solo `web/test-results/`, y el de la RAÍZ
+# —19 archivos de logs de corridas— entraba al commit.
+test-results/
+
+# Node / Next
+node_modules/
+.next/
+out/
+.turbo/
+
+# Editores y SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Scratch
+scratchpad/
+tmp/
+*.log
+
+# Claves sueltas — nunca al repo
+openrouter.txt
+# La lista de palabras que el gate de publicación busca: es privada por definición
+ops/palabras-privadas.txt
+*.key.txt
+
+# Artefacto incremental de tsc: cambia en cada `npm run typecheck` y no aporta
+# nada al repo. Se colo en el commit O.
+web/tsconfig.tsbuildinfo
+data/eval/
+data/models/

@@ -1,0 +1,290 @@
+# Agentes del grafo — CAPA 1 de 2 en la configuración de modelos.
+#
+#   config/agents.yaml   nodo del grafo  ->  TAREA + PROMPT + parámetros
+#   config/litellm.yaml  TAREA           ->  PROVEEDOR
+#
+# El código pide `nodo("extract_features")` y no sabe qué modelo hay detrás ni
+# qué versión de prompt se usa. Cambiar el modelo del extractor, subir la
+# versión de un prompt, agrandar el batch o APAGAR un nodo entero es editar
+# este archivo. Cero código, cero deploy de imagen.
+#
+# El hash de este archivo + prompts/bundle.lock.json es el
+# `prompt_bundle_version` que se estampa en cada informe. Sin eso, "el sistema
+# mejoró" es una opinión; con eso, es una medición (doc 04 §5).
+
+version: "2026.08.1"
+
+# Se aplican a todo nodo que no los pise.
+defaults:
+  timeout_seconds: 120
+  max_attempts: 2
+  # fail    -> el informe entero falla
+  # degrade -> el informe sigue sin lo que aportaba este nodo
+  # skip    -> no corre
+  on_error: fail
+
+# El orden del grafo es `seq`. No se reordena tocando código.
+nodes:
+
+  - id: normalize_subject
+    seq: 1
+    kind: deterministic
+    descripcion: Dirección normalizada, geocodificada y barrio resuelto
+    # Sin barrio no hay comparables: es mejor fallar acá con un mensaje claro
+    # que producir un informe sobre la zona equivocada (doc 04, nodo 1).
+    on_error: fail
+    params:
+      geocoder: nominatim
+      geocoder_fallback: google      # solo si hay clave configurada
+      cache_days: 90
+
+  - id: retrieve_candidates
+    seq: 2
+    kind: deterministic
+    descripcion: SQL de filtros duros con relajación progresiva (+ puntaje semántico opcional)
+    on_error: fail
+    params:
+      target_candidates: 25          # por debajo de esto se relaja o se captura
+      max_candidates: 60
+      # Relajación progresiva. Cada paso que se usa BAJA la confianza del
+      # informe y queda registrado (doc 04, nodo 2).
+      #
+      # ⚠️ `require_full_detail` — de qué avisos se puede tasar.
+      #
+      # Los cuatro primeros escalones usan SOLO avisos con ficha de detalle: los
+      # que el scraper abrió de verdad, no los que vio de refilón en el listado.
+      # La diferencia, medida el 15/08 sobre 8.248 avisos de Palermo:
+      #
+      #     con ficha (924)   sin ficha (7.324)
+      #     estado        93,8%              0%     <- el coeficiente más grande
+      #     orientación   60,8%              0%
+      #     ambientes     95,7%            0,5%
+      #     baños         94,1%           38,9%
+      #
+      # Un comparable sin estado entra al cálculo con coeficiente 1,00, o sea
+      # que se lo trata como "muy bueno" sin que nadie lo haya dicho.
+      #
+      # El ÚLTIMO escalón lo suelta, y esa es la parte importante: en un barrio
+      # sin avisos enriquecidos —hoy, todo lo que no sea Palermo— el informe
+      # sale igual, por el escalón más bajo y con la confianza que eso implica.
+      # Es preferible a un INSUFFICIENT_DATA que en realidad quiere decir "no
+      # terminamos de scrapear ese barrio".
+      #
+      # Medido en Palermo: el primer escalón junta entre 124 y 294 avisos con
+      # ficha según la tipología, contra un `max_candidates` de 60.
+      relaxation:
+        - {surface_pct: 30, days: 120, scope: barrio_y_limitrofes, rooms_delta: 1, require_full_detail: true}
+        - {surface_pct: 40, days: 120, scope: barrio_y_limitrofes, rooms_delta: 1, require_full_detail: true}
+        - {surface_pct: 40, days: 180, scope: barrio_y_limitrofes, rooms_delta: 1, require_full_detail: true}
+        - {surface_pct: 40, days: 180, scope: comuna,              rooms_delta: 1, require_full_detail: true}
+        - {surface_pct: 40, days: 180, scope: comuna,              rooms_delta: 2, require_full_detail: false}
+      # ── Recuperación semántica (doc 18 §3.4) ─────────────────────────
+      # Mismo filtro duro y misma escalera; lo que cambia es el ORDER BY: el
+      # pool se puntúa por similitud (denso + léxico, fusionados con RRF) en
+      # vez de por recencia. `enabled: false` hasta que la tabla de ablación
+      # de doc 18 §4.3 lo justifique — el criterio está escrito en §4.4.
+      # Requiere el corpus indexado: `scripts/embed_corpus.py`.
+      semantic:
+        enabled: false
+        modo: hibrido                  # denso | lexico | hibrido
+        chunker: C-oraciones-v1
+        model: intfloat/multilingual-e5-large
+        rrf_k: 60
+        usar_notas_del_agente: true    # local: las notas no salen de la máquina
+
+  - id: ondemand_capture
+    seq: 3
+    kind: io
+    descripcion: Captura dirigida a portal cuando el corpus no alcanza
+    # APAGADO: este repo no incluye captura de portales (doc 10 §2.2). El
+    # corpus se alimenta por archivos con `scripts/ingest_csv.py`; el nodo
+    # queda como punto de extensión para quien opere con su propia fuente.
+    enabled: false
+    on_error: degrade
+    params:
+      max_new_listings: 40
+
+  - id: extract_features
+    seq: 4
+    kind: llm
+    descripcion: Estado, orientación, piso y ascensor desde la prosa del aviso
+    task: extractor
+    # ⚠️ VOLVIÓ A v1 el 14/08 a la noche, y es la corrección más cara de la
+    # sesión. Lo que pasó, en orden:
+    #
+    #   13/08  v2 midió MEJOR que v1 contra el golden set (24 avisos de
+    #          Portal B/Belgrano): floor_number 29% -> 71%, global 41% -> 68%.
+    #          Se puso en producción con esa evidencia.
+    #   14/08  Con el corpus real (8.199 avisos, 96% Portal A) se midió cuánto
+    #          OMITE sobre textos que sí declaran el dato:
+    #
+    #            2.704 avisos dicen la orientación -> v2 la extrajo en 31
+    #              989 avisos dicen el piso        -> v2 lo extrajo en 21
+    #
+    #          Experimento controlado, 48 avisos que TODOS declaran la
+    #          orientación, mismo modelo, mismo lote, 3 corridas:
+    #
+    #            v1   orientación 22 · 41 · 43   piso 20 · 30 · 28
+    #            v2   orientación  0 ·  0 ·  0   piso  0 ·  0 ·  0
+    #
+    #          Y las de v1 verifican: 41 de 43 con cita exacta, 2 citas falsas.
+    #
+    # No es que v2 alucine: es que devuelve null en todo. La instrucción que lo
+    # hacía mejor sobre 24 avisos de un portal lo apaga sobre el otro portal,
+    # que es el 96% del corpus. El golden set no vio nada de esto porque no
+    # tiene un solo aviso de Portal A.
+    #
+    # Queda como la decisión abierta #6 de ESTADO: v2 puede seguir siendo mejor
+    # para Portal B, y eso solo se sabe con un golden set que tenga los dos
+    # portales — que es justo lo que hay preparado y sin anotar.
+    prompt: extractor/v1
+    on_error: degrade                # un aviso sin features no entra, no rompe
+    params:
+      # 6 y no 10: con 10 avisos, la salida (16 campos + 5 citas textuales por
+      # aviso) se pasó de `max_tokens` y el lote entero se perdió. Medido el
+      # 13/08 sobre los 22 avisos reales de Belgrano.
+      batch_size: 6
+      # Los lotes son independientes: van en paralelo. 253 s -> ~60 s.
+      max_concurrent_batches: 4
+      temperature: 0.0
+      max_tokens: 16384
+      # Un aviso ya extraído no se vuelve a procesar nunca.
+      cache_by_content_hash: true
+      # Rondas de reintento para los avisos que el modelo OMITE sin avisar.
+      # Medido: sin esto, la mitad de los lotes devolvía 1 de 4 y la cobertura
+      # caía al 70%. Los reintentos van de a un aviso por llamada.
+      max_rondas_omitidos: 2
+      # Por debajo de esto el campo NO se usa para ajustar precio: se guarda,
+      # pero el coeficiente queda en 1,00. "Sin dato, sin ajuste" (doc 05 §4.2).
+      min_field_confidence: 0.70
+
+  - id: dedup_cluster
+    seq: 5
+    kind: hybrid
+    descripcion: El mismo inmueble en varios portales pesa UNA vez
+    task: judge                      # solo para la zona gris de la capa 3
+    prompt: dedup_judge/v1
+    on_error: degrade
+    params:
+      trigram_threshold: 0.85
+      embedding_threshold: 0.92
+      price_tolerance_pct: 5
+      surface_tolerance_m2: 2
+      # En PORCENTAJE y no en m² fijos, para la capa 2. Dos portales publican
+      # el mismo depto con superficies distintas porque uno cuenta el balcón y
+      # el otro no: 93 y 99 m² en el corpus real. Con ±2 m² esos dos quedaban
+      # separados; con ±10% se juntan, y el 93 vs 105 de las dos unidades
+      # distintas del edificio de Zabala sigue separado (Etapa 3 §11.1).
+      surface_tolerance_pct: 10
+      # El juez es ~190x más caro por llamada que el extractor (medido el
+      # 13/08: 519 tokens de salida para responder "ok"). Se le mandan solo
+      # los pares dudosos, y con tope.
+      max_llm_pairs: 15
+
+  - id: curate
+    seq: 6
+    kind: hybrid
+    descripcion: Reglas duras primero, LLM juez después
+    task: judge
+    prompt: curator/v1
+    on_error: degrade
+    params:
+      max_llm_batch: 20
+      # Motivos CERRADOS. El juez no puede inventar uno ni descartar "porque
+      # sí" (doc 04, nodo 6).
+      motivos_permitidos:
+        - permuta_o_financiacion
+        - en_pozo_o_construccion
+        - descripcion_inconsistente
+        - tipologia_distinta
+        - precio_promocional
+
+  - id: adjust_and_value
+    seq: 7
+    kind: deterministic
+    descripcion: EL PRECIO. Determinístico, sin LLM (ADR-002)
+    # Sin `task` a propósito: este nodo NO PUEDE tener un modelo. Si alguien
+    # le agrega uno, el test tests/test_agents_config.py falla.
+    on_error: fail
+    params:
+      config_path: config/adjustments.yaml
+
+  - id: market_context
+    seq: 8
+    kind: crew
+    descripcion: Qué pasa en el mercado del barrio (CrewAI, 2 agentes)
+    task: judge
+    prompt: market_context/v1
+    # Si falla, el informe sale igual, sin la sección de contexto.
+    on_error: degrade
+    params:
+      # secuencial | crewai — ver el docstring de _con_crewai. Con  se
+      # PIERDE el costo por llamada de este nodo: su cliente HTTP no acepta
+      # inyección y los headers de LiteLLM no nos llegan. Por eso el default
+      # no es CrewAI, aunque doc 04 §8 lo plantee.
+      engine: crewai
+      temperature: 0.2
+      max_tokens: 2048
+      agents: [analista_de_zona, redactor_de_contexto]
+      # Las herramientas consultan NUESTRA base, no la web abierta: un agente
+      # navegando internet traería cifras imposibles de auditar y el nodo 10
+      # las rechazaría (doc 04, nodo 8).
+      tools: [market_index, corpus_stats, price_drops, days_on_market]
+
+  - id: write_report
+    seq: 9
+    kind: llm
+    descripcion: Redacta. Recibe los números ya calculados y solo los explica
+    task: writer
+    prompt: writer/v1
+    on_error: fail
+    params:
+      temperature: 0.3
+      max_tokens: 4096
+      tono: profesional_directo      # configurable por tenant
+
+  - id: critic
+    seq: 10
+    kind: hybrid
+    descripcion: Verificación determinística + crítica adversarial
+    task: critic
+    prompt: critic/v1
+    # Si el crítico se cae, el informe NO sale con prosa no verificada.
+    on_error: fail
+    params:
+      temperature: 0.0
+      max_tokens: 4096
+      max_rejections: 2              # al tercero, informe sin narrativa
+      # A dónde vuelve el informe cuando el crítico lo rechaza. El ciclo del
+      # grafo sale de acá, no del código: si mañana hay un nodo de reescritura
+      # distinto, se apunta ahí.
+      reintenta_a: write_report
+      # Tolerancia al comparar una cifra del texto contra la tabla. Cubre el
+      # redondeo del redactor ("USD 182.000" por 181.950), nada más.
+      #
+      # ⚠️ BAJADA de 1,0 a 0,1 el 15/08, y el número sale de una medición.
+      # Con 1,0 y 23 comparables, el conjunto de cifras "trazables" cubría la
+      # MITAD del espacio de precios plausibles: `USD 312.000` inventado pasaba
+      # el control en los tres informes reales que se probaron. Medido sobre un
+      # informe con 23 comparables:
+      #
+      #     tolerancia 0,1%  -> deja pasar el  7,3% de los precios inventados
+      #     tolerancia 0,5%  ->                30,0%
+      #     tolerancia 1,0%  ->                49,2%
+      #     tolerancia 2,0%  ->                70,5%
+      #
+      # 0,1% sigue cubriendo el redondeo real: "USD 182.000" por 181.950 es un
+      # 0,03%.
+      numeric_tolerance_pct: 0.1
+
+  - id: render_pdf
+    seq: 11
+    kind: deterministic
+    descripcion: Markdown + datos -> HTML -> PDF con WeasyPrint
+    # `degrade` y no `fail`: WeasyPrint necesita librerias nativas de GTK que
+    # no estan en Windows (si en el contenedor Linux). Un informe sin PDF
+    # sigue siendo un informe: los numeros, la tabla y la narrativa ya estan
+    # en la base y los devuelve la API.
+    on_error: degrade
+    params:
+      template: informe/v1

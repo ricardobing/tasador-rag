@@ -1,0 +1,242 @@
+# Tasador — stack completo. Un solo `docker compose up` levanta todo.
+# Producción: este archivo tal cual.
+# Desarrollo:  docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+name: tasador
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+services:
+
+  # ── Borde ────────────────────────────────────────────────────────────────
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN:?falta DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@localhost}
+    depends_on: [api, web]
+    networks: [edge, internal]
+    deploy: { resources: { limits: { memory: 128M } } }
+    <<: *logging
+
+  # ── Aplicación ───────────────────────────────────────────────────────────
+  web:
+    build: { context: ./web, dockerfile: ../docker/web.Dockerfile }
+    image: ghcr.io/${GH_OWNER:-local}/tasador-web:${TAG:-dev}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_INTERNAL_URL: http://api:8000
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks: [internal]
+    read_only: true
+    tmpfs: [/tmp, /app/.next/cache]
+    deploy: { resources: { limits: { memory: 512M } } }
+    <<: *logging
+
+  api:
+    build: { context: ., dockerfile: docker/api.Dockerfile }
+    image: ghcr.io/${GH_OWNER:-local}/tasador-api:${TAG:-dev}
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      TASADOR_ROLE: api
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis:    { condition: service_healthy }
+      migrate:  { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "python", "-m", "tasador.healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks: [internal]
+    read_only: true
+    tmpfs: [/tmp]
+    volumes:
+      - artifacts:/data/artifacts
+    deploy: { resources: { limits: { memory: 768M } } }
+    <<: *logging
+
+  worker:
+    build: { context: ., dockerfile: docker/worker.Dockerfile }
+    image: ghcr.io/${GH_OWNER:-local}/tasador-worker:${TAG:-dev}
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      TASADOR_ROLE: worker
+      # los embeddings corren local, en CPU — sin llamadas de red ni costo
+      HF_HOME: /data/models
+      MODELS_DIR: /data/models
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis:    { condition: service_healthy }
+      migrate:  { condition: service_completed_successfully }
+    networks: [internal]
+    volumes:
+      - artifacts:/data/artifacts
+      - models:/data/models
+    deploy: { resources: { limits: { memory: 2560M } } }
+    <<: *logging
+
+  ingest:
+    build: { context: ., dockerfile: docker/worker.Dockerfile }
+    image: ghcr.io/${GH_OWNER:-local}/tasador-worker:${TAG:-dev}
+    command: ["supercronic", "/app/ops/crontab"]
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      TASADOR_ROLE: ingest
+    depends_on:
+      postgres: { condition: service_healthy }
+    networks: [internal]
+    volumes:
+      - rawdata:/data/raw
+    deploy: { resources: { limits: { memory: 512M } } }
+    <<: *logging
+
+  migrate:
+    build: { context: ., dockerfile: docker/api.Dockerfile }
+    image: ghcr.io/${GH_OWNER:-local}/tasador-api:${TAG:-dev}
+    command: ["alembic", "upgrade", "head"]
+    env_file: [.env]
+    depends_on:
+      postgres: { condition: service_healthy }
+    networks: [internal]
+    restart: "no"
+    <<: *logging
+
+  # ── Gateway de modelos (ADR-003) ─────────────────────────────────────────
+  # Todo el código habla OpenAI-compatible contra este servicio.
+  # Cambiar de proveedor = editar config/litellm.yaml. Cero cambios de código.
+  litellm:
+    image: ghcr.io/berriai/litellm:main-stable
+    restart: unless-stopped
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    # NO se le pasa el .env entero, por dos razones:
+    #  1. LiteLLM lee DATABASE_URL y aborta si el esquema no es postgresql://
+    #     puro. El nuestro es el de SQLAlchemy (postgresql+psycopg://) y lo
+    #     rechaza. Fallaba en silencio: el contenedor quedaba "running" sin
+    #     escuchar en el 4000. Medido el 13/08.
+    #  2. Menor privilegio: el gateway no tiene por qué ver SECRET_KEY,
+    #     ENCRYPTION_KEY ni las claves de backup.
+    # Solo lo que necesita para hablar con los proveedores y cachear.
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:?falta LITELLM_MASTER_KEY}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?falta REDIS_PASSWORD}
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+      LANGFUSE_HOST: ${LANGFUSE_HOST:-https://cloud.langfuse.com}
+    volumes:
+      - ./config/litellm.yaml:/app/config.yaml:ro
+    # La imagen de LiteLLM NO trae curl (mismo problema que resolvimos en la
+    # imagen de la API con healthcheck.py). Se usa el Python que ya está.
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:4000/health/liveliness', timeout=4).status==200 else sys.exit(1)"]
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 40s
+    networks: [internal]
+    # 512M NO alcanza: el contenedor moría con SIGKILL (exit 137) apenas
+    # terminaba de registrar los modelos, en loop infinito. `OOMKilled` sale
+    # false en Docker Desktop/WSL2, así que el síntoma visible era "running
+    # pero no escucha" y CERO logs. Medido el 13/08.
+    deploy: { resources: { limits: { memory: 1024M } } }
+    <<: *logging
+
+  # ── Datos ────────────────────────────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tasador}
+      POSTGRES_USER: ${POSTGRES_USER:-tasador}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?falta POSTGRES_PASSWORD}
+      # es-AR para que los ORDER BY de direcciones ordenen bien
+      POSTGRES_INITDB_ARGS: "--locale-provider=icu --icu-locale=es-AR --encoding=UTF8"
+    command:
+      - postgres
+      - -c
+      - shared_buffers=512MB
+      - -c
+      - work_mem=32MB
+      - -c
+      - maintenance_work_mem=256MB
+      - -c
+      - max_connections=60
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./ops/sql/00-extensions.sql:/docker-entrypoint-initdb.d/00-extensions.sql:ro
+      # El backup corre ACÁ y no en `api`. Dos razones: la imagen de la API no
+      # trae `pg_dump` (y meterle postgresql-client son 30 MB para un comando
+      # que se corre una vez por día), y acá el `pg_dump` es exactamente el de
+      # la versión del servidor. `make backup` fallaba con "No such file or
+      # directory" desde el 13/08 — el archivo existía, el contenedor no lo
+      # tenía.
+      - ./ops:/ops:ro
+      - backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tasador} -d ${POSTGRES_DB:-tasador}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks: [internal]
+    deploy: { resources: { limits: { memory: 2048M } } }
+    <<: *logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?falta REDIS_PASSWORD}",
+              "--maxmemory", "384mb", "--maxmemory-policy", "allkeys-lru",
+              "--save", "900", "1"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks: [internal]
+    deploy: { resources: { limits: { memory: 512M } } }
+    <<: *logging
+
+# Solo `caddy` toca la red externa. Postgres y Redis no publican puertos.
+networks:
+  edge:
+  internal:
+    internal: false   # los contenedores necesitan salida a internet (LLM APIs)
+
+volumes:
+  pgdata:
+  redisdata:
+  caddy_data:
+  caddy_config:
+  artifacts:   # PDFs generados
+  models:      # cache de modelos de embeddings
+  rawdata:     # HTML crudo y CSVs descargados
+  backups:     # dumps de `ops/backup.sh`, con su .sha256

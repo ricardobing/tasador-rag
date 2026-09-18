@@ -1,0 +1,193 @@
+/* Estilos base.
+ *
+ * Sin Tailwind todavía: doc 07 lo declara como stack, pero meter la cadena de
+ * build de Tailwind antes de que haya una sola pantalla terminada es agregar
+ * una dependencia que nadie usó aún. Esto es CSS plano con las variables que
+ * despues se mapean a los tokens.
+ *
+ * Lo que sí se respeta desde el día uno son los criterios transversales de
+ * doc 07 §12: mobile first, contraste AA, foco visible.
+ */
+
+:root {
+  --fondo: #ffffff;
+  --texto: #16181d;
+  --tenue: #5c626e;
+  --borde: #e3e5ea;
+  --acento: #1f5f9e;
+  /* El texto del botón. NO es siempre blanco: en modo oscuro `--acento` es un
+     celeste claro y blanco sobre celeste da 2,51:1, contra el 4,5:1 que doc 07
+     §12 pide por AA. El botón "Nuevo informe" es la acción principal del
+     producto y era el único de 14 combinaciones que no llegaba (H-38). */
+  --boton-texto: #ffffff;
+  /* La confianza tiene color propio y siempre visible (doc 07 §12). */
+  --alta: #17703f;
+  --media: #8a5a00;
+  --baja: #6b6f78;
+  /* INSUFFICIENT_DATA va en ámbar y NO en rojo: el sistema funcionó y su
+     respuesta correcta fue "no hay datos con qué" (doc 07 §3). */
+  --ambar: #8a5a00;
+  --ambar-fondo: #fdf6e3;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #14161a;
+    --texto: #eceef2;
+    --tenue: #a2a8b4;
+    --borde: #2a2e36;
+    --acento: #6aa9e0;
+    /* Oscuro sobre el celeste: 7,21:1. Blanco daba 2,51:1. */
+    --boton-texto: #14161a;
+    --alta: #57c98a;
+    --media: #dba63c;
+    --baja: #9aa0aa;
+    --ambar: #dba63c;
+    --ambar-fondo: #2a2313;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+main {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+
+a {
+  color: var(--acento);
+}
+
+/* Foco visible siempre: doc 07 §12 pide navegable por teclado. */
+:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+}
+
+.chip {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.chip-ALTA {
+  color: var(--alta);
+}
+.chip-MEDIA {
+  color: var(--media);
+}
+.chip-BAJA {
+  color: var(--baja);
+}
+
+.aviso {
+  background: var(--ambar-fondo);
+  border: 1px solid var(--ambar);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--borde);
+}
+
+th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--tenue);
+}
+
+.tenue {
+  color: var(--tenue);
+}
+
+.tarjeta {
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 1.1rem 1.25rem;
+}
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: 7px;
+  background: var(--fondo);
+  color: var(--texto);
+  font-size: 1rem;
+}
+
+button {
+  padding: 0.6rem 1.2rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--acento);
+  color: var(--boton-texto);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Mobile first: la tabla de comparables scrollea sola en vez de romper la
+   página, que es lo que pasa cuando el agente entra desde el celular. */
+.scroll-x {
+  overflow-x: auto;
+}
+
+/* La narrativa del informe, ya renderizada por la API. Los `h2` del redactor
+   son secciones dentro del informe, no títulos de página: se bajan de tamaño
+   para que no compitan con el número. */
+.narrativa h2 {
+  font-size: 1.15rem;
+  margin: 1.6rem 0 0.5rem;
+}
+
+.narrativa h3 {
+  font-size: 1rem;
+  margin: 1.2rem 0 0.4rem;
+}
+
+.narrativa p,
+.narrativa li {
+  line-height: 1.65;
+}
+
+.narrativa ul {
+  margin: 0.4rem 0 0.9rem 1.2rem;
+}

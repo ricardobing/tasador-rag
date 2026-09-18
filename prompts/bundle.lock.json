@@ -1,0 +1,30 @@
+{
+  "agents_version": "2026.08.1",
+  "bundle_hash": "08c70a8fdeea",
+  "nodes": {
+    "extract_features": {
+      "task": "extractor",
+      "prompt": "extractor/v1"
+    },
+    "dedup_cluster": {
+      "task": "judge",
+      "prompt": "dedup_judge/v1"
+    },
+    "curate": {
+      "task": "judge",
+      "prompt": "curator/v1"
+    },
+    "market_context": {
+      "task": "judge",
+      "prompt": "market_context/v1"
+    },
+    "write_report": {
+      "task": "writer",
+      "prompt": "writer/v1"
+    },
+    "critic": {
+      "task": "critic",
+      "prompt": "critic/v1"
+    }
+  }
+}

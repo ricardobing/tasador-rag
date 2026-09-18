@@ -1,0 +1,56 @@
+# Caddy: TLS automático, reverse proxy y cabeceras de seguridad.
+# El frontend y la API viven en el MISMO origen a propósito (ver docs/08 §2.1):
+#   /v1/*  -> api    (FastAPI)
+#   /*     -> web    (Next.js)
+# Mismo origen = cookies de sesión simples, sin CORS, sin preflight.
+
+{
+	email {$ACME_EMAIL}
+	admin off
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options    "nosniff"
+		X-Frame-Options           "DENY"
+		Referrer-Policy           "strict-origin-when-cross-origin"
+		Permissions-Policy        "geolocation=(), microphone=(), camera=()"
+		-Server
+		-X-Powered-By
+	}
+
+	# La API
+	handle /v1/* {
+		reverse_proxy api:8000 {
+			header_up X-Real-IP {remote_host}
+			# generar un informe tarda ~90 s; el proxy no debe cortarlo
+			transport http {
+				read_timeout 300s
+			}
+		}
+	}
+
+	# El resto, el frontend
+	handle {
+		reverse_proxy web:3000
+	}
+
+	log {
+		output stdout
+		format json
+		# No loguear el bearer token ni cookies
+		format filter {
+			request>headers>Authorization delete
+			request>headers>Cookie        delete
+		}
+	}
+}
+
+# Política de crawleo pública, referenciada desde el User-Agent del ingestor
+# (docs/10 §2.2). Que puedan escribirnos en vez de bloquearnos.
+{$DOMAIN}/bot {
+	respond "Tasador bot — contacto: contacto@ejemplo.com.ar — respetamos robots.txt y pedidos de baja." 200
+}

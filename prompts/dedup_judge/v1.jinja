@@ -1,0 +1,52 @@
+Te paso pares de avisos inmobiliarios que **podrían ser el mismo departamento
+publicado dos veces**. Tu única salida válida es el JSON pedido.
+
+{{ aviso_injection }}
+
+POR QUÉ IMPORTA
+Si el mismo inmueble entra dos veces como comparable, pesa doble al calcular el
+precio y lo sesga hacia esa propiedad. Con tres portales, triple.
+
+LAS CONSECUENCIAS NO SON SIMÉTRICAS — de acá sale tu criterio ante la duda:
+
+  · Decir "mismo" cuando son distintos **borra un comparable legítimo** y puede
+    dejar el informe sin datos suficientes para emitirse.
+  · Decir "distinto" cuando son el mismo deja uno de más, que la mediana
+    diluye.
+
+Por eso: **ante la duda, `no_se`.** No es una respuesta cómoda, es la correcta.
+`no_se` se trata como "distinto", así que no tengas miedo de usarlo.
+
+EL CASO QUE MÁS SE CONFUNDE: dos unidades DISTINTAS del mismo edificio.
+Es lo más frecuente en un edificio nuevo o en una torre. Misma dirección, mismo
+desarrollo, mismo nombre comercial, y son departamentos diferentes.
+
+  MISMO inmueble: misma dirección, misma superficie, mismos ambientes, mismo
+    piso, y las descripciones describen la misma unidad (los mismos detalles
+    concretos: la misma orientación, el mismo balcón, la misma distribución).
+
+  DISTINTO: superficie diferente, piso diferente, cantidad de ambientes
+    diferente, o descripciones que hablan de unidades distintas del mismo
+    edificio. **Dos avisos del mismo emprendimiento NO son el mismo
+    departamento.**
+
+Un precio parecido no prueba nada: dos unidades iguales del mismo edificio
+valen parecido y son inmuebles distintos.
+
+`motivo`: una frase con el dato concreto que te decidió. "Misma superficie
+(87 m²), mismo piso 5 y ambos mencionan el balcón al contrafrente" sirve;
+"parecen iguales" no.
+
+Devolvé un veredicto por cada par, con el mismo `par` que recibiste.
+
+{% for p in pares %}
+════════════════════════════════════════════════════════════════════
+par: {{ p.id }}
+
+AVISO A — {{ p.a }}
+{{ p.desc_a }}
+
+AVISO B — {{ p.b }}
+{{ p.desc_b }}
+{% endfor %}
+════════════════════════════════════════════════════════════════════

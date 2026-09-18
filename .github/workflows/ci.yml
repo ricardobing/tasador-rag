@@ -1,0 +1,251 @@
+name: CI
+
+# ⚠️ `master` además de `main`. El repo tuvo su primer commit el 15/08 sobre
+# `master`, y con el disparador apuntando solo a `main` el CI habría seguido sin
+# correr una sola vez — que es lo que venía pasando. Cuando la rama se renombre,
+# `master` se saca de acá.
+on:
+  push: { branches: [main, master] }
+  pull_request: { branches: [main, master] }
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Los tests NO tocan internet ni gastan en APIs (ADR-009 + VCR).
+  ENV: test
+  FETCHER_STRATEGY: fixture
+
+jobs:
+
+  quality:
+    name: Lint · tipos · tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: tasador_test
+          POSTGRES_USER: tasador
+          POSTGRES_PASSWORD: test
+        options: >-
+          --health-cmd "pg_isready -U tasador" --health-interval 10s
+          --health-timeout 5s --health-retries 10
+        ports: ["5432:5432"]
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 10s
+          --health-timeout 5s --health-retries 5
+        ports: ["6379:6379"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with: { enable-cache: true }
+      - run: uv sync --extra dev
+
+      # `migrations/` entra al lint desde el 14/08. Estaba afuera y había
+      # acumulado 11 errores que nadie veía, porque el comando del Makefile
+      # decía `src tests scripts` y el "ruff ✅" de la doc se leía como "todo".
+      - name: Lint
+        run: uv run ruff check src tests scripts migrations ops
+
+      # `migrations/` también acá: el lint ya lo incluía y el formato no, así que
+      # una migración mal formateada pasaba. Mismo alcance en los tres pasos y
+      # en el Makefile, que es de donde salen los comandos que corre una persona.
+      - name: Formato
+        run: uv run ruff format --check src tests scripts migrations ops
+
+      - name: Tipos
+        run: uv run mypy src
+
+      # `--cov-fail-under`: el flag `--cov` ya estaba, pero sin umbral la
+      # cobertura era un número que se imprimía y nadie leía. Es un piso para
+      # que no BAJE, no un objetivo.
+      #
+      # ⚠️ Estaba en 60 con la nota "es lo que hay hoy más un poco", y lo que
+      # había era 55,67%: el paso no podía pasar. Nadie lo sabía porque el CI
+      # nunca corrió. Se baja a 57 —lo que hay al 15/08, después de sumar
+      # `tests/test_runner.py` y `tests/test_critic.py`— y se sube a medida que
+      # entren los módulos que hoy están en 0%: `eval/run.py` (el gate de
+      # calidad), `eval/backtest.py` y `eval/componentes.py`.
+      #
+      # Poner un piso por encima del suelo no es exigente: es un gate que se
+      # aprende a ignorar.
+      - name: Tests
+        env:
+          DATABASE_URL: postgresql+psycopg://tasador:test@localhost:5432/tasador_test
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-para-ci-solamente
+          ENCRYPTION_KEY: test-encryption-para-ci-solamente
+          LITELLM_MASTER_KEY: sk-test
+        run: |
+          uv run pytest -m "not live" --cov=tasador --cov-report=term-missing \
+                        --cov-fail-under=57
+
+      # Los tests que tocan la base se saltean si falta DATABASE_URL. Acá SÍ
+      # está definida, así que tienen que correr: si se saltearan, el job daría
+      # verde sin haber probado ni el aislamiento entre tenants ni el contrato
+      # HTTP. Un gate que puede evaporarse en silencio no es un gate.
+      - name: Que los tests de base NO se hayan salteado
+        env:
+          DATABASE_URL: postgresql+psycopg://tasador:test@localhost:5432/tasador_test
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-para-ci-solamente
+          ENCRYPTION_KEY: test-encryption-para-ci-solamente
+          LITELLM_MASTER_KEY: sk-test
+        run: |
+          uv run pytest tests/test_reports_api.py tests/architecture -q \
+            | tee /tmp/salida.txt
+          if grep -qE '[1-9][0-9]* skipped' /tmp/salida.txt; then
+            echo "::error::hay tests salteados con DATABASE_URL definida"
+            exit 1
+          fi
+
+      # La migración tiene que aplicar sobre una base VACÍA, sin depender de
+      # `ops/sql/00-extensions.sql` — que es un init script del contenedor de
+      # Postgres y no corre acá. Lo descubrió el schema `eval`: estaba en
+      # MANAGED_SCHEMAS y no lo creaba nadie.
+      - name: Migraciones desde cero
+        env:
+          DATABASE_URL: postgresql+psycopg://tasador:test@localhost:5432/tasador_test
+          SECRET_KEY: test-secret-para-ci-solamente
+          ENCRYPTION_KEY: test-encryption-para-ci-solamente
+          LITELLM_MASTER_KEY: sk-test
+        run: |
+          PGPASSWORD=test psql -h localhost -U tasador -d tasador_test \
+            -f ops/sql/00-extensions.sql
+          uv run alembic upgrade head
+          uv run alembic check
+
+      # Cada tenant solo ve lo suyo. Si alguna query pierde el filtro de
+      # org_id, esto falla (doc 03 §6).
+      #
+      # ⚠️ Hasta el 14/08 `tests/architecture/` era un directorio VACÍO: pytest
+      # devolvía exit 5 ("no tests ran") y el job salía en rojo con un mensaje
+      # que se lee como un problema de configuración. El gate de aislamiento
+      # multi-tenant no existía. `--strict-markers` y el chequeo de arriba están
+      # para que eso no pueda volver a pasar en silencio.
+      - name: Aislamiento entre tenants
+        env:
+          DATABASE_URL: postgresql+psycopg://tasador:test@localhost:5432/tasador_test
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-para-ci-solamente
+          ENCRYPTION_KEY: test-encryption-para-ci-solamente
+          LITELLM_MASTER_KEY: sk-test
+        run: uv run pytest tests/architecture -v
+
+  secrets:
+    name: Secretos filtrados
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+
+  build:
+    name: Imágenes
+    runs-on: ubuntu-latest
+    needs: [quality]
+    strategy:
+      matrix:
+        # `web` entró el 14/08: su Dockerfile no existía y `docker compose
+        # build` fallaba entero, con él `make up`, `make dev` y la instrucción
+        # de arranque de ESTADO §8. El CI no lo veía porque solo construía api
+        # y worker.
+        #
+        # El contexto de `web` es ./web y no la raíz — así lo declara
+        # docker-compose.yml, y construirlo con otro contexto probaría una
+        # imagen distinta de la que se despliega.
+        include:
+          - { image: api, context: ".", target: runtime }
+          - { image: worker, context: ".", target: "" }
+          - { image: web, context: "./web", target: runtime }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      # `ops/verificar_imagen.py` solo usa la biblioteca estándar, pero se corre
+      # con `python` del runner y no hace falta `uv sync`.
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: docker/${{ matrix.image }}.Dockerfile
+          push: false
+          load: true
+          tags: tasador-${{ matrix.image }}:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      # ⚠️ EL GATE QUE FALTABA. El 15/08 la imagen que se desplegaba estaba 12
+      # archivos atrás y le faltaban tres módulos enteros: cinco endpoints
+      # daban 404 y el rate limit del login no existía, todos declarados ✅ en
+      # ESTADO. En desarrollo no se veía porque el override monta ./src por
+      # volumen, y nada comparaba el tag con el código.
+      #
+      # Solo para api y worker: `web` no tiene código Python.
+      - name: La imagen es el repo
+        if: matrix.image != 'web'
+        run: python ops/verificar_imagen.py --imagen tasador-${{ matrix.image }}:ci
+
+      - name: Vulnerabilidades
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: tasador-${{ matrix.image }}:ci
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+
+  # Gate de calidad del modelo: si cambian los prompts, los coeficientes o el
+  # motor de valuación, hay que probar que no empeoró (doc 09 §5).
+  eval-gate:
+    name: Backtest (gate)
+    runs-on: ubuntu-latest
+    needs: [quality]
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: ¿Cambió algo que afecte la calidad?
+        id: check
+        run: |
+          if git diff --name-only origin/main...HEAD | \
+             grep -qE '^(prompts/|config/adjustments\.yaml|src/tasador/valuation/)'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Sin cambios en prompts/coeficientes/valuación — se omite."
+          fi
+      - uses: astral-sh/setup-uv@v4
+        if: steps.check.outputs.run == 'true'
+      # El backtest LEE EL CORPUS de la base: sin BA Data cargado no hay casos.
+      # Este paso está declarado y desactivado a propósito. Se enciende cuando
+      # el runner tenga de dónde cargar el corpus (dump restaurado o volumen
+      # cacheado).
+      #
+      # El motivo original era que "correrlo contra una base vacía daría 0
+      # casos evaluados y un gate verde, que es peor que no tener gate". Eso ya
+      # NO puede pasar: desde H-44 el gate corta si evaluó menos de
+      # `--min-casos` (50 por default), antes de mirar el MdAPE, y con estos
+      # mismos flags. Verificado en `tests/test_eval_gate.py`.
+      #
+      # Sigue desactivado porque sin corpus el paso no aporta nada, pero ya no
+      # es una casilla que al tildarse mienta.
+      - name: Muestra de backtest (pendiente de corpus en el runner)
+        if: steps.check.outputs.run == 'true' && vars.EVAL_CORPUS_LISTO == 'true'
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          DATABASE_URL: ${{ secrets.EVAL_DATABASE_URL }}
+        run: |
+          uv sync --extra dev
+          uv run python -m tasador.eval.run --dataset BADATA_2015_2020 --sample 300 \
+                                            --fail-if-mdape-worse-than 2.0
+      - name: Avisar que el gate de calidad no corrió
+        if: steps.check.outputs.run == 'true' && vars.EVAL_CORPUS_LISTO != 'true'
+        run: |
+          echo "::warning::Cambiaron prompts/coeficientes/valuación y el backtest NO corrió:"
+          echo "::warning::falta corpus en el runner. Correrlo a mano antes de mergear:"
+          echo "::warning::  make eval   (o  uv run python -m tasador.eval.run --history)"

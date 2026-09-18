@@ -1,0 +1,131 @@
+{# Plantilla del PDF. WeasyPrint soporta CSS Paged Media, así que los
+   encabezados, pies y saltos de página se resuelven en CSS y no armando el
+   documento a mano.
+
+   Sin recursos externos a propósito: ni fuentes, ni CSS, ni imágenes por URL.
+   Un PDF que depende de la red falla en silencio cuando no hay red, y este
+   documento se le entrega a un cliente. #}
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<title>Informe de Mercado Comparativo — {{ direccion }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 18mm 22mm 18mm;
+    @top-right {
+      content: "{{ org }} · Informe de Mercado Comparativo";
+      font: 8pt "Helvetica", sans-serif; color: #6b7280;
+    }
+    @bottom-left {
+      content: "{{ direccion }} · {{ fecha }}";
+      font: 7.5pt "Helvetica", sans-serif; color: #9ca3af;
+    }
+    @bottom-right {
+      content: "Página " counter(page) " de " counter(pages);
+      font: 7.5pt "Helvetica", sans-serif; color: #9ca3af;
+    }
+  }
+  body { font: 10.5pt/1.55 "Helvetica", sans-serif; color: #111827; }
+  h1 { font-size: 19pt; margin: 0 0 2mm; }
+  h2 { font-size: 12.5pt; margin: 8mm 0 2mm; color: #1f2937;
+       border-bottom: 0.4pt solid #d1d5db; padding-bottom: 1.5mm;
+       /* Un título solo al pie de la página se lee como un error de armado. */
+       break-after: avoid; }
+  p { margin: 0 0 3mm; text-align: justify; }
+
+  .sub { color: #6b7280; font-size: 9pt; margin-bottom: 6mm; }
+
+  .valor { background: #f9fafb; border: 0.4pt solid #e5e7eb; border-radius: 2mm;
+           padding: 5mm; margin: 4mm 0 6mm; break-inside: avoid; }
+  .valor .cifra { font-size: 21pt; font-weight: bold; }
+  .valor .rango { color: #4b5563; font-size: 9.5pt; margin-top: 1.5mm; }
+
+  /* La advertencia de confianza BAJA va visible en la primera página, no en
+     un footer de 6pt (doc 05 §7). */
+  .aviso { background: #fef3c7; border-left: 3pt solid #d97706;
+           padding: 4mm 5mm; margin: 4mm 0; font-size: 9.5pt;
+           break-inside: avoid; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 8.5pt;
+          margin: 3mm 0 5mm; }
+  th { text-align: left; background: #f3f4f6; padding: 2mm;
+       border-bottom: 0.5pt solid #d1d5db; font-weight: 600; }
+  td { padding: 1.8mm 2mm; border-bottom: 0.3pt solid #f3f4f6; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.fuera td { color: #9ca3af; }
+  thead { display: table-header-group; }  /* se repite al cortar la página */
+
+  .pie { margin-top: 8mm; padding-top: 3mm; border-top: 0.4pt solid #e5e7eb;
+         font-size: 7.5pt; color: #6b7280; }
+  .pie code { font-size: 7pt; }
+</style>
+</head>
+<body>
+
+<h1>Informe de Mercado Comparativo</h1>
+<div class="sub">{{ direccion }}{% if barrio %} · {{ barrio }}{% endif %} · {{ fecha }}</div>
+
+<div class="valor">
+  <div>Precio de publicación sugerido</div>
+  <div class="cifra">{{ moneda }} {{ valor_medio }}</div>
+  <div class="rango">
+    Rango de confianza: {{ moneda }} {{ valor_min }} — {{ valor_max }}<br>
+    Si publicás al valor sugerido, esperá cerrar entre {{ moneda }} {{ cierre_min }} y {{ cierre_max }}
+  </div>
+</div>
+
+{% if confianza_baja %}
+<div class="aviso">
+  <strong>Confianza baja.</strong> Esta estimación se apoya en pocos comparables
+  o en un mercado muy heterogéneo. Tomala como una referencia de orden de
+  magnitud y no como un valor cerrado; la sección de limitaciones explica por qué.
+</div>
+{% endif %}
+
+{{ narrativa_html }}
+
+{% if comparables %}
+<h2>Comparables</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Origen</th><th>Dirección</th>
+      <th class="num">Precio</th><th class="num">m²</th>
+      <th class="num">USD/m²</th><th class="num">Ajustado</th>
+      <th>Estado</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for c in comparables %}
+    <tr class="{{ '' if c.included else 'fuera' }}">
+      <td>{{ c.source }}</td>
+      <td>{{ c.direccion or '—' }}</td>
+      <td class="num">{{ c.precio }}</td>
+      <td class="num">{{ c.superficie or '—' }}</td>
+      <td class="num">{{ c.usd_m2 or '—' }}</td>
+      <td class="num">{{ c.usd_m2_ajustado or '—' }}</td>
+      <td>{{ 'usado' if c.included else c.motivo }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{# La trazabilidad va IMPRESA, no escondida: es lo que permite auditar este
+   documento seis meses después. #}
+<div class="pie">
+  Informe generado el {{ fecha }} · {{ comparables_usados }} de
+  {{ comparables_encontrados }} avisos utilizados · confianza {{ confianza }}<br>
+  Versiones — motor <code>{{ engine_version }}</code>,
+  método <code>{{ method_version }}</code>,
+  prompts <code>{{ prompt_bundle_version }}</code> · informe
+  <code>{{ report_id }}</code><br>
+  Los valores corresponden a precios de publicación, no de escrituración.
+  Este informe no constituye una tasación con validez legal, que debe estar
+  firmada por un martillero matriculado.
+</div>
+
+</body>
+</html>

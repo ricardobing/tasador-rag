@@ -1,0 +1,200 @@
+# LiteLLM — gateway único de modelos (ADR-003).
+#
+# CAPA 1 de 2 en la configuración de modelos:
+#
+#   config/agents.yaml   nodo del grafo  ->  TAREA   ("nodo 4" -> "extractor")
+#   config/litellm.yaml  TAREA           ->  PROVEEDOR  (este archivo)
+#
+# El código no nombra proveedores ni modelos: pide una tarea. Cambiar de
+# DeepSeek a GPT-4o del cliente = editar este archivo. Cero código.
+#
+# Estado 13/08/2026: la única clave cargada es OPENROUTER_API_KEY. Los
+# proveedores directos (DEEPSEEK_API_KEY, ANTHROPIC_API_KEY) están vacíos en
+# el .env, así que todo sale por OpenRouter.
+#
+# ⚠ UNA TAREA = UN DESPLIEGUE. Con `simple-shuffle`, dos entradas con el mismo
+# `model_name` NO son primario y fallback: el router las SORTEA. Lo medimos —
+# una de cada dos llamadas a `extractor` se iba a un modelo distinto. La
+# degradación se declara explícita abajo, en `router_settings.fallbacks`.
+#
+# Precios y capacidades reales de OpenRouter al 13/08/2026 (USD por millón de
+# tokens), consultados contra /api/v1/models:
+#
+#   MODELO                            in      out     contexto    structured
+#   deepseek/deepseek-v4-flash        0.140   0.280   1.048.576   sí
+#   qwen/qwen3-30b-a3b-instruct-2507  0.048   0.193     262.144   sí
+#   deepseek/deepseek-chat            0.257   1.029     163.840   sí
+#   z-ai/glm-4.6                      0.500   2.000     202.752   sí
+#   qwen/qwen3-max                    0.780   3.900     262.144   sí
+#   anthropic/claude-sonnet-4.5       3.000  15.000   1.000.000   sí
+#
+# Esos precios están declarados abajo como `model_info`. LiteLLM no conoce el
+# costo de los modelos que no están en su tabla interna, y sin eso hay dos
+# consecuencias: `x-litellm-response-cost` puede venir en 0, y no hay forma de
+# calcular el gasto de una librería que no nos deja ver sus respuestas —el caso
+# de CrewAI. Declararlos acá deja UNA sola fuente de verdad, versionada, y sin
+# números de precio sueltos en el código Python.
+
+model_list:
+
+  # ── extractor ── el caballo de batalla: ~40 avisos por informe, en batch.
+  #
+  # v4-flash sobre deepseek-chat NO es una decisión de costo: tiene 1M de
+  # contexto contra 164k (un batch de 40 avisos con descripciones de 1.700
+  # caracteres entra sin transpirar), soporta structured outputs nativo —que
+  # es de lo que depende instructor— y además sale 3,7x menos en salida.
+  # Cuando el costo y la capacidad apuntan al mismo lado, no hay trade-off.
+  - model_name: extractor
+    litellm_params:
+      model: openrouter/deepseek/deepseek-v4-flash
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.0
+      max_tokens: 16384
+    model_info:
+      input_cost_per_token: 1.400e-07
+      output_cost_per_token: 2.800e-07
+
+  # Degradación del extractor.
+  - model_name: extractor_backup
+    litellm_params:
+      model: openrouter/qwen/qwen3-30b-a3b-instruct-2507
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.0
+      max_tokens: 8192
+    model_info:
+      input_cost_per_token: 4.800e-08
+      output_cost_per_token: 1.930e-07
+
+  # ── judge ── dedup, curaduría y contexto de mercado.
+  #
+  # MEDIDO el 13/08 con `check_models.py --structured`, misma extracción
+  # trivial de 4 campos, mismo schema:
+  #
+  #     deepseek-v4-flash    1.566 ms     31 tok salida   USD 0.000013
+  #     z-ai/glm-4.6        44.869 ms  1.180 tok salida   USD 0.002080
+  #
+  # Los dos aciertan. GLM-4.6 es de razonamiento: piensa antes de responder, y
+  # lo cobra en tokens y en latencia. 45 s por llamada no entra en el
+  # presupuesto de doc 09 §4 (p95 ≤ 180 s por informe COMPLETO): el nodo 5
+  # solo, con sus 15 pares dudosos, se lo comería once veces.
+  #
+  # Por eso el juez de línea es v4-flash y el razonador queda abajo como
+  # `judge_deep`, para la escalada de casos genuinamente ambiguos — que es
+  # exactamente la capa 3 de la cascada de doc 04 (nodo 5). Cuál gana en
+  # precisión se decide en la Fase 4 contra el golden set, con el número.
+  - model_name: judge
+    litellm_params:
+      model: openrouter/deepseek/deepseek-v4-flash
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.1
+      max_tokens: 16384
+    model_info:
+      input_cost_per_token: 1.400e-07
+      output_cost_per_token: 2.800e-07
+
+  # El razonador, para la zona gris. Caro y lento a propósito: se lo llama
+  # poco y cuando el barato no alcanza.
+  - model_name: judge_deep
+    litellm_params:
+      model: openrouter/z-ai/glm-4.6
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.1
+      max_tokens: 8192
+    model_info:
+      input_cost_per_token: 5.000e-07
+      output_cost_per_token: 2.000e-06
+
+  - model_name: judge_backup
+    litellm_params:
+      model: openrouter/qwen/qwen3-30b-a3b-instruct-2507
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.1
+      max_tokens: 8192
+    model_info:
+      input_cost_per_token: 4.800e-08
+      output_cost_per_token: 1.930e-07
+
+  # ── flash ── tarea de DESARROLLO. Ningún nodo la usa por defecto.
+  #
+  # Existe para iterar barato sin degradar la configuración real: mientras se
+  # ajusta un prompt del juez o del redactor se apunta ese nodo acá con
+  #     TASADOR_TASK_CURATE=flash
+  # y se vuelve solo con sacar la variable. Así el YAML que se versiona sigue
+  # describiendo la configuración de producción y no la del último experimento.
+  - model_name: flash
+    litellm_params:
+      model: openrouter/deepseek/deepseek-v4-flash
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.0
+      max_tokens: 16384
+    model_info:
+      input_cost_per_token: 1.400e-07
+      output_cost_per_token: 2.800e-07
+
+  # ── writer ── redacta el informe. Los números ya vienen calculados.
+  - model_name: writer
+    litellm_params:
+      model: openrouter/qwen/qwen3-max
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.3
+      max_tokens: 4096
+    model_info:
+      input_cost_per_token: 7.800e-07
+      output_cost_per_token: 3.900e-06
+
+  # ── critic ── el ÚNICO caro, y a propósito. Es la garantía de que no sale
+  # un informe con una cifra inventada. Ahorrar acá es ahorrar en lo que
+  # justifica el producto.
+  - model_name: critic
+    litellm_params:
+      model: openrouter/anthropic/claude-sonnet-4.5
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.0
+      max_tokens: 4096
+    model_info:
+      input_cost_per_token: 3.000e-06
+      output_cost_per_token: 1.500e-05
+
+router_settings:
+  routing_strategy: simple-shuffle
+  num_retries: 2
+  timeout: 120
+  allowed_fails: 3
+  cooldown_time: 60
+  # Degradación explícita, en orden. Primero el reemplazo barato de la misma
+  # categoría; recién si eso también cae, el juez. Un informe caro es mejor
+  # que un informe fallado, pero no es la primera opción.
+  fallbacks:
+    - extractor: ["extractor_backup", "judge"]
+    - judge: ["judge_backup", "judge_deep"]
+    - judge_deep: ["judge"]
+    - writer: ["judge"]
+    - critic: ["judge_deep", "judge"]
+
+litellm_settings:
+  drop_params: true
+  set_verbose: false
+  # Caché por hash del prompt: reprocesar los mismos avisos sale gratis.
+  # Es lo que hace que iterar sobre el prompt del extractor no queme crédito.
+  cache: true
+  cache_params:
+    type: redis
+    host: redis
+    port: 6379
+    password: os.environ/REDIS_PASSWORD
+    ttl: 604800          # 7 días
+  # ── Langfuse ──────────────────────────────────────────────────────────
+  # Apagado a propósito: LANGFUSE_PUBLIC_KEY y LANGFUSE_SECRET_KEY están
+  # vacías. Con las claves vacías el callback falla en cada request y ensucia
+  # todas las respuestas. Para encenderlo: cargar las dos claves en .env y
+  # descomentar estas dos líneas. La traza auditable mientras tanto vive en
+  # core.report_events, que además es la que consume el producto.
+  # success_callback: ["langfuse"]
+  # failure_callback: ["langfuse"]
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  # Tope duro de gasto. El crédito real en OpenRouter es ~USD 7; esto corta
+  # en 5 y deja margen. Si algo entra en loop, corta acá y no en la tarjeta.
+  max_budget: 5
+  budget_duration: 30d

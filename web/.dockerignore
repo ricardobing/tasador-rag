@@ -1,0 +1,7 @@
+# node_modules se instala DENTRO de la imagen: copiar los del host mete
+# binarios compilados para Windows en una imagen Alpine y falla en runtime, no
+# en el build — que es la peor forma de fallar.
+node_modules
+.next
+.turbo
+npm-debug.log*

@@ -1,0 +1,140 @@
+# Overrides de desarrollo.
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# Diferencias con producción:
+#   - código montado desde el host (hot reload)
+#   - Postgres y Redis exponen puertos al host (para DBeaver, psql, etc.)
+#   - sin read_only, para poder escribir mientras se desarrolla
+#   - sin Caddy: se entra directo a los puertos
+
+services:
+
+  caddy:
+    profiles: ["donotstart"]     # en dev no hace falta TLS
+
+  api:
+    build:
+      target: runtime
+    command: ["uvicorn", "tasador.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./src:/app/src:ro
+      - ./config:/app/config:ro
+      - ./prompts:/app/prompts:ro
+      - ./templates:/app/templates:ro
+      - ./scripts:/app/scripts:ro
+      - ./migrations:/app/migrations:ro
+      - ./data:/data/raw
+    ports: ["8000:8000"]
+    environment:
+      ENV: development
+      LOG_LEVEL: DEBUG
+      # WeasyPrint usa fontconfig, que necesita un cache escribible. Sin esto
+      # imprime "No writable cache directories" en cada PDF y re-escanea las
+      # fuentes cada vez.
+      # WeasyPrint (fontconfig) y CrewAI (appdirs) escriben en $HOME por
+      # defecto, y en el contenedor /home/app no es escribible. Se resuelve
+      # con las variables XDG, que es la palanca real: `CREWAI_STORAGE_DIR`
+      # pese al nombre es el NOMBRE de la app, no la ruta.
+      XDG_CACHE_HOME: /tmp/cache
+      XDG_DATA_HOME: /tmp/data
+      # CrewAI manda trazas afuera y escribe un token en $HOME. Este
+      # sistema procesa datos de clientes: doc 10 seccion 3 dice que sale
+      # y hacia donde, y la telemetria de una libreria no esta en la lista.
+      CREWAI_DISABLE_TELEMETRY: "true"
+      CREWAI_TRACING_ENABLED: "false"
+      # Y HOME escribible: CrewAI toca $HOME aunque la telemetria este
+      # apagada. /home/app no existe en la imagen y el usuario no puede
+      # crearlo. Con esto la crew arranca; sin esto degrada en silencio.
+      HOME: /tmp/home
+    read_only: false
+
+  worker:
+    command: ["arq", "tasador.worker.WorkerSettings", "--watch", "/app/src"]
+    volumes:
+      - ./src:/app/src:ro
+      - ./config:/app/config:ro
+      - ./prompts:/app/prompts:ro
+      - ./templates:/app/templates:ro
+      - ./data:/data/raw
+    environment:
+      ENV: development
+      LOG_LEVEL: DEBUG
+      # WeasyPrint (fontconfig) y CrewAI (appdirs) escriben en $HOME por
+      # defecto, y en el contenedor /home/app no es escribible. Se resuelve
+      # con las variables XDG, que es la palanca real: `CREWAI_STORAGE_DIR`
+      # pese al nombre es el NOMBRE de la app, no la ruta.
+      XDG_CACHE_HOME: /tmp/cache
+      XDG_DATA_HOME: /tmp/data
+      # CrewAI manda trazas afuera y escribe un token en $HOME. Este
+      # sistema procesa datos de clientes: doc 10 seccion 3 dice que sale
+      # y hacia donde, y la telemetria de una libreria no esta en la lista.
+      CREWAI_DISABLE_TELEMETRY: "true"
+      CREWAI_TRACING_ENABLED: "false"
+      # Y HOME escribible: CrewAI toca $HOME aunque la telemetria este
+      # apagada. /home/app no existe en la imagen y el usuario no puede
+      # crearlo. Con esto la crew arranca; sin esto degrada en silencio.
+      HOME: /tmp/home
+    read_only: false
+
+  ingest:
+    profiles: ["ingest"]         # se levanta a mano: --profile ingest
+
+  web:
+    build:
+      target: dev
+    # ⚠️ TAG PROPIO, y no es cosmético.
+    #
+    # `docker-compose.yml` no declara `target`, así que construye la última
+    # etapa (`runtime`, con `node server.js` y sin las herramientas de dev).
+    # Este override construye `dev`. Si las dos escriben el MISMO tag, la que
+    # corrió última gana y la otra se usa creyendo que es la propia.
+    #
+    # El síntoma medido el 14/08: `make build` dejó la imagen `runtime` bajo el
+    # tag compartido, y `up` con este override arrancó ESA imagen con el comando
+    # de dev. Resultado: `sh: next: not found` y el contenedor en loop de
+    # reinicio — un error que apunta a las dependencias cuando el problema era
+    # de tags. Con api y worker no pasaba porque su etapa de dev y la de
+    # producción son la misma.
+    image: tasador-web:dev-local
+    command: ["npm", "run", "dev"]
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    # El puerto del HOST es configurable y el del contenedor no.
+    #
+    # En Windows, Hyper-V/WinNAT reserva rangos de puertos dinámicos y el 3000
+    # cae adentro seguido. El síntoma es feo de diagnosticar porque no dice
+    # "puerto ocupado" sino:
+    #
+    #   bind: An attempt was made to access a socket in a way forbidden by its
+    #   access permissions
+    #
+    # ...con NADA escuchando en 3000. Se confirma con
+    # `netsh interface ipv4 show excludedportrange protocol=tcp`.
+    # Verificado el 14/08: el rango 2992-3091 estaba reservado.
+    #
+    # Salida:  WEB_PORT=3001 docker compose ... up
+    ports: ["${WEB_PORT:-3000}:3000"]
+    environment:
+      NODE_ENV: development
+      # Modo desarrollo SIN login: el front manda `X-Org-Slug` y el middleware
+      # no rebota a `/login`. Sirve para levantar el stack antes de haber
+      # creado un usuario.
+      #
+      # Está SOLO acá y no en docker-compose.yml a propósito: en producción la
+      # variable no existe, y aunque alguien la definiera, la API ignora el
+      # header cuando `ENV=production` (v1/auth.py). Dos candados, porque el
+      # primero es de conveniencia y el segundo es el que importa.
+      #
+      # Para probar el login de verdad en dev: TASADOR_ORG_SLUG= (vacío).
+      TASADOR_ORG_SLUG: "${TASADOR_ORG_SLUG-inmo-demo}"
+    read_only: false
+
+  postgres:
+    ports: ["5433:5432"]         # 5433 para no chocar con un Postgres local
+
+  redis:
+    ports: ["6380:6379"]
+
+  litellm:
+    ports: ["4000:4000"]

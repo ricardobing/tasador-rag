@@ -169,7 +169,10 @@ async def _registrar(
             report_id=report_id,
             seq=int(ultimo) + 1,
             node="ask",
-            status="OK" if not r.rechazada else "REJECTED",
+            # El CHECK de `report_events.status` admite STARTED/OK/RETRIED/
+            # FAILED/SKIPPED. Una pregunta rechazada no falló: se decidió no
+            # responder. Es SKIPPED, con el motivo en `detail`.
+            status="OK" if not r.rechazada else "SKIPPED",
             model=r.usos[-1].provider_model if r.usos else None,
             tokens_in=sum(u.tokens_in for u in r.usos) or None,
             tokens_out=sum(u.tokens_out for u in r.usos) or None,

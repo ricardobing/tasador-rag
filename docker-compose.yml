@@ -55,6 +55,11 @@ services:
     env_file: [.env]
     environment:
       TASADOR_ROLE: api
+      # «Preguntale al informe» embebe en la API (doc 18 §5): el modelo vive en
+      # el mismo volumen que usa el worker. Sin esto, `/app` es read-only y la
+      # descarga del modelo falla con FileNotFoundError.
+      HF_HOME: /data/models
+      MODELS_DIR: /data/models
     depends_on:
       postgres: { condition: service_healthy }
       redis:    { condition: service_healthy }
@@ -70,7 +75,8 @@ services:
     tmpfs: [/tmp]
     volumes:
       - artifacts:/data/artifacts
-    deploy: { resources: { limits: { memory: 768M } } }
+      - models:/data/models
+    deploy: { resources: { limits: { memory: 1536M } } }
     <<: *logging
 
   worker:

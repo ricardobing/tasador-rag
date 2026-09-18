@@ -221,6 +221,12 @@ jobs:
         run: |
           cp .env.example .env
           sed -i             -e 's/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=ci-postgres/'             -e 's#^DATABASE_URL=.*#DATABASE_URL=postgresql+psycopg://tasador:ci-postgres@postgres:5432/tasador#'             -e 's/^REDIS_PASSWORD=.*/REDIS_PASSWORD=ci-redis/'             -e 's#^REDIS_URL=.*#REDIS_URL=redis://:ci-redis@redis:6379/0#'             -e 's/^SECRET_KEY=.*/SECRET_KEY=ci-secret-key-que-no-vale-fuera-del-runner-0123456789abcdef/'             -e 's/^ENCRYPTION_KEY=.*/ENCRYPTION_KEY=ci-encryption-key-que-no-vale-fuera-del-runner-0123456789/'             -e 's/^LITELLM_MASTER_KEY=.*/LITELLM_MASTER_KEY=sk-ci-local/'             -e 's/^OPENROUTER_API_KEY=.*/OPENROUTER_API_KEY=sk-or-sin-clave-en-el-ci/'             -e 's/^PORTALES=.*/PORTALES=demo-a=PORTAL_A,demo-b=PORTAL_B/'             .env
+      # El override monta ./data en /data/raw y el contenedor corre como el
+      # usuario `app` (uid 10001); en el runner la carpeta es del uid 1001 y el
+      # geocoder no puede crear /data/raw/geocode (PermissionError, primer run).
+      # En Docker Desktop no se ve porque los bind mounts son permisivos.
+      - name: Permisos de ./data para el usuario del contenedor
+        run: chmod -R a+rwX data
       - name: Levantar el stack de desarrollo
         run: |
           docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build --wait --wait-timeout 900

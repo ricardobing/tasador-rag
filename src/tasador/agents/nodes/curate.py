@@ -229,7 +229,8 @@ async def curate(state: ReportState, cfg: NodeConfig) -> NodeResult:
 
     # ── Fase 2: LLM juez sobre lo que sobrevivió ─────────────────────────
     ledger = UsageLedger()
-    citas_falsas = descartes_llm = 0
+    citas_falsas = descartes_llm = lotes_sin_juez = 0
+    lotes: list[list[Candidate]] = []
     permitidos = set(cfg.param("motivos_permitidos") or [])
 
     if vivos:
@@ -272,6 +273,7 @@ async def curate(state: ReportState, cfg: NodeConfig) -> NodeResult:
             for lote, (salida, usos) in zip(lotes, salidas, strict=True):
                 ledger.extend(usos)
                 if salida is None:
+                    lotes_sin_juez += 1
                     continue
                 por_ref = {c["listing_id"]: c for c in lote}
                 for v in salida.veredictos:
@@ -296,6 +298,12 @@ async def curate(state: ReportState, cfg: NodeConfig) -> NodeResult:
 
     quedan = sum(1 for c in candidatos if c.get("included", True))
     s = get_settings()
+    if lotes_sin_juez:
+        # Sin juez, sobreviven todos: es una degradación, y el informe tiene que
+        # poder decirlo. El eval de recuperación (eval/juicios.py) lo lee para
+        # NO guardar juicios que en realidad nadie juzgó (18/09: un gateway
+        # caído dejó 41 consultas "juzgadas" con todo en grado 2).
+        log.warning("curaduría degradada: lotes sin juez", lotes=lotes_sin_juez, de=len(lotes))
 
     log.info(
         "curaduría terminada",
@@ -313,6 +321,7 @@ async def curate(state: ReportState, cfg: NodeConfig) -> NodeResult:
                 "quedan": quedan,
                 "por_reglas": duros,
                 "por_juez": descartes_llm,
+                "lotes_sin_juez": lotes_sin_juez,
             },
         },
         detail={
@@ -320,6 +329,7 @@ async def curate(state: ReportState, cfg: NodeConfig) -> NodeResult:
             "descartados_por_reglas": duros,
             "descartados_por_juez": descartes_llm,
             "descartes_sin_cita_verificable": citas_falsas,
+            "lotes_sin_juez": lotes_sin_juez,
             "quedan": quedan,
             "motivos": motivos,
             # Si esto es True, el nodo 7 va a cortar con INSUFFICIENT_DATA.

@@ -98,6 +98,14 @@ async def juzgar(
         resultado = await nodo(estado, cfg.node(nombre))
         estado.update(resultado.updates)  # type: ignore[typeddict-item]
 
+    # El nodo 6 degrada sin juez (sobreviven todos) y eso está bien para un
+    # informe; para un juicio de relevancia es veneno: todo queda en grado 2.
+    # 18/09: el gateway perdió el puerto en el host y 41 consultas se guardaron
+    # "juzgadas" así. Acá se corta y no se guarda nada.
+    sin_juez = int((estado.get("curation") or {}).get("lotes_sin_juez", 0))
+    if sin_juez:
+        raise RuntimeError(f"el juez no respondió en {sin_juez} lote(s): no se guarda el juicio")
+
     detalle = (estado.get("valuation") or {}).get("detail", [])
     return {
         str(d["listing_id"]): grado_de(bool(d.get("included")), d.get("exclusion_reason"))

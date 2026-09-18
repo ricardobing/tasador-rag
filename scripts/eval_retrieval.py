@@ -85,11 +85,13 @@ async def _main(args: argparse.Namespace) -> int:
                     # el pool es el mismo, el juicio también. Reanudable.
                     c.juicios = {k: int(v) for k, v in guardado["juicios"].items()}
                     continue
-                c.juicios = await juicios.juzgar_pool(session, c, rankings)
+                c.juicios = await juicios.juzgar_pool(session, c, rankings, guardado=guardado)
                 rel = sum(1 for g in c.juicios.values() if g == retrieval.COMPARABLE)
+                previos = len(guardado["juicios"]) if guardado else 0
                 print(
                     f"  {i:>3}/{len(consultas)} {c.report_id[:14]:<14} "
                     f"pool {len(c.juicios):>3} · comparables {rel:>3}"
+                    + (f" · nuevos {len(c.juicios) - previos}" if previos else "")
                 )
         else:
             n = juicios.aplicar_juicios_guardados(consultas)

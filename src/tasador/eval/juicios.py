@@ -258,12 +258,20 @@ async def juzgar_pool(
     *,
     top: int = 30,
     cfg: AgentsConfig | None = None,
+    guardado: dict[str, Any] | None = None,
 ) -> dict[str, int]:
     """La unión de los top-N de todos los sistemas, juzgada de una vez.
 
     N = 30 y no 60: con cinco sistemas, la unión de los top-60 daba pools de
     150-170 avisos y ~6 minutos de juez por consulta (18/09). Con 30, el pool
     cubre lo que las métricas miran (nDCG@25, recall@30) a la mitad del costo.
+
+    Con `guardado` (los juicios que ya están en disco para esta consulta) se
+    juzga SOLO lo que ningún sistema había traído antes. Agregar un sistema a
+    la comparación —el reranker, un modelo nuevo— cuesta entonces sus
+    candidatos nuevos y no el pool entero, y los juicios de los sistemas que
+    ya estaban no cambian de una corrida a la otra (el juez no es
+    determinístico).
     """
     pool: list[str] = []
     vistos: set[str] = set()
@@ -274,7 +282,15 @@ async def juzgar_pool(
                 pool.append(lid)
     if not pool:
         return {}
-    candidatos = await candidatos_por_id(session, pool)
-    juicios = await juzgar(consulta.subject, candidatos, cfg=cfg)
-    guardar_juicios(consulta, pool, juicios)
+    previos: dict[str, int] = (
+        {k: int(v) for k, v in guardado["juicios"].items()} if guardado else {}
+    )
+    nuevos = [lid for lid in pool if lid not in previos]
+    juicios = dict(previos)
+    if nuevos:
+        candidatos = await candidatos_por_id(session, nuevos)
+        juicios.update(await juzgar(consulta.subject, candidatos, cfg=cfg))
+    # El pool guardado es la unión: lo de antes más lo que trajo el sistema nuevo.
+    pool_total = list(dict.fromkeys([*(guardado["pool"] if guardado else []), *pool]))
+    guardar_juicios(consulta, pool_total, juicios)
     return juicios

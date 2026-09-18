@@ -467,8 +467,11 @@ repo. R3 es independiente y se puede hacer antes si lo que más interesa mostrar
 - **§4.1, los juicios de informes pasados**: son relativos al pool de aquel
   momento. La escalera cambió el 15/08 y el corpus creció: sobre 23 consultas,
   `juzgados@25` dio 0,27 y en 17 fue cero. Se pasó a **pooling juzgado por el
-  propio pipeline** (nodos 4-7 sobre la unión del top-60 de los sistemas), con
-  53 informes + 60 avisos del corpus como consultas (`eval/juicios.py`).
+  propio pipeline** (nodos 4-7 sobre la unión del top-30 de los sistemas), con
+  53 informes + 60 avisos del corpus como consultas (`eval/juicios.py`). El
+  pooling es incremental: con juicios guardados, un sistema nuevo paga solo los
+  candidatos que ningún otro había traído, y los juicios anteriores no cambian
+  (el juez no es determinístico; rejuzgar todo movería la vara con cada sistema).
 - **§3.5, el costo de contar tokens**: la primera versión del chunker re-tokenizaba
   el candidato entero en cada paso —O(n²)— y tardó 323 s solo en contar sobre
   8.500 avisos. Cada oración se cuenta una vez y el chunk es la suma.

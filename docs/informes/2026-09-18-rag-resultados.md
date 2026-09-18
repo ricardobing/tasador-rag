@@ -125,8 +125,16 @@ en local:
 - **gitleaks:** dos falsos positivos —el placeholder de `SECRET_KEY` en `.env.example` y
   el `Bearer tsk_live_...` del manual—. `.gitleaks.toml` con allowlist por forma del
   placeholder; con la misma imagen en Docker: `no leaks found`.
-- **Tests:** ⏳ reproducción en curso contra una base vacía `tasador_test` con
-  `--cov-fail-under=57`.
+- **Tests:** el paso de migraciones desde cero no tenía `REDIS_URL` y los settings
+  explotan al arrancar sin él (a propósito). Con la variable, 481 tests en verde en el
+  runner.
+
+El segundo run cayó en «Imágenes», por `trivy` sobre la imagen del front: Next 15.1.6
+con CVE-2025-29927 (bypass de autorización en middleware) → `next@15.5`; y el `npm`
+que trae la imagen base de Node arrastra `tar` y `brace-expansion` con CVEs → se borra
+del runtime (el servicio corre `node server.js`, no lo usa). Quedaba `postcss 8.4.31`
+como dependencia transitiva de Next → fijado por `overrides` a `^8.5.12`. Playwright
+completo tras la actualización: 50 passed · 7 skipped. ⏳ tercer run.
 
 ## 6. Lo que aprendimos, esta vez
 

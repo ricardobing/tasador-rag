@@ -49,6 +49,12 @@ ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0
 # Nunca root, igual que api y worker.
 RUN addgroup -g 10001 -S app && adduser -u 10001 -S app -G app
 
+# Sin npm en la imagen final. El runtime es `node server.js` y no lo usa, y el
+# npm que trae la imagen base arrastra sus propias dependencias (`tar`,
+# `brace-expansion`) con CVEs que trivy marca como HIGH/CRITICAL en el CI
+# (18/09/2026). Lo que no corre no se escanea: se borra.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx     /usr/local/lib/node_modules/corepack /usr/local/bin/corepack
+
 # `output: standalone` deja un server.js con solo lo que hace falta. Importa
 # acá porque el servicio corre con `read_only: true` y un tmpfs chico.
 COPY --from=builder --chown=app:app /app/.next/standalone ./

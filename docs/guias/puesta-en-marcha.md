@@ -221,9 +221,16 @@ uv run python scripts/run_backtest.py --sample 1500
 
 # 4. Avisos vigentes: el corpus DEMO que viene en el repo (sintético, ver
 #    scripts/generar_corpus_demo.py). Con esto ya se puede generar un informe.
-$env:PORTALES="demo-a=PORTAL_A,demo-b=PORTAL_B"
-uv run python scripts/ingest_csv.py --carpeta data/demo
+#    Va DENTRO del contenedor: el .env apunta a postgres:5432 y ./data está
+#    montado en /data/raw. PORTALES=demo-a=PORTAL_A,demo-b=PORTAL_B en el .env.
+docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm api python scripts/ingest_csv.py --carpeta /data/raw/demo
 ```
+
+**Sin BA Data también funciona** (18/09): `seed.py` siembra los 59 barrios y sus
+centroides, así que los pasos 1-3 son opcionales para probar el sistema; hacen
+falta para el backtest histórico y la serie oficial de USD/m². Los `uv run` de
+arriba asumen `DATABASE_URL` apuntando al host (`127.0.0.1:5433`); con el `.env`
+de la plantilla, usá `docker compose ... run --rm api python scripts/<script>`.
 
 El paso 2 tarda ~90 segundos. El 3, ~2 minutos. El 4, segundos.
 

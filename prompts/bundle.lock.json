@@ -1,6 +1,6 @@
 {
   "agents_version": "2026.08.1",
-  "bundle_hash": "83b55c798fac",
+  "bundle_hash": "4ab9d7bc6539",
   "nodes": {
     "extract_features": {
       "task": "extractor",
@@ -24,7 +24,7 @@
     },
     "critic": {
       "task": "critic",
-      "prompt": "critic/v1"
+      "prompt": "critic/v2"
     }
   }
 }

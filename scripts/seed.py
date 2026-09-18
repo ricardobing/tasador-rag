@@ -42,10 +42,22 @@ async def _seed(slug: str, name: str, *, offline: bool) -> int:
     from geocode_neighborhoods import _geocodificar  # type: ignore[import-not-found]
     from seed_org import _seed as _seed_org  # type: ignore[import-not-found]
 
-    print("── 1/2 · organización ───────────────────────────────────────────")
+    from tasador.corpus.neighborhoods import seed_neighborhoods
+    from tasador.db.base import get_session_factory
+
+    print("── 1/3 · organización ───────────────────────────────────────────")
     await _seed_org(slug, name)
 
-    print("\n── 2/2 · centroides de los barrios ──────────────────────────────")
+    # Los barrios los sembraba solo `load_badata.py`. Con el corpus demo del
+    # README (sin BA Data) la tabla quedaba vacía, el paso de centroides
+    # decía "geocodificados=0" con cara de éxito, y el primer informe moría
+    # con BARRIO_NO_RESUELTO (18/09, demo desde una base vacía).
+    print("\n── 2/3 · barrios ───────────────────────────────────────────────")
+    async with get_session_factory()() as session:
+        creados, actualizados = await seed_neighborhoods(session)
+        print(f"   {creados} nuevos, {actualizados} actualizados")
+
+    print("\n── 3/3 · centroides de los barrios ──────────────────────────────")
     # `solo_faltantes=True`: los positivos de geocodificación no caducan nunca
     # —una coordenada no se mueve— así que reconsultar Nominatim por barrios
     # que ya están es gastarle requests a un servicio gratuito sin motivo.

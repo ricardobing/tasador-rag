@@ -69,20 +69,34 @@ Necesita Docker y una clave de un proveedor de modelos compatible con OpenAI (el
 LiteLLM la enruta; ver `config/litellm.yaml`).
 
 ```bash
-cp .env.example .env            # completar OPENROUTER_API_KEY y las contraseñas
+cp .env.example .env            # completar OPENROUTER_API_KEY, las contraseñas y PORTALES=demo-a=PORTAL_A,demo-b=PORTAL_B
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
-uv run python scripts/seed.py   # tenant demo + centroides de barrios
-PORTALES=demo-a=PORTAL_A,demo-b=PORTAL_B uv run python scripts/ingest_csv.py --carpeta data/demo
-uv run python scripts/crear_usuario.py --email vos@inmo-demo.com.ar --rol owner
+alias tas='docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm api python'
+tas scripts/seed.py                                   # tenant demo + 59 barrios + centroides
+tas scripts/ingest_csv.py --carpeta /data/raw/demo    # 581 avisos sintéticos
+tas scripts/crear_usuario.py --email vos@inmo-demo.com.ar --rol owner --api-key demo
 ```
 
-Front en `http://127.0.0.1:3000`, API en `:8000`. Un informe desde la CLI, dentro del
-contenedor (el PDF necesita las librerías nativas de WeasyPrint):
+Los scripts corren **dentro del contenedor** (el `.env` de la plantilla apunta a
+`postgres:5432`, que solo resuelve ahí; `./data` está montado en `/data/raw`). Front en
+`http://127.0.0.1:3000`, API en `:8000`. Un informe desde la CLI:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm api \
-  python scripts/run_report.py --direccion "Gorriti 5000" --amb 3 --m2 70
+tas scripts/run_report.py --direccion "Gorriti 5000" --amb 3 --m2 70
 ```
+
+Y una pregunta al informe, con la API key que imprimió `crear_usuario`:
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/reports/<id>/ask -H "Authorization: Bearer tsk_live_..." -H "Content-Type: application/json" -d '{"pregunta": "Cuantos comparables se usaron?"}'
+```
+
+Verificado el 18/09/2026 desde un clon limpio y una base vacía: informe `SUCCEEDED`
+con 45/60 comparables en ~15 minutos (la primera extracción de 60 avisos es lo que
+tarda), USD 0,07; la pregunta responde con citas `[N]` y `[V]` y la que no tiene
+respuesta se rechaza sin llamar al modelo. Para levantar dos stacks a la vez (p. ej.
+este y el corpus real) los puertos del host son variables: `PG_PORT`, `REDIS_PORT`,
+`LITELLM_PORT`, `API_PORT`, `WEB_PORT` y `COMPOSE_PROJECT_NAME` en el `.env`.
 
 El corpus demo lo genera `scripts/generar_corpus_demo.py`: 600 avisos sintéticos con las
 distribuciones del corpus real y descripciones redactadas por un modelo a partir de

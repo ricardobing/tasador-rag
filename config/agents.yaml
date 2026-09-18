@@ -249,7 +249,10 @@ nodes:
     kind: hybrid
     descripcion: Verificación determinística + crítica adversarial
     task: critic
-    prompt: critic/v1
+    # v2 (18/09): con el crítico en un modelo abierto, v1 rechazaba tres veces
+    # seguidas el nivel de confianza que el motor calculó y el rango de cierre
+    # condicional; el informe demo salía sin narrativa.
+    prompt: critic/v2
     # Si el crítico se cae, el informe NO sale con prosa no verificada.
     on_error: fail
     params:

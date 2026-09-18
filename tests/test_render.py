@@ -75,7 +75,8 @@ def test_los_descartados_aparecen_con_su_motivo():
     """Doc 03 §3.6: es lo que permite responder "¿por qué no usaste el de
     Cabildo 2500?". Si no están impresos, el descarte es invisible."""
     html = informe_html(_estado())
-    assert "en_pozo_o_construccion" in html
+    # En castellano llano: el PDF lo lee el propietario, no el motor.
+    assert "en pozo o en construcción" in html
     assert "610.400" in html
 
 

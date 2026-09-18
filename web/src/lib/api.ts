@@ -249,6 +249,12 @@ export const MOTIVO_DE_DESCARTE: Record<string, string> = {
   usd_m2_fuera_de_rango: "USD/m² fuera de rango plausible",
   duplicado: "duplicado de otro aviso",
   outlier_estadistico: "descartado por razones estadísticas",
+  recorte_p5_p95: "fuera del rango p5 a p95 de precios ajustados",
+  recorte_p10_p90: "fuera del rango p10 a p90 de precios ajustados",
+  ajuste_excede_el_tope: "el ajuste necesario supera el tope de ±25 %",
+  sin_precio_o_superficie_en_usd: "sin precio en USD o sin superficie",
+  duplicado_de_cluster: "duplicado de otro aviso del mismo inmueble",
+  descartado_sin_motivo: "descartado",
 };
 
 // ── El corpus (doc 07 §8) ───────────────────────────────────────────────

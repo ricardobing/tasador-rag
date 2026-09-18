@@ -89,6 +89,38 @@ _ESTADOS = {
 }
 
 
+# Los motivos de descarte del motor (engine.py, curate) en castellano llano.
+# Mismo mapa que el front (`web/src/lib/api.ts`): el propietario lee el PDF.
+MOTIVO_DE_DESCARTE: dict[str, str] = {
+    "permuta_o_financiacion": "ofrecía permuta o financiación especial",
+    "en_pozo_o_construccion": "en pozo o en construcción",
+    "descripcion_inconsistente": "la descripción no cierra con los datos",
+    "tipologia_distinta": "es de otra tipología",
+    "precio_promocional": "precio promocional",
+    "sin_precio": "sin precio publicado",
+    "precio_no_usd": "publicado en pesos",
+    "sin_superficie": "sin superficie declarada",
+    "sin_direccion": "sin dirección",
+    "usd_m2_fuera_de_rango": "USD/m² fuera de rango plausible",
+    "duplicado": "duplicado de otro aviso",
+    "duplicado_de_cluster": "duplicado de otro aviso del mismo inmueble",
+    "outlier_estadistico": "descartado por razones estadísticas",
+    "recorte_p5_p95": "fuera del rango p5 a p95 de precios ajustados",
+    "recorte_p10_p90": "fuera del rango p10 a p90 de precios ajustados",
+    "ajuste_excede_el_tope": "el ajuste necesario supera el tope de ±25 %",
+    "sin_precio_o_superficie_en_usd": "sin precio en USD o sin superficie",
+    "descartado_sin_motivo": "descartado",
+}
+
+
+def _barrio_si_no_esta(direccion: str | None, barrio: str | None) -> str | None:
+    """La dirección normalizada suele traer el barrio («Cerviño 4400, Palermo»):
+    no repetirlo al lado."""
+    if not barrio or not direccion:
+        return barrio
+    return None if barrio.lower() in direccion.lower() else barrio
+
+
 def _datos_propiedad(subject: dict[str, Any]) -> list[dict[str, Any]]:
     """La ficha de la propiedad tasada, en el orden en que la lee una persona.
 
@@ -152,7 +184,7 @@ def informe_html(state: ReportState, *, org: str = "Tasador", template: str = "i
             "usd_m2": _num(d.get("raw_price_per_m2")),
             "usd_m2_ajustado": _num(d.get("adjusted_price_per_m2")),
             "included": bool(d.get("included")),
-            "motivo": d.get("exclusion_reason") or "—",
+            "motivo": MOTIVO_DE_DESCARTE.get(d.get("exclusion_reason") or "", d.get("exclusion_reason") or "descartado"),
         }
         # Primero los usados: es lo que sostiene el número. Los descartados van
         # después pero VAN, con su motivo (doc 03 §3.6).
@@ -176,7 +208,7 @@ def informe_html(state: ReportState, *, org: str = "Tasador", template: str = "i
         report_id=state.get("report_id", ""),
         fecha=datetime.now(UTC).strftime("%d/%m/%Y"),
         direccion=subject.get("address_raw") or "—",
-        barrio=subject.get("neighborhood_name"),
+        barrio=_barrio_si_no_esta(subject.get("address_raw"), subject.get("neighborhood_name")),
         moneda=v.get("currency") or "USD",
         valor_medio=_plata(v.get("value_mid")),
         valor_min=_plata(v.get("value_low")),

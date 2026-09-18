@@ -147,6 +147,28 @@ test.describe("/informes/[id] — la ficha", () => {
     await expect(page.getByText(/no constituye una tasación con validez legal/)).toBeVisible();
   });
 
+  test("«Preguntale al informe» responde con citas o rechaza, nunca inventa", async ({ page }) => {
+    // doc 18 §5 / ADR-013. Una pregunta sobre la metodología tiene que volver con
+    // al menos una cita; una que no se puede responder con el informe tiene que
+    // volver RECHAZADA. En los dos casos la caja lo dice en pantalla. La primera
+    // pregunta a un informe construye el índice (hasta ~2 min en frío).
+    test.setTimeout(240_000);
+    await abrirUnInformeTerminado(page);
+    const caja = page.getByRole("region", { name: /Preguntale al informe/ });
+    await expect(caja).toBeVisible();
+
+    await caja.getByRole("button", { name: /mediana y no el promedio/ }).click();
+    const respuesta = caja.locator(".tarjeta").first();
+    await expect(respuesta).toBeVisible({ timeout: 200_000 });
+    await expect(respuesta.getByText(/Verificada: cada cifra existe en las citas/)).toBeVisible();
+    await expect(respuesta.getByText(/\d+ citas?/)).toBeVisible();
+
+    await caja.getByLabel("Pregunta").fill("¿Cuánto va a valer la propiedad dentro de dos años?");
+    await caja.getByRole("button", { name: "Preguntar" }).click();
+    const rechazo = caja.locator(".tarjeta").first();
+    await expect(rechazo.getByText(/Rechazada:/)).toBeVisible({ timeout: 60_000 });
+  });
+
   test("el PDF se descarga de verdad", async ({ page }) => {
     await abrirUnInformeTerminado(page);
     const r = await page.request.get(page.url() + "/pdf");

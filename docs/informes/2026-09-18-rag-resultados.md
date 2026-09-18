@@ -59,7 +59,30 @@ F  E + rerank bge-reranker-base        ⏳  (subconjunto: 1,7 pares/s en CPU)
 G  E + rerank jina-v2 multilingual     ⏳  (subconjunto; CC-BY-NC, solo para comparar)
 ```
 
-Lo que ya se sabe de la primera pasada, con juicios solo de A: el sistema A sobre su
+**Primer tercio, ya juzgado con pooling** (las 34 consultas que vienen de informes
+pasados; pools de 90-100 avisos, `juzgados@25` = 1,00 en los cinco sistemas):
+
+```
+                                   nDCG@25            recall@30          MRR               bpref
+A  SQL + recencia                0,688 [0,673–0,708]  0,262             0,387             0,325
+B  denso, truncar                0,817 [0,809–0,829]  0,302             1,000             0,369
+C  denso, oraciones+encabezado   0,707 [0,697–0,719]  0,285             0,559             0,351
+D  léxico (FTS spanish)          0,844 [0,834–0,850]  0,296             1,000             0,401
+E  C + D con RRF                 0,702 [0,696–0,713]  0,274             0,529             0,473
+
+Δ vs A (apareada, 95%):  B +0,130 [0,121–0,136] · C +0,020 [0,008–0,028] · D +0,156 [0,128–0,176] · E +0,015 [0,003–0,023]
+```
+
+Tres lecturas, provisorias hasta tener las 113: (1) **todo puntaje le gana a la
+recencia**, fuera del intervalo; (2) el léxico solo (D) es el mejor en nDCG y el
+denso con *truncar* (B) le sigue — el chunking por oraciones (C) **no** mejora sobre
+truncar en este tercio, al contrario; (3) la fusión (E) hereda lo peor de C en nDCG
+pero tiene el mejor bpref. Las consultas de informes no traen texto libre: la
+consulta semántica es solo el encabezado estructurado, que es exactamente lo que
+el léxico matchea mejor. Las 60 consultas que vienen de avisos —con la descripción
+como notas— son las que pueden dar vuelta esto.
+
+Lo que ya se sabía de la primera pasada, con juicios solo de A: el sistema A sobre su
 propio pool da nDCG@25 0,64 —la recencia no empuja hacia abajo a los que la curaduría
 después descarta— y recall@30 1,0 por construcción. Los sistemas B-E sobre ese pool dan
 `juzgados@25` de 0,16 a 0,36, que es la razón del pooling: sin juzgar lo que ELLOS

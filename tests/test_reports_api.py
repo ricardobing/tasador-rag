@@ -665,3 +665,30 @@ async def test_la_narrativa_sale_tambien_como_html_seguro(db: AsyncSession, clie
     # El crudo sigue viajando: el PDF y cualquier cliente que prefiera markdown
     # no dependen de esto.
     assert c["narrative_md"].startswith("## Resumen")
+
+
+async def test_la_ficha_trae_la_propiedad_tasada_completa(db: AsyncSession, cliente, org):
+    """19/09: el número sin decir qué propiedad es no sirve. Lo no declarado
+    viene como null, no desaparece: el front lo imprime como «sin declarar»."""
+    r = cliente.post(
+        "/v1/reports",
+        json={
+            "property": {
+                "address_raw": "Gorriti 5000",
+                "property_type": "departamento",
+                "rooms": 3,
+                "surface_total": 70,
+            }
+        },
+    )
+    assert r.status_code == 202
+    rid = r.json()["report_id"]
+    ficha = cliente.get(f"/v1/reports/{rid}").json()
+    prop = ficha["property"]
+    assert prop["address"] == "Gorriti 5000"
+    assert prop["property_type"] == "departamento"
+    assert prop["rooms"] == 3
+    assert prop["surface_total"] == 70.0
+    for campo in ("bedrooms", "bathrooms", "condition", "orientation", "floor_number"):
+        assert campo in prop
+        assert prop[campo] is None

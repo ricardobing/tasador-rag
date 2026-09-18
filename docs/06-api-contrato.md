@@ -199,6 +199,21 @@ y su respuesta correcta es "no hay datos".
 
 ---
 
+**`property` (19/09/2026).** La ficha completa de la propiedad tasada, en todos los
+estados: `address`, `neighborhood`, `property_type`, `rooms`, `bedrooms`, `bathrooms`,
+`surface_total`, `surface_covered`, `age_years`, `floor_number`, `has_elevator`,
+`condition`, `orientation`, `parking_spaces`, `expenses_ars`, `notes`. Lo no declarado es
+`null` y el front lo muestra como «sin declarar»: el propietario ve qué se usó y qué no.
+`GET /v1/shared/{token}` trae el mismo bloque.
+
+### `PATCH /v1/auth/password` — cambiar la propia contraseña (19/09/2026)
+
+Cuerpo: `{"actual": "…", "nueva": "…"}` (nueva ≥ 10 caracteres). Solo con sesión de
+usuario (una API key no tiene contraseña: 403). La actual se verifica siempre, y el
+endpoint comparte el rate limit del login (5 por minuto por IP y por email): verificar
+una contraseña es probar una contraseña. 422 si la actual no coincide o la nueva es
+igual.
+
 ### `GET /v1/reports/{id}/pdf`
 
 `200 application/pdf` con `Content-Disposition: attachment`. Requiere el mismo tenant.

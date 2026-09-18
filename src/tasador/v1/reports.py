@@ -195,6 +195,36 @@ async def _encolar(report_id: str) -> None:
 
 
 # ── GET /v1/reports/{id} ─────────────────────────────────────────────────
+def _ficha_del_sujeto(sujeto: SubjectProperty | None, barrio: str | None) -> dict[str, Any]:
+    """La propiedad tasada, completa, para la ficha y el compartido.
+
+    Hasta el 19/09 la API devolvía el número sin decir qué propiedad era: la
+    pantalla y el PDF empezaban por la cifra y el propietario no veía ni
+    cuántos ambientes tenía lo que se tasó. Lo no declarado va como `None`
+    a propósito: el front lo imprime como «sin declarar», no lo esconde.
+    """
+    if sujeto is None:
+        return {}
+    return {
+        "address": sujeto.address_raw,
+        "neighborhood": barrio,
+        "property_type": sujeto.property_type,
+        "rooms": sujeto.rooms,
+        "bedrooms": sujeto.bedrooms,
+        "bathrooms": sujeto.bathrooms,
+        "surface_total": _dinero(sujeto.surface_total),
+        "surface_covered": _dinero(sujeto.surface_covered),
+        "age_years": sujeto.age_years,
+        "floor_number": sujeto.floor_number,
+        "has_elevator": sujeto.has_elevator,
+        "condition": sujeto.condition,
+        "orientation": sujeto.orientation,
+        "parking_spaces": sujeto.parking_spaces,
+        "expenses_ars": _dinero(sujeto.expenses_ars),
+        "notes": sujeto.notes,
+    }
+
+
 def _dinero(v: Decimal | None) -> float | None:
     return None if v is None else float(v)
 
@@ -565,10 +595,21 @@ async def obtener_informe(
         )
     ).scalar_one_or_none()
 
+    barrio_del_sujeto: str | None = None
+    if sujeto is not None and sujeto.neighborhood_id is not None:
+        from tasador.db.models import Neighborhood
+
+        barrio_del_sujeto = (
+            await session.execute(
+                select(Neighborhood.name).where(Neighborhood.id == sujeto.neighborhood_id)
+            )
+        ).scalar_one_or_none()
+
     salida: dict[str, Any] = {
         "report_id": str(informe.id),
         "status": informe.status,
         "external_ref": sujeto.external_ref if sujeto else None,
+        "property": _ficha_del_sujeto(sujeto, barrio_del_sujeto),
         "progress": {
             "current_node": pendientes[0] if pendientes else None,
             "completed": len(hechos),
@@ -859,6 +900,7 @@ async def informe_compartido(
         "property_type": sujeto.property_type,
         "rooms": sujeto.rooms,
         "surface_total": _dinero(sujeto.surface_total),
+        "property": _ficha_del_sujeto(sujeto, barrio),
         "generated_at": informe.finished_at.isoformat() if informe.finished_at else None,
         "valuation": {
             "currency": informe.currency,

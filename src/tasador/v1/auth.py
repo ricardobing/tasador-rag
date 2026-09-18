@@ -309,6 +309,47 @@ async def login(
     raise _NO_AUTORIZADO
 
 
+class PasswordIn(BaseModel):
+    actual: str = Field(min_length=1, max_length=200)
+    nueva: str = Field(min_length=10, max_length=200)
+
+
+@router.patch("/auth/password", summary="Cambiar la propia contraseña")
+async def cambiar_password(
+    body: PasswordIn,
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    p: Annotated[Principal, Depends(resolve_principal)],
+) -> dict[str, str]:
+    """La contraseña actual se verifica aunque haya sesión: una pestaña
+    abierta no puede convertirse en un cambio de contraseña silencioso.
+
+    Solo con sesión de usuario: una API key no tiene contraseña y el header de
+    desarrollo no tiene usuario. Pasa por el mismo rate limit que el login,
+    porque verificar la actual es probar una contraseña.
+    """
+    if p.via != "sesion" or p.user is None:
+        raise HTTPException(status_code=403, detail="Solo con sesión de usuario.")
+    ip = request.client.host if request.client else "sin-ip"
+    if _excedido(f"ip:{ip}") or _excedido(f"email:{p.user.email.lower()}"):
+        raise HTTPException(
+            status_code=429,
+            detail="Demasiados intentos. Esperá un minuto y volvé a probar.",
+            headers={"Retry-After": "60"},
+        )
+    usuario = (
+        await session.execute(select(User).where(User.id == p.user.id, User.org_id == p.org.id))
+    ).scalar_one()
+    if not verificar_password(usuario.password_hash, body.actual):
+        raise HTTPException(status_code=422, detail="La contraseña actual no es correcta.")
+    if body.actual == body.nueva:
+        raise HTTPException(status_code=422, detail="La nueva tiene que ser distinta de la actual.")
+    usuario.password_hash = hash_password(body.nueva)
+    await session.commit()
+    log.info("password cambiada", user=str(usuario.id))
+    return {"ok": "contraseña cambiada"}
+
+
 @router.post("/auth/logout", summary="Cerrar sesión")
 async def logout(response: Response) -> dict[str, str]:
     response.delete_cookie(COOKIE_SESION, path="/")

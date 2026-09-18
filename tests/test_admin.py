@@ -375,3 +375,51 @@ async def test_el_sexto_intento_en_un_minuto_da_429(db: AsyncSession, cliente):
         json={"email": "agente@inmo-demo.com.ar", "password": "buena-clave-1"},
     )
     assert r.status_code == 429
+
+
+# ── Cambiar la propia contraseña ─────────────────────────────────────────
+async def test_cambiar_password_exige_la_actual_y_despues_entra_con_la_nueva(
+    db: AsyncSession, cliente
+):
+    org = await _org(db)
+    await _usuario(db, org.id, "agente@inmo-demo.com.ar", rol="agent")
+    await db.commit()
+    _login(cliente, "agente@inmo-demo.com.ar")
+
+    mal = cliente.patch(
+        "/v1/auth/password", json={"actual": "otra-cosa-larga", "nueva": "nueva-clave-segura-1"}
+    )
+    assert mal.status_code == 422
+
+    corta = cliente.patch("/v1/auth/password", json={"actual": "buena-clave-1", "nueva": "corta"})
+    assert corta.status_code == 422
+
+    ok = cliente.patch(
+        "/v1/auth/password", json={"actual": "buena-clave-1", "nueva": "nueva-clave-segura-1"}
+    )
+    assert ok.status_code == 200
+
+    cliente.post("/v1/auth/logout")
+    vieja = cliente.post(
+        "/v1/auth/login", json={"email": "agente@inmo-demo.com.ar", "password": "buena-clave-1"}
+    )
+    assert vieja.status_code == 401
+    nueva = cliente.post(
+        "/v1/auth/login",
+        json={"email": "agente@inmo-demo.com.ar", "password": "nueva-clave-segura-1"},
+    )
+    assert nueva.status_code == 200
+
+
+async def test_una_api_key_no_puede_cambiar_contrasenas(db: AsyncSession, cliente):
+    """Una API key no tiene contraseña: 403, no 422."""
+    org = await _org(db)
+    clave = await _api_key(db, org.id)
+    await db.commit()
+    r = cliente.patch(
+        "/v1/auth/password",
+        json={"actual": "x", "nueva": "nueva-clave-segura-1"},
+        headers={"Authorization": f"Bearer {clave}"},
+        cookies={},
+    )
+    assert r.status_code == 403

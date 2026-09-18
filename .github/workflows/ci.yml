@@ -237,12 +237,18 @@ jobs:
           $C scripts/seed.py --offline
           $C scripts/ingest_csv.py --carpeta /data/raw/demo
           $C scripts/crear_usuario.py --email ci@inmo-demo.com.ar --rol owner --generar-password
+      # Playwright corre desde una copia aparte: el contenedor `web` monta ./web
+      # y deja node_modules con otro dueño, y un `npm ci` ahí borraría los
+      # módulos del contenedor que está sirviendo la app (EACCES, segundo run).
       - name: Playwright
-        working-directory: web
         env:
           E2E_BASE_URL: http://127.0.0.1:3000
         run: |
-          npm ci
+          mkdir -p /tmp/e2e
+          cp web/package.json web/package-lock.json web/playwright.config.ts /tmp/e2e/
+          cp -r web/e2e /tmp/e2e/e2e
+          cd /tmp/e2e
+          npm ci --ignore-scripts
           npx playwright install --with-deps chromium
           npx playwright test --project=escritorio --reporter=list
       - name: Logs del stack si algo falló
@@ -252,7 +258,7 @@ jobs:
         if: failure()
         with:
           name: playwright-evidencia
-          path: web/test-results
+          path: /tmp/e2e/test-results
           if-no-files-found: ignore
 
   # Gate de calidad del modelo: si cambian los prompts, los coeficientes o el

@@ -105,7 +105,7 @@ extractor_backup → openrouter/qwen/qwen3-30b-a3b-instruct-2507  ✅    971 ms
 judge            → openrouter/deepseek/deepseek-v4-flash        ✅  1.385 ms
 judge_deep       → openrouter/z-ai/glm-4.6                      ✅ 44.869 ms ⚠️
 writer           → openrouter/qwen/qwen3-max                    ✅  2.268 ms
-critic           → openrouter/anthropic/claude-sonnet-4.5       ✅  2.722 ms
+critic           → openrouter/anthropic/claude-sonnet-4.5       ✅  2.722 ms   (hasta el 18/09; hoy deepseek-v4-flash, ver litellm.yaml)
 ```
 
 ⚠️ **GLM-4.6 dejó de ser el `judge` de línea.** Es de razonamiento: gastó 1.180

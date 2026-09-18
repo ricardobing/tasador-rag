@@ -52,7 +52,7 @@ OpenRouter** tenés los cuatro:
 | `extractor` | DeepSeek Chat | ✅ `openrouter/deepseek/deepseek-chat` |
 | `judge` | GLM / Qwen | ✅ |
 | `writer` | Qwen3 Max | ✅ |
-| `critic` | Claude Sonnet 4.5 | ✅ `openrouter/anthropic/claude-sonnet-4.5` |
+| `critic` | DeepSeek V4 Flash (desde el 18/09; antes Claude Sonnet 4.5) | ✅ `openrouter/deepseek/deepseek-v4-flash` |
 
 **Una cuenta, una clave, una factura.** Sin OpenRouter necesitarías tres cuentas
 distintas (DeepSeek + Z.ai + Anthropic).
@@ -177,7 +177,7 @@ model_list:
       temperature: 0.3
   - model_name: critic
     litellm_params:
-      model: openrouter/anthropic/claude-sonnet-4.5
+      model: openrouter/deepseek/deepseek-v4-flash
       api_key: os.environ/OPENROUTER_API_KEY
       temperature: 0.0
 ```

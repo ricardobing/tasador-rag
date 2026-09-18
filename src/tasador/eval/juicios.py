@@ -172,6 +172,41 @@ async def consultas_de_avisos(
     return out
 
 
+async def consultas_de_avisos_fijas(
+    session: AsyncSession, *, n: int, semilla: int = 7
+) -> list[Consulta]:
+    """Las mismas N consultas de avisos en todas las corridas.
+
+    `consultas_de_avisos` muestrea entre los avisos CON features, y el propio
+    eval crea features (el nodo 4 extrae lo que el pool trae): entre una corrida
+    y la siguiente cambiaba el universo, cambiaba el sorteo, y aparecían
+    consultas nuevas mientras las viejas quedaban huérfanas (18/09: 102 archivos
+    de juicios para 60 consultas). El set se fija en disco la primera vez.
+    """
+    ruta = CARPETA / "_consultas_avisos.json"
+    if ruta.exists():
+        ids = set(json.loads(ruta.read_text(encoding="utf-8"))["listing_ids"])
+        todas = await consultas_de_avisos(session, n=100_000, semilla=semilla)
+        fijas = [c for c in todas if c.report_id.removeprefix("aviso:") in ids]
+        if len(fijas) < len(ids):
+            log.warning("consultas fijas que ya no existen", faltan=len(ids) - len(fijas))
+        return fijas
+    consultas = await consultas_de_avisos(session, n=n, semilla=semilla)
+    CARPETA.mkdir(parents=True, exist_ok=True)
+    ruta.write_text(
+        json.dumps(
+            {
+                "listing_ids": [c.report_id.removeprefix("aviso:") for c in consultas],
+                "semilla": semilla,
+                "fijado_en": datetime.now(UTC).isoformat(timespec="seconds"),
+            },
+            indent=1,
+        ),
+        encoding="utf-8",
+    )
+    return consultas
+
+
 # ── Persistencia de los juicios ──────────────────────────────────────────
 
 

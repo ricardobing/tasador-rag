@@ -29,6 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from tasador.cli import run
 from tasador.eval import juicios, retrieval
+from tasador.eval.memoria import esperar_memoria
 
 SISTEMAS: dict[str, retrieval.Sistema] = {
     "A": retrieval.sistema_actual,
@@ -59,7 +60,7 @@ async def _main(args: argparse.Namespace) -> int:
     async with get_session_factory()() as session:
         consultas = await retrieval.cargar_consultas(session, min_juicios=args.min_juicios)
         if args.avisos:
-            consultas += await juicios.consultas_de_avisos(
+            consultas += await juicios.consultas_de_avisos_fijas(
                 session, n=args.avisos, semilla=args.semilla
             )
         if args.desde:
@@ -73,6 +74,9 @@ async def _main(args: argparse.Namespace) -> int:
         if args.juzgar:
             print(f"juzgando el pool de {len(consultas)} consultas con {nombres}…")
             for i, c in enumerate(consultas, 1):
+                # Un proceso que corre horas cede el paso si la máquina se queda
+                # sin memoria (18/09: seis de estos dejaron 0,1 GB libres de 32).
+                esperar_memoria(args.memoria_libre)
                 guardado = None if args.rejuzgar else juicios.cargar_juicios(c.report_id)
                 rankings = await retrieval.rankings_de(session, sistemas, c)
                 nuevos = {lid for r in rankings.values() for lid in r[:30]} - c.excluir
@@ -140,6 +144,12 @@ def main() -> int:
     ap.add_argument("--rejuzgar", action="store_true", help="aunque el pool no haya cambiado")
     ap.add_argument("--json", default="", help="guardar el detalle por consulta")
     ap.add_argument("--guardar", action="store_true")
+    ap.add_argument(
+        "--memoria-libre",
+        type=float,
+        default=0.20,
+        help="fracción de RAM que tiene que quedar libre antes de juzgar cada consulta",
+    )
     return run(_main(ap.parse_args()))
 
 

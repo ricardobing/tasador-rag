@@ -126,9 +126,10 @@ pg_trgm · Redis + arq · LangGraph (checkpoint en Postgres) · CrewAI (un solo 
 instructor + Pydantic v2 · LiteLLM · fastembed · WeasyPrint · Next.js 15 · Docker Compose ·
 pytest (429 tests, incluidos tests de arquitectura) · Playwright · mypy --strict · ruff.
 
-Modelos: el crítico corre sobre Claude Sonnet 4.5; extracción, juicio y redacción sobre
-modelos abiertos de bajo costo vía API compatible con OpenAI. Cambiar cualquiera es editar
-`config/litellm.yaml`.
+Modelos: extracción, juicio, redacción y crítica sobre modelos abiertos de bajo costo vía API
+compatible con OpenAI. El crítico corrió sobre Claude Sonnet 4.5 hasta el 18/09/2026 y pasó
+a un modelo abierto 20x más barato: la garantía contra cifras inventadas es la fase A del
+crítico, que no usa ningún modelo. Cambiar cualquiera es editar `config/litellm.yaml`.
 
 ## Estado y límites
 

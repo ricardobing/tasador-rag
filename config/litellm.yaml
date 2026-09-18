@@ -142,18 +142,27 @@ model_list:
       input_cost_per_token: 7.800e-07
       output_cost_per_token: 3.900e-06
 
-  # ── critic ── el ÚNICO caro, y a propósito. Es la garantía de que no sale
-  # un informe con una cifra inventada. Ahorrar acá es ahorrar en lo que
-  # justifica el producto.
+  # ── critic ── la fase B del nodo 10 (la crítica adversarial sobre un texto
+  # cuyas cifras YA verificó la fase A sin LLM). Hasta el 18/09 corría sobre
+  # Claude Sonnet 4.5 —USD 3 / 15 por millón— y era el 60-75% del costo de un
+  # informe. Pasa a un modelo abierto por decisión de costos: la garantía
+  # contra cifras inventadas no está acá sino en la fase A, que no depende de
+  # ningún modelo.
+  #
+  # Se probó primero `deepseek-v4.1-flash` (USD 0,15 / 0,60): en la sonda de
+  # `check_models.py --structured` respondió DOS veces «Palermo» a un aviso que
+  # dice «Belgrano». `deepseek-v4-flash` (USD 0,09 / 0,18, el mismo que atiende
+  # al extractor y al juez) la pasa. Un crítico que se equivoca en la sonda
+  # trivial no puede ser el crítico.
   - model_name: critic
     litellm_params:
-      model: openrouter/anthropic/claude-sonnet-4.5
+      model: openrouter/deepseek/deepseek-v4-flash
       api_key: os.environ/OPENROUTER_API_KEY
       temperature: 0.0
       max_tokens: 4096
     model_info:
-      input_cost_per_token: 3.000e-06
-      output_cost_per_token: 1.500e-05
+      input_cost_per_token: 1.400e-07
+      output_cost_per_token: 2.800e-07
 
 router_settings:
   routing_strategy: simple-shuffle

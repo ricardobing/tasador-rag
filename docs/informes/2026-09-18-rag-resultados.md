@@ -102,13 +102,16 @@ respuesta posible. Modelo: la tarea `judge` (flash). Costo: USD 0,008 las 26.
                               rechazo correcto   citas correctas   cifras correctas
 umbral denso 0,80 (e5-style)        0,31              0,00              0,56
 compuerta doble 0,40 / 0,34         0,92              0,83              0,83   (mediana de 3, con caché: idénticas)
++ citas normalizadas, «comparables»
+  fuera de stopwords, «metro cuadrado»  0,96              0,89              0,94   (mediana de 3 corridas SIN caché; USD 0,004-0,008 cada una)
 ```
 
 Los tres fallos que quedaban, y su arreglo: el modelo devolvía `[N]` con corchetes y la
 verificación lo tomaba por un id desconocido (se normaliza); «comparables» en plural
 estaba en la lista de stopwords y la pregunta «¿cuántos comparables se usaron?» no
 encontraba el hecho [N] (sale de la lista); «valor por metro cuadrado» no matcheaba
-«por m²» (el hecho dice las dos cosas). ⏳ Volver a correr sin caché, 3 corridas.
+«por m²» (el hecho dice las dos cosas). Con los tres arreglos y sin caché: rechazo
+0,96 · citas 0,89 · cifras 0,94 (mediana de 3; guardado en `eval.component_runs`).
 
 Lo que NO se mide todavía y hay que decir: la fidelidad de la prosa (que la respuesta
 no afirme algo que el fragmento no dice) solo la controla la verificación de cifras y

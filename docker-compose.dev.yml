@@ -24,7 +24,10 @@ services:
       - ./scripts:/app/scripts:ro
       - ./migrations:/app/migrations:ro
       - ./data:/data/raw
-    ports: ["8000:8000"]
+    # Todos los puertos del host son variables para poder levantar DOS stacks
+    # a la vez (p. ej. el corpus real y la demo desde cero): PG_PORT, REDIS_PORT,
+    # LITELLM_PORT, API_PORT, WEB_PORT en el .env o en el entorno.
+    ports: ["${API_PORT:-8000}:8000"]
     environment:
       ENV: development
       LOG_LEVEL: DEBUG
@@ -131,10 +134,10 @@ services:
     read_only: false
 
   postgres:
-    ports: ["5433:5432"]         # 5433 para no chocar con un Postgres local
+    ports: ["${PG_PORT:-5433}:5432"]   # 5433 para no chocar con un Postgres local
 
   redis:
-    ports: ["6380:6379"]
+    ports: ["${REDIS_PORT:-6380}:6379"]
 
   litellm:
-    ports: ["4000:4000"]
+    ports: ["${LITELLM_PORT:-4000}:4000"]

@@ -20,6 +20,7 @@ qué no se usó el aviso de la esquina.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any, Literal
@@ -234,17 +235,24 @@ async def curate(state: ReportState, cfg: NodeConfig) -> NodeResult:
     if vivos:
         cliente = LlmClient()
         tam = int(cfg.param("max_llm_batch", 20))
-        try:
-            for i in range(0, len(vivos), tam):
-                lote = vivos[i : i + tam]
-                prompt = render(
-                    cfg.prompt or "curator/v1",
-                    aviso_injection=AVISO_INJECTION,
-                    sujeto=_resumen_sujeto(subject),
-                    avisos=[_payload(c) for c in lote],
-                )
+        # Los lotes son independientes: van en paralelo, como en el nodo 4.
+        # Medido el 18/09 sobre pools de ~160 avisos del eval de recuperación:
+        # 8 llamadas en serie eran ~5 minutos por consulta; en paralelo, el
+        # tiempo de la más lenta. Los veredictos se aplican después, en
+        # orden, así que el resultado es el mismo.
+        paralelo = asyncio.Semaphore(int(cfg.param("max_concurrent_batches", 4)))
+        lotes = [vivos[i : i + tam] for i in range(0, len(vivos), tam)]
+
+        async def _juzgar(lote: list[Candidate]) -> tuple[LoteCurado | None, list[Any]]:
+            prompt = render(
+                cfg.prompt or "curator/v1",
+                aviso_injection=AVISO_INJECTION,
+                sujeto=_resumen_sujeto(subject),
+                avisos=[_payload(c) for c in lote],
+            )
+            async with paralelo:
                 try:
-                    salida, usos = await cliente.structured(
+                    return await cliente.structured(
                         cfg.task or "judge",
                         [{"role": "user", "content": prompt}],
                         LoteCurado,
@@ -256,11 +264,15 @@ async def curate(state: ReportState, cfg: NodeConfig) -> NodeResult:
                 except (LlmValidationError, LlmError) as e:
                     # Sin juez, sobreviven todos los que pasaron las reglas
                     # duras. Degrada, no rompe.
-                    ledger.extend(getattr(e, "usos", []))
                     log.warning("el juez no respondió", error=str(e)[:200])
-                    continue
+                    return None, list(getattr(e, "usos", []))
 
+        try:
+            salidas = await asyncio.gather(*(_juzgar(lote) for lote in lotes))
+            for lote, (salida, usos) in zip(lotes, salidas, strict=True):
                 ledger.extend(usos)
+                if salida is None:
+                    continue
                 por_ref = {c["listing_id"]: c for c in lote}
                 for v in salida.veredictos:
                     cand = por_ref.get(v.listing_ref)

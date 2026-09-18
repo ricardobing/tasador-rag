@@ -221,10 +221,15 @@ async def juzgar_pool(
     consulta: Consulta,
     rankings: dict[str, list[str]],
     *,
-    top: int = 60,
+    top: int = 30,
     cfg: AgentsConfig | None = None,
 ) -> dict[str, int]:
-    """La unión de los top-N de todos los sistemas, juzgada de una vez."""
+    """La unión de los top-N de todos los sistemas, juzgada de una vez.
+
+    N = 30 y no 60: con cinco sistemas, la unión de los top-60 daba pools de
+    150-170 avisos y ~6 minutos de juez por consulta (18/09). Con 30, el pool
+    cubre lo que las métricas miran (nDCG@25, recall@30) a la mitad del costo.
+    """
     pool: list[str] = []
     vistos: set[str] = set()
     for ranking in rankings.values():

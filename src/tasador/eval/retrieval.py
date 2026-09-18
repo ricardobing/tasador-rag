@@ -191,7 +191,7 @@ def juzgados_at(ranking: list[str], juicios: dict[str, int], k: int) -> float:
 def evaluar(ranking: list[str], juicios: dict[str, int], k: int) -> dict[str, float]:
     return {
         f"ndcg@{k}": ndcg_at(ranking, juicios, k),
-        "recall@60": recall_at(ranking, juicios, 60),
+        "recall@30": recall_at(ranking, juicios, 30),
         "mrr": mrr(ranking, juicios),
         "bpref": bpref(ranking, juicios),
         f"juzgados@{k}": juzgados_at(ranking, juicios, k),

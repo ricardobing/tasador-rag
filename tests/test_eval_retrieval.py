@@ -83,7 +83,7 @@ def test_juzgados_at_k_mide_cuanto_del_top_se_esta_evaluando():
 
 def test_evaluar_devuelve_todas_las_metricas_con_el_k_en_el_nombre():
     m = evaluar(["a", "b"], JUICIOS, 25)
-    assert set(m) == {"ndcg@25", "recall@60", "mrr", "bpref", "juzgados@25", "devueltos"}
+    assert set(m) == {"ndcg@25", "recall@30", "mrr", "bpref", "juzgados@25", "devueltos"}
     assert m["devueltos"] == 2
 
 

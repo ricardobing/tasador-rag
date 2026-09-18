@@ -1,0 +1,22 @@
+# Gitleaks — el mismo escáner que corre en el CI (job «Secretos filtrados»).
+#
+# Los dos hallazgos del primer run (18/09/2026) eran placeholders:
+#   .env.example:36   SECRET_KEY=cambiar-esto-por-algo-aleatorio-de-48-bytes
+#   manual.md:84      curl -H "Authorization: Bearer tsk_live_..."
+# Se permiten por FORMA (el texto literal del placeholder), no por archivo:
+# un secreto real en .env.example seguiría disparando.
+#
+# El gate propio, ops/auditar_publicacion.py, cubre lo que gitleaks no puede:
+# compara contra los VALORES del .env local.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "placeholders documentados, nunca valores reales"
+regexes = [
+  '''cambiar-esto''',
+  '''tsk_live_\.\.\.''',
+  '''tsk_live_inventad''',
+  '''sk-test''',
+]

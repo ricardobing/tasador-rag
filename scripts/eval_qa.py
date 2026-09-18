@@ -132,7 +132,9 @@ def _cita_correcta(citas: list[str], esperada: str) -> bool:
     return esperada in citas
 
 
-async def _corrida(casos: list[Caso], indice: Any, umbral: float) -> dict[str, Any]:
+async def _corrida(
+    casos: list[Caso], indice: Any, umbral: float, *, use_cache: bool
+) -> dict[str, Any]:
     from tasador.llm import LlmClient
     from tasador.rag import qa
     from tasador.rag.embedder import get_embedder
@@ -152,6 +154,7 @@ async def _corrida(casos: list[Caso], indice: Any, umbral: float) -> dict[str, A
                 umbral=umbral,
                 umbral_lexico=s.qa_umbral_lexico,
                 k=s.qa_k,
+                use_cache=use_cache,
             )
             citas = [f.id for f in r.citas]
             ok_cita = c.cita_esperada is None or (
@@ -243,7 +246,9 @@ async def _main(args: argparse.Namespace) -> int:
 
         corridas = []
         for i in range(args.corridas):
-            r = await _corrida(casos, indice, args.umbral)
+            # Con varias corridas, sin caché: tres lecturas del mismo caché son
+            # una corrida, no tres.
+            r = await _corrida(casos, indice, args.umbral, use_cache=args.corridas == 1)
             corridas.append(r)
             print(
                 f"corrida {i + 1}: rechazo {r['exactitud_rechazo']:.2f} · "

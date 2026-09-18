@@ -7,7 +7,7 @@
 
 Doc 18 §4. Las consultas son los informes pasados más, con `--avisos N`, N
 avisos del corpus leídos como sujetos (leave-one-out). Con `--juzgar`, el pool
-—la unión del top-60 de cada sistema— se juzga con el propio pipeline (nodos
+—la unión del top-30 de cada sistema— se juzga con el propio pipeline (nodos
 4 a 7) y los juicios quedan en `data/eval/retrieval/`; sin `--juzgar` se usan
 los juicios guardados, o los del informe original si no hay.
 
@@ -75,7 +75,7 @@ async def _main(args: argparse.Namespace) -> int:
             for i, c in enumerate(consultas, 1):
                 guardado = None if args.rejuzgar else juicios.cargar_juicios(c.report_id)
                 rankings = await retrieval.rankings_de(session, sistemas, c)
-                nuevos = {lid for r in rankings.values() for lid in r[:60]} - c.excluir
+                nuevos = {lid for r in rankings.values() for lid in r[:30]} - c.excluir
                 if guardado and nuevos <= set(guardado["pool"]):
                     # Ya está juzgado y ningún sistema trajo un documento nuevo:
                     # el pool es el mismo, el juicio también. Reanudable.

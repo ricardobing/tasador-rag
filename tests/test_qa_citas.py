@@ -52,6 +52,15 @@ def test_las_citas_son_requeridas_en_el_schema():
     assert "citas" in RespuestaQA.model_json_schema()["required"]
 
 
+def test_una_cita_con_corchetes_es_la_misma_cita():
+    r = RespuestaQA(
+        respuesta="Se usaron 19 [N].", citas=["[N]", " C-01 ", "[]"], sin_evidencia=False
+    )
+    assert r.ids_citados() == ["N", "C-01"]
+    permitidos = {"N": "Comparables: se usaron 19 y se descartaron 41.", "C-01": "x"}
+    assert verificar(r, permitidos) == []
+
+
 def test_los_hechos_del_informe_llevan_ids_estables_y_el_motivo_en_castellano():
     informe = {
         "valuation": {

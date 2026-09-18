@@ -103,7 +103,8 @@ def fragmentos_del_informe(informe: dict[str, Any]) -> list[Fragmento]:
                 "Valuación: precio de publicación sugerido USD "
                 f"{_plata(p.get('mid'))} (rango USD {_plata(p.get('low'))} a USD "
                 f"{_plata(p.get('high'))}); rango esperado de cierre USD {_plata(c.get('low'))} "
-                f"a USD {_plata(c.get('high'))}; USD {_plata(v.get('price_per_m2'))} por m² sobre "
+                f"a USD {_plata(c.get('high'))}; USD {_plata(v.get('price_per_m2'))} por metro "
+                f"cuadrado (m²) sobre "
                 f"{_plata(v.get('weighted_surface'))} m² de superficie ponderada. Los valores son "
                 "precios de publicación, no de escrituración.",
                 "informe",
@@ -198,7 +199,7 @@ _PALABRA = re.compile(r"[a-záéíóúñü0-9]{3,}", re.IGNORECASE)
 _STOPWORDS = {
     "que", "cual", "cuál", "como", "cómo", "por", "para", "los", "las", "una", "uno", "del",
     "con", "sin", "sobre", "entre", "hay", "esta", "está", "este", "esa", "ese", "son", "fue",
-    "informe", "propiedad", "aviso", "avisos", "comparable", "comparables", "valor", "precio",
+    "informe", "propiedad", "aviso", "avisos", "comparable", "valor", "precio",
     "usd", "cuanto", "cuánto", "cuantos", "cuántos", "tiene", "tienen", "puede", "más", "mas",
 }  # fmt: skip
 
@@ -258,6 +259,11 @@ class RespuestaQA(BaseModel):
     citas: list[str] = Field(max_length=8)
     sin_evidencia: bool
 
+    def ids_citados(self) -> list[str]:
+        """`[N]`, ` C-07 ` y `C-07` son la misma cita. Medido: uno de cada
+        cuatro rechazos del eval era un id correcto con corchetes."""
+        return [c.strip().strip("[]").strip() for c in self.citas if c and c.strip("[] ")]
+
 
 def verificar(
     respuesta: RespuestaQA, permitidos: dict[str, str], *, tolerancia_pct: float = 0.1
@@ -268,12 +274,13 @@ def verificar(
     problemas: list[str] = []
     if respuesta.sin_evidencia:
         return problemas
-    if not respuesta.citas:
+    citas = respuesta.ids_citados()
+    if not citas:
         problemas.append("la respuesta no cita ningún fragmento")
-    desconocidas = [c for c in respuesta.citas if c not in permitidos]
+    desconocidas = [c for c in citas if c not in permitidos]
     if desconocidas:
         problemas.append(f"cita fragmentos que no se le pasaron: {desconocidas}")
-    citados = [permitidos[c] for c in respuesta.citas if c in permitidos]
+    citados = [permitidos[c] for c in citas if c in permitidos]
     huerfanas = cifras_no_trazables(
         respuesta.respuesta, {"fragmentos": citados}, tolerancia_pct=tolerancia_pct
     )
@@ -312,6 +319,7 @@ async def responder(
     umbral_lexico: float = 0.34,
     k: int = 8,
     max_intentos: int = 2,
+    use_cache: bool = True,
 ) -> ResultadoQA:
     """Dos compuertas antes del modelo y dos verificaciones después.
 
@@ -355,7 +363,7 @@ async def responder(
                 RespuestaQA,
                 temperature=0.0,
                 max_tokens=1200,
-                use_cache=feedback is None,
+                use_cache=use_cache and feedback is None,
             )
         except (LlmValidationError, LlmError) as e:
             usos.extend(getattr(e, "usos", []))
@@ -369,7 +377,8 @@ async def responder(
             )
         problemas = verificar(salida, permitidos)
         if not problemas:
-            citas = [f for f in fragmentos if f.id in salida.citas]
+            ids = set(salida.ids_citados())
+            citas = [f for f in fragmentos if f.id in ids]
             return ResultadoQA(salida.respuesta, citas, False, None, mejor, usos, intento)
         feedback = "; ".join(problemas)
         log.info("respuesta rechazada por la verificación", problemas=problemas, intento=intento)

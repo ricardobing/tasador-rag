@@ -84,6 +84,48 @@ en el `.env` (ya viene así en la plantilla comentada).
    leídos por la mediana.
 8. **`/admin/usuarios` y `/admin/organizacion`** — alta de usuario, API key.
 
+### 2.3 bis Qué direcciones probar (con los datos que hay hoy)
+
+El corpus real cubre **dos barrios y un tipo de propiedad**: departamentos en Palermo,
+con densidad, y en Belgrano, apenas. Todo lo demás termina en `INSUFFICIENT_DATA` por
+diseño. Medido sobre la base local el 19/09/2026 (avisos vigentes en USD con ficha
+extraída):
+
+| Barrio | Tipo · ambientes | Avisos | m² típicos | USD/m² mediano | Qué esperar |
+|---|---|---|---|---|---|
+| Palermo | departamento · 2 | 1.268 | 45 | 3.720 | `ALTA`, 45–55 de 60 comparables, sin relajar |
+| Palermo | departamento · 1 | 967 | 32 | 3.556 | `ALTA` |
+| Palermo | departamento · 3 | 905 | 70 | 3.360 | `ALTA` |
+| Palermo | departamento · 4 | 619 | 119 | 3.551 | `ALTA` |
+| Palermo | departamento · 5 | 101 | 165 | 3.600 | `ALTA` o `MEDIA` |
+| Palermo | departamento · 6–7 | 44 | 210–240 | 3.400 | `MEDIA`, con relajación |
+| Palermo | PH · 3 | 10 | 74 | 2.343 | `BAJA` o `INSUFFICIENT_DATA` |
+| Belgrano | departamento · 1–4 | 14–27 por ambientes | 42–138 | 2.540–2.800 | `MEDIA`/`BAJA`, la escalera se relaja a linderos |
+| cualquier otro barrio | — | 0 | — | — | `INSUFFICIENT_DATA` con el desglose |
+
+Direcciones que sirven para probar (calles reales; el número es solo para geocodificar
+la cuadra, no hace falta que exista el edificio):
+
+```
+Palermo, el caso fácil     Gorriti 5000 · 3 amb · 70 m²        → ALTA, ~50 comparables
+Palermo, chico             Thames 1800 · 1 amb · 32 m²          → ALTA
+Palermo, grande            Av. Santa Fe 4200 · 4 amb · 120 m²   → ALTA
+Palermo, borde del corpus  Charcas 3400 · 6 amb · 200 m²        → MEDIA, escalera relajada
+Belgrano                   Av. Cabildo 2500 · 3 amb · 78 m²     → MEDIA/BAJA, pocos comparables
+Belgrano, chico            Vuelta de Obligado 2200 · 1 amb · 42 m² → BAJA o sin datos
+Sin corpus                 Av. del Libertador 9000, Núñez · 3 amb → INSUFFICIENT_DATA
+Sin corpus                 Av. Rivadavia 6000, Caballito · 2 amb → INSUFFICIENT_DATA
+```
+
+Con el **corpus demo** (581 avisos sintéticos: ~350 de Palermo y ~240 de Belgrano, 1 a 5
+ambientes) las dos primeras zonas funcionan parecido entre sí y con menos comparables
+(45 de 60 en Palermo); no hay PH ni barrios fuera de esos dos.
+
+Para ver el efecto de los datos del sujeto, generá el mismo caso dos veces: primero
+solo con dirección, tipo, ambientes y metros; después desplegando «Tengo más datos» con
+estado *a refaccionar*, contrafrente y piso bajo. El valor tiene que bajar y la confianza
+puede cambiar; los comparables descartados por ajuste excesivo aparecen con su motivo.
+
 ### 2.4 Lo mismo por API (para el panel de una inmobiliaria)
 
 ```powershell

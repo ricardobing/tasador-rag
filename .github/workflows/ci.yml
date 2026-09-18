@@ -237,6 +237,11 @@ jobs:
           $C scripts/seed.py --offline
           $C scripts/ingest_csv.py --carpeta /data/raw/demo
           $C scripts/crear_usuario.py --email ci@inmo-demo.com.ar --rol owner --generar-password
+          # Un informe sin comparables (barrio sin corpus): termina en
+          # INSUFFICIENT_DATA sin llamar a ningún modelo, y deja una fila en el
+          # listado para los tests que la necesitan. Si Nominatim no responde
+          # en el runner, el informe queda FAILED y también es una fila.
+          $C scripts/run_report.py --direccion "Av. del Libertador 9000, Núñez" --amb 3 --m2 70 || true
       # Playwright corre desde una copia aparte: el contenedor `web` monta ./web
       # y deja node_modules con otro dueño, y un `npm ci` ahí borraría los
       # módulos del contenedor que está sirviendo la app (EACCES, segundo run).

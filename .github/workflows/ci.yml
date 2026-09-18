@@ -109,6 +109,7 @@ jobs:
       # MANAGED_SCHEMAS y no lo creaba nadie.
       - name: Migraciones desde cero
         env:
+          REDIS_URL: redis://localhost:6379/0
           DATABASE_URL: postgresql+psycopg://tasador:test@localhost:5432/tasador_test
           SECRET_KEY: test-secret-para-ci-solamente
           ENCRYPTION_KEY: test-encryption-para-ci-solamente

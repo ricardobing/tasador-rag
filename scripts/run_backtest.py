@@ -32,6 +32,11 @@ async def main() -> int:
         default="",
         help="varias semillas separadas por coma: imprime el MdAPE de cada una y la amplitud",
     )
+    ap.add_argument(
+        "--solo-con-sujeto",
+        action="store_true",
+        help="recorta a los casos con features (los mismos que usa --seleccion A|E)",
+    )
     args = ap.parse_args()
     seeds = [int(s) for s in args.seeds.split(",") if s.strip()] or [args.seed]
     mdapes: list[Decimal] = []
@@ -44,6 +49,7 @@ async def main() -> int:
                 sample=args.sample,
                 seed=seed,
                 seleccion=args.seleccion,
+                solo_con_sujeto=args.solo_con_sujeto,
             )
             print(render(res))
             if res.mdape is not None:

@@ -35,7 +35,7 @@ SISTEMAS: dict[str, retrieval.Sistema] = {}
 
 
 def _registrar_sistemas_rag() -> None:
-    """Los sistemas B-G existen solo si el paquete `rag` está; A no depende de él."""
+    """Los sistemas B-H existen solo si el paquete `rag` está; A no depende de él."""
     SISTEMAS.update(retrieval.sistemas_disponibles())
 
 

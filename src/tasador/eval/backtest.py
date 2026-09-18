@@ -334,6 +334,7 @@ async def run_backtest(
     sample: int = 500,
     seed: int = 42,
     seleccion: str = "superficie",
+    solo_con_sujeto: bool = False,
 ) -> BacktestResult:
     """`seleccion`: cómo se eligen los comparables de cada caso.
 
@@ -362,10 +363,12 @@ async def run_backtest(
         )
     else:
         cases, pool = await load_cases(session, sample=sample, seed=seed)
-    if sistema is not None:
-        # Después del sorteo, no antes: la misma semilla tiene que dar los
-        # mismos casos que `superficie`. Los que no tienen sujeto (sin
-        # features) se caen y `n_cases` lo declara.
+    if sistema is not None or solo_con_sujeto:
+        # Después del sorteo, no antes: la misma semilla tiene que dar el mismo
+        # sorteo. Los casos sin sujeto (sin features con ambientes) no pueden
+        # ir al nodo 2 y se caen; `solo_con_sujeto` aplica el MISMO recorte a
+        # la selección por superficie para que la comparación sea sobre los
+        # mismos casos (18/09: 183 de 300 tenían sujeto).
         cases = [c for c in cases if c.subject is not None]
     res = BacktestResult(
         dataset=dataset if seleccion == "superficie" else f"{dataset}·{seleccion}",

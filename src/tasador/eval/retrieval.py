@@ -251,7 +251,7 @@ Sistema = Callable[[AsyncSession, dict[str, Any]], Awaitable[list[str]]]
 
 
 def sistemas_disponibles() -> dict[str, Sistema]:
-    """A siempre; B-G solo si el paquete `rag` está instalado."""
+    """A siempre; B-H solo si el paquete `rag` está instalado."""
     sistemas: dict[str, Sistema] = {"A": sistema_actual}
     try:
         from tasador.rag import sistemas_para_eval

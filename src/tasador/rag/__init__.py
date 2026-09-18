@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def sistemas_para_eval() -> dict[str, Any]:
-    """Los sistemas B-G de la tabla de ablación (doc 18 §4.3), para
+    """Los sistemas B-H de la tabla de ablación (doc 18 §4.3), para
     `scripts/eval_retrieval.py`."""
     from tasador.agents.config import load_agents_config
     from tasador.corpus.resolve import Barrios
@@ -62,4 +62,8 @@ def sistemas_para_eval() -> dict[str, Any]:
         "E": _sistema(hibrido),
         "F": _sistema(hibrido, rerank=MODELOS["bge"]),
         "G": _sistema(hibrido, rerank=MODELOS["jina"]),
+        # H no estaba en la tabla de doc 18: la agregó la medición. Sobre 112
+        # consultas, el denso con truncar (B) le ganó al denso por oraciones (C)
+        # en nDCG@25, así que la fusión con B es la pregunta obvia siguiente.
+        "H": _sistema(Semantica(modo="hibrido", chunker_version=ch["A"].version)),
     }

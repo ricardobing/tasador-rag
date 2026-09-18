@@ -42,55 +42,83 @@ chunker A (truncar a 120)                                     8.514 chunks · 1 
 Con e5-large (objetivo 320 / máx 480) el mismo chunker C daba 2,06 chunks por aviso, p50
 276, máx 480: el número de chunks es una función del contexto del modelo, no del texto.
 
-## 3. La tabla de ablación ⏳
+## 3. La tabla de ablación
 
-Consultas: 53 informes pasados + 60 avisos del corpus leídos como sujeto (leave-one-out).
-Pool: unión del top-30 de cada sistema, juzgado por el pipeline. Métricas sobre la lista
-condensada, con intervalo del 95% por bootstrap sobre las consultas; Δ apareada contra A.
-
-```
-                                   nDCG@25   recall@30   MRR   bpref   juzgados@25   ms
-A  SQL + recencia (hoy)               ⏳
-B  A + denso, truncar (A-truncar-120)  ⏳
-C  A + denso, oraciones+encabezado     ⏳
-D  A + léxico (FTS spanish)            ⏳
-E  C + D fusionados con RRF            ⏳
-F  E + rerank bge-reranker-base        ⏳  (subconjunto: 1,7 pares/s en CPU)
-G  E + rerank jina-v2 multilingual     ⏳  (subconjunto; CC-BY-NC, solo para comparar)
-```
-
-**Primer tercio, ya juzgado con pooling** (las 34 consultas que vienen de informes
-pasados; pools de 90-100 avisos, `juzgados@25` = 1,00 en los cinco sistemas):
+Consultas: 53 informes pasados + 59 avisos del corpus leídos como sujeto (leave-one-out;
+el set de 60 se fijó en disco y uno dejó de calificar cuando sus features cambiaron).
+Pool: unión del top-30 de cada sistema, juzgado por el pipeline (nodos 4-7); 16 juicios
+de la segunda mitad se rehicieron porque el gateway se reinició en el medio y el nodo 6
+degrada sin juez (§6). Métricas sobre la lista condensada, intervalo del 95% por
+bootstrap sobre las consultas; Δ apareada contra A. `descartados@30` es la fracción del
+top-30 juzgado que la curaduría no usa —el criterio (b) de doc 18 §4.4—.
 
 ```
-                                   nDCG@25            recall@30          MRR               bpref
-A  SQL + recencia                0,688 [0,673–0,708]  0,262             0,387             0,325
-B  denso, truncar                0,817 [0,809–0,829]  0,302             1,000             0,369
-C  denso, oraciones+encabezado   0,707 [0,697–0,719]  0,285             0,559             0,351
-D  léxico (FTS spanish)          0,844 [0,834–0,850]  0,296             1,000             0,401
-E  C + D con RRF                 0,702 [0,696–0,713]  0,274             0,529             0,473
+112 consultas · k=25 · juzgados@25 = 1,00 en todos
 
-Δ vs A (apareada, 95%):  B +0,130 [0,121–0,136] · C +0,020 [0,008–0,028] · D +0,156 [0,128–0,176] · E +0,015 [0,003–0,023]
+                                  nDCG@25              Δ vs A (95%)          recall@30  MRR    bpref  descartados@30
+A  SQL + recencia (hoy)           0,748 [0,719–0,774]       —                  0,314     0,649  0,390  0,292
+B  A + denso, truncar 120         0,805 [0,782–0,827]  +0,057 [+0,033, +0,081]  0,346     0,905  0,441  0,218
+C  A + denso, oraciones+encab.    0,759 [0,730–0,783]  +0,012 [−0,010, +0,031]  0,333     0,753  0,444  0,247
+D  A + léxico (FTS spanish)       0,821 [0,795–0,845]  +0,073 [+0,049, +0,096]  0,345     0,940  0,456  0,218
+E  C + D fusionados con RRF       0,780 [0,753–0,804]  +0,032 [+0,014, +0,050]  0,336     0,795  0,534  0,241
+F  E + rerank bge-reranker-base   ⏳
+H  B + D fusionados con RRF       ⏳  (no estaba en el plan: la agregó la fila B)
+G  E + rerank jina-v2             ⏳  (CC-BY-NC; solo para comparar)
 ```
 
-Tres lecturas, provisorias hasta tener las 113: (1) **todo puntaje le gana a la
-recencia**, fuera del intervalo; (2) el léxico solo (D) es el mejor en nDCG y el
-denso con *truncar* (B) le sigue — el chunking por oraciones (C) **no** mejora sobre
-truncar en este tercio, al contrario; (3) la fusión (E) hereda lo peor de C en nDCG
-pero tiene el mejor bpref. Las consultas de informes no traen texto libre: la
-consulta semántica es solo el encabezado estructurado, que es exactamente lo que
-el léxico matchea mejor. Las 60 consultas que vienen de avisos —con la descripción
-como notas— son las que pueden dar vuelta esto.
+Lo que dice la tabla, en orden de sorpresa:
 
-Lo que ya se sabía de la primera pasada, con juicios solo de A: el sistema A sobre su
-propio pool da nDCG@25 0,64 —la recencia no empuja hacia abajo a los que la curaduría
-después descarta— y recall@30 1,0 por construcción. Los sistemas B-E sobre ese pool dan
-`juzgados@25` de 0,16 a 0,36, que es la razón del pooling: sin juzgar lo que ELLOS
-traen, no se puede decir nada.
+1. **Todo puntaje le gana a la recencia** salvo el chunking por oraciones solo (C), que
+   roza el cero. B, D y E están fuera del intervalo en nDCG@25, y **descartan menos**:
+   la curaduría tira el 29% del top-30 de A y el 22-24% del de B, D y E.
+2. **El léxico solo (D) es el mejor sistema individual**, y el denso con *truncar* (B) le
+   sigue de cerca. Con un modelo de 128 tokens, quedarse con el encabezado estructurado
+   + el arranque de la descripción (B) rinde más que partir la descripción en oraciones
+   (C): los chunks de oraciones traen avisos que hablan de lo mismo pero no son
+   comparables. Es exactamente lo contrario de lo que decía doc 18 §3.2.
+3. **La fusión (E) hereda lo peor de C en nDCG pero tiene el mejor bpref por lejos**
+   (0,534 contra 0,44-0,46): pone arriba más de lo juzgado relevante en relación con
+   lo juzgado irrelevante, aunque el orden fino sea peor. De ahí la fila H: fusionar
+   el denso que funciona (B) con el léxico.
+4. Las 34 consultas de informes pasados (sin texto libre) y las 59 de avisos (con la
+   descripción como notas) cuentan la misma historia: no es un artefacto del tipo de
+   consulta.
 
-**Criterio, escrito antes (doc 18 §4.4):** `semantic.enabled: true` solo si E o F
-superan a A en nDCG@25 fuera del intervalo, el % descartado por la curaduría baja, y el
-MdAPE no empeora fuera del ruido entre semillas. ⏳
+**Criterio (c), el MdAPE.** El backtest de `VIGENTES` no pasaba por el nodo 2 (elegía
+comparables por superficie), así que ningún recuperador podía moverle el número. Se
+agregó `--seleccion A|E` (doc 09 §3.2 bis): los mismos casos, los comparables que
+trae cada recuperador, el mismo motor después.
+
+```
+VIGENTES · 300 casos sorteados por semilla · casos con sujeto: 183 / 173 / 176
+
+                          semilla 42   43      44      media   amplitud
+superficie (300 casos)      23,1%    23,8%   22,1%    23,0%   1,7 pp
+A  SQL + recencia           22,7%    21,4%   22,8%    22,3%   1,4 pp
+E  híbrido                  22,1%    20,2%   20,4%    20,9%   1,8 pp
+```
+
+E le gana a A en las tres semillas (0,6 · 1,2 · 2,4 pp): del tamaño del ruido, pero
+consistente en signo. Con el doble de casos, y la línea base por superficie recortada
+a los MISMOS casos con sujeto:
+
+```
+VIGENTES · 600 casos sorteados por semilla · casos con sujeto: 356 / 337 / 354
+
+                          semilla 42   43      44      media   amplitud
+superficie (mismos casos)   22,6%    24,8%   24,1%    23,9%   2,2 pp
+A  SQL + recencia           23,6%    24,0%   23,3%    23,6%   0,7 pp
+E  híbrido                  21,4%    22,2%   20,5%    21,4%   1,7 pp
+```
+
+E mejora sobre A en las tres semillas por 2,2 · 1,8 · 2,8 pp: más que la amplitud
+entre semillas de cualquiera de los dos. El recuperador de hoy (A) no le gana a la
+selección por superficie (23,6 contra 23,9); el híbrido sí. ⏳ D y H.
+
+**Criterio (doc 18 §4.4), leído contra la tabla:** (a) E supera a A en nDCG@25 fuera
+del intervalo ✓; (b) el % descartado baja (29% → 24%, intervalo de la Δ sin cero) ✓;
+(c) el MdAPE no empeora ✓ (mejora en las tres semillas). **`semantic.enabled` pasa a
+`true`.** Con qué `modo` y qué chunker lo dice el resto de la tabla (F, H): ⏳.
 
 ## 4. «Preguntale al informe»
 

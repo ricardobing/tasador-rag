@@ -17,6 +17,7 @@ se lee todo lo demás.
 | «`e5-large` como reemplazo» (doc 18 §3.1) | **0,4–0,8 pasajes/s en CPU**: 6-12 h para 17.500 chunks; 35 min de indexado escribieron 199 | MiniLM-L12 multilingüe (13/s) para poder comparar chunkers en una tarde; e5 queda como fila pendiente sobre un subconjunto |
 | «Entre un cuarto y un tercio de los avisos no entra en 512 tokens» (estimado por caracteres) | **28,1%** con el tokenizador real, sin truncar (p50 374 · p90 710 · p99 1.176 · máx 2.400, n=8.514) | La estimación estaba bien. La PRIMERA medición dio p90 = p99 = máx = 512: el tokenizador con el que se embebe trunca, y contar con él responde «ninguno» por construcción |
 | «Los comparables de informes pasados son juicios de relevancia» (doc 18 §4.1) | Sobre 23 consultas, `juzgados@25` = 0,27 y en 17 fue **cero**: la escalera cambió el 15/08 y el pool de entonces ya no existe | Pooling: el propio pipeline (nodos 4-7) juzga la unión del top-N de los sistemas que se comparan (`eval/juicios.py`) |
+| «F = E + rerank» con el tope de latencia de producción (15 s) | En CPU, 60 pares tardan 17-35 s: el reranker **degradaba a E en todas las consultas** y la fila F medía la fila E sin decirlo | En el eval, tope de 300 s y el sistema explota si degrada; el tope de producción es una decisión aparte (§3) |
 | «El umbral de coseno rechaza sin llamar al modelo» (doc 18 §5.3) | Con MiniLM, las preguntas con respuesta dan 0,43-0,74 y las que no, 0,32-0,51: **no separan**. Umbral 0,80: rechazo 0,31, citas 0,00 | Compuerta doble —coseno **y** solapamiento léxico— y el modelo decide con `sin_evidencia` |
 
 Y dos de rendimiento que no cambian el diseño pero sí el costo de medir:
@@ -108,12 +109,19 @@ VIGENTES · 600 casos sorteados por semilla · casos con sujeto: 356 / 337 / 354
                           semilla 42   43      44      media   amplitud
 superficie (mismos casos)   22,6%    24,8%   24,1%    23,9%   2,2 pp
 A  SQL + recencia           23,6%    24,0%   23,3%    23,6%   0,7 pp
-E  híbrido                  21,4%    22,2%   20,5%    21,4%   1,7 pp
+D  léxico                   20,4%    22,2%   20,9%    21,2%   1,8 pp
+E  híbrido C + D            21,4%    22,2%   20,5%    21,4%   1,7 pp
+H  híbrido B + D            21,4%    21,7%   22,0%    21,7%   0,7 pp
 ```
 
 E mejora sobre A en las tres semillas por 2,2 · 1,8 · 2,8 pp: más que la amplitud
 entre semillas de cualquiera de los dos. El recuperador de hoy (A) no le gana a la
-selección por superficie (23,6 contra 23,9); el híbrido sí. ⏳ D y H.
+selección por superficie (23,6 contra 23,9); cualquier recuperador con puntaje sí, y
+**entre D, E y H el MdAPE no distingue** (21,2-21,7, dentro del ruido). El precio final
+se decide por la mediana robusta de 25 comparables: con que el top-25 traiga
+suficientes comparables buenos alcanza, y los tres lo hacen. Lo que sí distingue entre
+ellos es el orden (nDCG, MRR) y cuánto tira la curaduría: eso lo dice la tabla de
+arriba.
 
 **Criterio (doc 18 §4.4), leído contra la tabla:** (a) E supera a A en nDCG@25 fuera
 del intervalo ✓; (b) el % descartado baja (29% → 24%, intervalo de la Δ sin cero) ✓;

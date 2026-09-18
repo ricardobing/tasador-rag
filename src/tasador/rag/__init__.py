@@ -44,12 +44,19 @@ def sistemas_para_eval() -> dict[str, Any]:
                 ]
                 for c in candidatos
             }
-            orden, _ = await reordenar(
+            orden, traza = await reordenar(
                 texto_de_consulta(subject, con_notas=sem.usar_notas),
                 ids,
                 textos,
                 reranker=get_reranker(rerank),
+                # El tope de producción (15 s) es una decisión de latencia; en
+                # CPU, 60 pares tardan 17-35 s y con ese tope F degradaba a E en
+                # TODAS las consultas (18/09) y la fila F medía la fila E. La
+                # ablación mide el reranker de verdad; el tope se decide después.
+                max_ms=300_000,
             )
+            if traza.get("rerank") == "degradado":
+                raise RuntimeError(f"el reranker degradó en el eval: {traza}")
             return orden
 
         return correr

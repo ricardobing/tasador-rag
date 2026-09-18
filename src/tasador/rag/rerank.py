@@ -109,7 +109,13 @@ async def reordenar(
             reranker.puntuar(consulta, [textos[i] for i in con_texto]), timeout=max_ms / 1000
         )
     except (TimeoutError, Exception) as e:
-        log.warning("reranker no disponible; se conserva el orden del híbrido", error=str(e)[:120])
+        log.warning(
+            "reranker no disponible; se conserva el orden del híbrido",
+            error=type(e).__name__,
+            detalle=str(e)[:120],
+            pares=len(con_texto),
+            max_ms=max_ms,
+        )
         return ids, {"rerank": "degradado", "error": type(e).__name__}
     ms = int((time.perf_counter() - t0) * 1000)
     orden = [i for _, i in sorted(zip(puntajes, con_texto, strict=True), key=lambda p: -p[0])]

@@ -1,6 +1,6 @@
 # Mapa del proyecto — cómo funciona, qué se construyó, cómo explicarlo
 
-Siete diagramas interactivos (HTML autocontenido, generados con
+Siete diagramas interactivos (abrí [`index.html`](index.html) para verlos con la guía; HTML autocontenido, generados con
 [Archify](https://github.com/tt-a1i/archify) a partir de los JSON de esta carpeta) y
 esta guía para recorrerlos. Cada HTML abre solo en un navegador: tiene búsqueda, foco
 por componente, trazado de relaciones, vistas guiadas, tema claro/oscuro y exportación a

@@ -1,0 +1,146 @@
+<title>Mapa Tasador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --paper: #f3f5f7;
+    --panel: #ffffff;
+    --ink: #1b222b;
+    --ink-2: #4b5563;
+    --line: #d5dae1;
+    --accent: #1f7a5c;
+    --accent-ink: #ffffff;
+    --amber: #a86a12;
+    --amber-soft: #fbf1e0;
+    --mint-soft: #e6f3ed;
+    --code: #eef1f4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #101418; --panel: #171c22; --ink: #e6e9ee; --ink-2: #a3acb8; --line: #2a323c;
+      --accent: #4cc39a; --accent-ink: #0d1a15; --amber: #e2a24a; --amber-soft: #2a2114; --mint-soft: #14261f; --code: #1e252d;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #101418; --panel: #171c22; --ink: #e6e9ee; --ink-2: #a3acb8; --line: #2a323c;
+    --accent: #4cc39a; --accent-ink: #0d1a15; --amber: #e2a24a; --amber-soft: #2a2114; --mint-soft: #14261f; --code: #1e252d;
+  }
+  body { background: var(--paper); color: var(--ink); font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; font-size: 16px; line-height: 1.55; padding-inline: 20px; padding-block: 28px 56px; }
+  .wrap { max-width: 1040px; margin-inline: auto; }
+  header { display: grid; gap: 10px; margin-bottom: 30px; }
+  .eyebrow { font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+  h1 { font-size: clamp(30px, 4.6vw, 44px); font-weight: 600; line-height: 1.08; margin: 0; text-wrap: balance; }
+  .thesis { max-width: 62ch; font-size: 18px; color: var(--ink-2); margin: 0; }
+  .thesis strong { color: var(--ink); font-weight: 600; }
+  h2 { font-size: 22px; font-weight: 600; margin: 40px 0 12px; text-wrap: balance; }
+  h3 { font-size: 16px; font-weight: 600; margin: 22px 0 6px; }
+  p { max-width: 68ch; margin: 0 0 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .tile { display: grid; grid-template-rows: auto 1fr auto; gap: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; text-decoration: none; color: inherit; transition: border-color .15s; }
+  .tile:hover, .tile:focus-visible { border-color: var(--accent); outline: none; }
+  .tile .num { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--accent); letter-spacing: .06em; }
+  .tile .name { font-size: 17px; font-weight: 600; line-height: 1.25; }
+  .tile .q { color: var(--ink-2); font-size: 14.5px; }
+  .tile .kind { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--ink-2); }
+  .note { background: var(--mint-soft); border-left: 3px solid var(--accent); padding: 10px 14px; border-radius: 0 8px 8px 0; max-width: 72ch; margin: 14px 0; }
+  .warn { background: var(--amber-soft); border-left: 3px solid var(--amber); padding: 10px 14px; border-radius: 0 8px 8px 0; max-width: 72ch; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 600; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); }
+  tr:last-child td { border-bottom: 0; }
+  td.n { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  code { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .92em; background: var(--code); padding: 1px 5px; border-radius: 4px; }
+  ol, ul { padding-left: 22px; max-width: 70ch; }
+  li { margin-bottom: 6px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .two { grid-template-columns: 1fr; } }
+  .faq dt { font-weight: 600; margin-top: 12px; }
+  .faq dd { margin: 4px 0 0; color: var(--ink-2); max-width: 68ch; }
+  footer { margin-top: 44px; color: var(--ink-2); font-size: 13.5px; border-top: 1px solid var(--line); padding-top: 14px; }
+  a { color: var(--accent); }
+</style>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Tasador · repositorio público · 18 de septiembre de 2026</div>
+    <h1>Mapa del proyecto: cómo funciona, qué se construyó, cómo contarlo</h1>
+    <p class="thesis"><strong>El LLM hace lenguaje y juicio; la matemática hace los números.</strong> Un motor de tasaciones para inmobiliarias que calcula el precio con matemática reproducible sobre comparables reales, hace que cada dato de un modelo venga con la cita que lo prueba, y midió su propio RAG con una vara escrita antes de medir.</p>
+  </header>
+
+  <h2>Siete diagramas para recorrerlo</h2>
+  <p>Cada uno abre en una pestaña nueva. Son páginas interactivas: búsqueda, foco por componente, trazado de relaciones, vistas guiadas (arriba a la derecha), tema claro u oscuro y exportación. En el primero, cada componente enlaza al archivo del repositorio que lo implementa.</p>
+  <div class="grid">
+    <a class="tile" href="01-sistema.html" target="_blank" rel="noopener"><span class="num">01 · arquitectura</span><span class="name">Sistema</span><span class="q">¿Qué corre y quién habla con quién? Web, API, cola, worker, Postgres, gateway de modelos, modelos locales.</span><span class="kind">12 conexiones · 2 fronteras</span></a>
+    <a class="tile" href="02-pipeline-a-precio.html" target="_blank" rel="noopener"><span class="num">02 · workflow</span><span class="name">Del sujeto al precio</span><span class="q">Nodos 1 a 7: dirección → barrio → 60 candidatos → lectura con cita → deduplicación → curaduría → mediana robusta.</span><span class="kind">salida temprana: INSUFFICIENT_DATA</span></a>
+    <a class="tile" href="03-pipeline-a-pdf.html" target="_blank" rel="noopener"><span class="num">03 · workflow</span><span class="name">Del precio al PDF</span><span class="q">Nodos 8 a 11: contexto, redacción, crítico en dos fases y PDF. Dónde se rechaza y cuándo sale sin prosa.</span><span class="kind">el ciclo crítico → redactor</span></a>
+    <a class="tile" href="04-informe.html" target="_blank" rel="noopener"><span class="num">04 · secuencia</span><span class="name">Pedir un informe</span><span class="q">Navegador, API, Redis, worker, Postgres y LiteLLM: qué mensaje va a quién y en qué orden.</span><span class="kind">202 → grafo → SUCCEEDED</span></a>
+    <a class="tile" href="05-pregunta.html" target="_blank" rel="noopener"><span class="num">05 · secuencia</span><span class="name">Preguntale al informe</span><span class="q">Compuerta doble sin modelo, respuesta con citas verificadas, rechazo en milisegundos cuando no hay evidencia.</span><span class="kind">rechazo 0,96 · citas 0,89</span></a>
+    <a class="tile" href="06-rag-y-evaluacion.html" target="_blank" rel="noopener"><span class="num">06 · flujo de datos</span><span class="name">Del aviso al veredicto</span><span class="q">Cómo se indexó el corpus, qué siete sistemas se compararon y con qué vara. Por qué ganó el léxico.</span><span class="kind">113 consultas · pooling</span></a>
+    <a class="tile" href="07-vida-de-un-informe.html" target="_blank" rel="noopener"><span class="num">07 · ciclo de vida</span><span class="name">La vida de un informe</span><span class="q">QUEUED, RUNNING, CRÍTICA, SUCCEEDED; reintentos, reescrituras y las tres salidas terminales.</span><span class="kind">estados y transiciones</span></a>
+  </div>
+
+  <h2>Cómo funciona, en un párrafo</h2>
+  <p>Una inmobiliaria carga una dirección, los ambientes y los metros. La API crea el informe y lo encola; un worker corre un grafo de once nodos: resuelve el barrio, recupera 60 avisos comparables del corpus (filtro SQL con relajación progresiva, ordenados por puntaje léxico), los lee con un modelo que devuelve cada dato <strong>con la cita textual del aviso</strong> (verificada por comparación de strings, sin modelo), deduplica el mismo inmueble publicado varias veces, descarta con un juez que solo puede elegir entre cinco motivos y tiene que citar, y <strong>calcula el precio sin ningún modelo</strong>: mediana robusta de USD/m² con coeficientes explícitos, en aritmética decimal.</p>
+  <p>Después un redactor escribe seis secciones y un crítico en dos fases las verifica: la fase A extrae toda cifra de la prosa y la busca en los datos; la fase B es un modelo adversarial. Sale un PDF con la tabla de comparables usados y descartados, cada uno con su motivo. El propietario puede preguntarle al informe; la respuesta cita hechos del informe y se rechaza sin llamar al modelo cuando no hay evidencia.</p>
+  <div class="note">Un test de arquitectura impide que el nodo del precio tenga un modelo asignado, y otro que el mínimo de cinco comparables se ablande por variable de entorno. Las garantías están en el código, no en la intención.</div>
+
+  <h2>Qué se construyó y qué se midió</h2>
+  <div class="two">
+    <div>
+      <h3>El producto (agosto)</h3>
+      <ul>
+        <li>Pipeline de 11 nodos en LangGraph con checkpoint en Postgres, cola arq/Redis, API FastAPI, front Next.js, multi-tenant, PDF con WeasyPrint.</li>
+        <li>Cuatro controles donde interviene un modelo: cita verificada, motivos cerrados con cita, crítico en dos fases, <code>INSUFFICIENT_DATA</code> con desglose.</li>
+        <li>Backtest de 1.500 casos, calibración de la confianza, precios inventados que pasaban el crítico 50,5 % → 4,3 %, costo por informe trazado por nodo.</li>
+        <li>La fila más importante: el aporte de la extracción al error no se distingue del ruido entre semillas. Se publicó como salió.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>El RAG (18 de septiembre, una sesión)</h3>
+      <ul>
+        <li>La vara primero: nDCG, recall, MRR, bpref y tasa de descarte con bootstrap apareado sobre 113 consultas juzgadas por el propio pipeline.</li>
+        <li>Índice: 83.063 chunks con encabezado estructurado, embeddings locales en pgvector y <code>tsvector</code> en español.</li>
+        <li>Siete sistemas: recencia, denso truncado, denso por oraciones, léxico, dos híbridos con RRF y un reranker.</li>
+        <li>«Preguntale al informe»: RAG chico con citas obligatorias verificadas con la misma función que usa el crítico.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>La tabla que decidió</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Sistema</th><th>nDCG@25</th><th>Descarte en curaduría</th><th>MdAPE (600 casos × 3 semillas)</th></tr></thead>
+      <tbody>
+        <tr><td>A · recencia (lo que había)</td><td class="n">0,747</td><td class="n">29 %</td><td class="n">23,6 %</td></tr>
+        <tr><td><strong>D · léxico</strong> (encendido)</td><td class="n"><strong>0,821</strong></td><td class="n"><strong>22 %</strong></td><td class="n"><strong>21,2 %</strong></td></tr>
+        <tr><td>E · híbrido denso + léxico</td><td class="n">0,781</td><td class="n">24 %</td><td class="n">21,4 %</td></tr>
+        <tr><td>F · híbrido + reranker</td><td class="n">0,790</td><td class="n">25 %</td><td class="n">—</td></tr>
+        <tr><td>H · denso truncado + léxico</td><td class="n">0,799</td><td class="n">23 %</td><td class="n">21,7 %</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="warn">El resultado incómodo, y el que más credibilidad da: el sistema más simple ganó. El léxico supera al híbrido y al reranker por fuera del intervalo de confianza; los híbridos ganan solo en bpref. Quedó encendido <code>semantic.modo: lexico</code>; el denso y el reranker quedaron construidos, medidos y apagados, con la tabla que lo justifica.</div>
+
+  <h3>Lo que la medición corrigió</h3>
+  <ol>
+    <li>El tokenizador con el que se embebe trunca: contar con él dice «ningún aviso se pasa». Sin truncar, el 28 % supera 512 tokens.</li>
+    <li>Los juicios de relevancia de agosto eran de un pool que ya no existe. Se juzga el pool de hoy, con el propio pipeline.</li>
+    <li>Partir la descripción en oraciones no le gana a truncar con un modelo de 128 tokens: lo contrario de lo escrito en la propuesta.</li>
+    <li>El reranker con el tope de latencia de producción degradaba siempre: la fila F medía la fila E. En la medición, tope de 300 s y error si degrada.</li>
+    <li>Un gateway caído dejó juicios «con todo relevante» porque la curaduría degrada sin juez. Se rehicieron, y ahora el eval corta sin guardar.</li>
+    <li>El crítico en un modelo abierto discutía el nivel de confianza calculado por el motor y se cortaba en 4.096 tokens: prompt v2, 8.192 tokens y sin razonamiento extendido.</li>
+  </ol>
+
+  <h2>Cómo explicarlo</h2>
+  <p><strong>En treinta segundos.</strong> «Un motor de tasaciones para inmobiliarias. El precio lo calcula matemática reproducible sobre comparables reales; los modelos leen avisos, juzgan y escriben, y cada cosa que dicen viene con la cita que lo prueba. Construimos un RAG encima, lo medimos con una vara escrita antes de medir y encendimos la parte que ganó: la búsqueda léxica. Lo que no ganó quedó medido y apagado.»</p>
+  <p><strong>En una entrevista técnica</strong>, el orden que funciona: el principio (diagrama 01), un informe de punta a punta con sus dos salidas (02 y 03), la vara antes que el sistema (06), el resultado incómodo, y lo operativo (04 y 07).</p>
+  <dl class="faq">
+    <dt>¿Por qué no una base vectorial?</dt><dd>Postgres con pgvector y búsqueda exacta sobre el pool filtrado: recall 100 %, milisegundos y un sistema menos.</dd>
+    <dt>¿Por qué LangGraph y no una crew?</dt><dd>Hacen falta ciclos (crítico → redactor), salidas tempranas y checkpoint durable.</dd>
+    <dt>¿Por qué el léxico le ganó al denso?</dt><dd>Consultas cortas y estructuradas, corpus de dos barrios con vocabulario cerrado y un modelo de embeddings de 128 tokens en CPU. Con un modelo mejor o más texto libre la tabla puede cambiar; está previsto medirlo.</dd>
+    <dt>¿Qué garantiza que la prosa no mienta?</dt><dd>Toda cifra se busca en los datos sin modelo; una sola no trazable rechaza; tras dos rechazos, el informe sale sin prosa.</dd>
+    <dt>¿Cuánto cuesta?</dt><dd>Entre 2 y 8 centavos de dólar por informe, trazado por llamada; embeddings y reranker a costo cero en CPU.</dd>
+  </dl>
+
+  <footer>Repositorio: <a href="https://github.com/ricardobing/tasador-rag" target="_blank" rel="noopener">github.com/ricardobing/tasador-rag</a> · diagramas generados con Archify a partir de JSON versionado en <code>docs/mapa/</code> · números en <code>docs/informes/2026-09-18-rag-resultados.md</code>.</footer>
+</div>

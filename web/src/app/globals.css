@@ -67,8 +67,50 @@
   --sidebar: 15.5rem;
 }
 
+/* ── Tema ───────────────────────────────────────────────────────────────
+   Claro por defecto, para todo el mundo: es el que mejor lee un documento con
+   números. El oscuro se elige a mano (Mi cuenta / pie de la barra) y queda en
+   `localStorage`; «auto» sigue al sistema. `data-theme` lo pone un script
+   en `layout.tsx` antes de pintar, así no hay destello. */
+:root {
+  color-scheme: light;
+}
+
+:root[data-theme="oscuro"] {
+  color-scheme: dark;
+    --gris-50: #14171c;
+    --gris-100: #1b1f26;
+    --gris-200: #2a2f39;
+    --gris-300: #3a4150;
+    --gris-400: #6b7383;
+    --gris-500: #9aa2b1;
+    --gris-600: #b3bac6;
+    --gris-700: #cfd4dc;
+    --gris-800: #e6e9ee;
+    --gris-900: #f4f6f9;
+    --superficie: #1b1f26;
+    --marca-50: #1e2a3d;
+    --marca-100: #243450;
+    --marca-200: #2f4569;
+    --acento: #8fb0e6;
+    --acento-hover: #a9c3ee;
+    --acento-suave: #1e2a3d;
+    /* Oscuro sobre el celeste: 7,2:1. Blanco daba 2,5:1 (H-38). */
+    --boton-texto: #14171c;
+    --exito: #5fcb92;
+    --exito-fondo: #16301f;
+    --alerta: #e2b15a;
+    --alerta-fondo: #2c2413;
+    --peligro: #f28b82;
+    --peligro-fondo: #3a1e1c;
+    --neutro: #9aa2b1;
+    --neutro-fondo: #262b36;
+    --sombra-flotante: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root[data-theme="auto"] {
+    color-scheme: dark;
     --gris-50: #14171c;
     --gris-100: #1b1f26;
     --gris-200: #2a2f39;
@@ -1204,4 +1246,29 @@ dialog.dialogo::backdrop {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ── Selector de tema (pie de la barra) ─────────────────────────────────── */
+.tema {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem 0;
+}
+
+.tema button {
+  flex: 1;
+  min-height: 30px;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-chip);
+  background: transparent;
+  color: var(--tenue);
+}
+
+.tema button[aria-pressed="true"] {
+  background: var(--acento-suave);
+  border-color: var(--acento);
+  color: var(--acento);
 }

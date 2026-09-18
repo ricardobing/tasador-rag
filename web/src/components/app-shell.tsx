@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { Icono, type NombreDeIcono } from "./iconos";
 import { Salir } from "./salir";
+import { Tema } from "./tema";
 
 type Item = { href: string; texto: string; icono: NombreDeIcono; exacto?: boolean };
 type Grupo = { titulo: string; items: Item[]; soloAdmin?: boolean };
@@ -119,6 +120,7 @@ export function AppShell({
           Mi cuenta
         </Link>
         <Salir />
+        <Tema />
       </div>
     </>
   );

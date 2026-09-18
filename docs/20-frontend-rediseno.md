@@ -261,6 +261,14 @@ Las cuatro fases del plan están hechas. Lo que quedó distinto del plan, y por 
   lo que viene, así que desde el formulario no se puede «borrar» un dato. Es a
   propósito: un dato que se aprendió en la visita no se desaprende.
 
+- **Claro por defecto, oscuro a elección** (pedido del usuario el 19/09: el claro lee
+  mejor un documento con números). El tema no sigue al sistema salvo que se elija
+  «Sistema» en el pie de la barra; la elección queda en `localStorage`
+  (`tasador-tema`) y un script en `layout.tsx` la aplica antes de pintar. El test de
+  contraste AA corre sobre los dos temas simulando esa elección.
+- **El indicador de desarrollo de Next** (el globo abajo a la izquierda) está apagado
+  en `next.config.ts` (`devIndicators: false`): tapaba el pie de la barra.
+
 Verificación: `npm run typecheck` y `npm run build` en verde; Playwright completo
 (`pantallas.spec.ts` + `rediseno.spec.ts`, escritorio y celular) contra el stack local.
 

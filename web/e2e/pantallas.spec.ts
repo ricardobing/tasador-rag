@@ -622,7 +622,9 @@ test.describe("accesibilidad — doc 07 §12", () => {
   // Playwright —claro— pasaba en verde sobre el único esquema que no fallaba.
   for (const esquema of ["light", "dark"] as const) {
     test(`ningún texto queda por debajo del contraste AA (${esquema})`, async ({ page }) => {
-    await page.emulateMedia({ colorScheme: esquema });
+    // El tema es una elección guardada, no el del sistema: claro por defecto,
+    // oscuro a mano. Se simula lo que hace el usuario al elegirlo.
+    await page.addInitScript((tema) => localStorage.setItem("tasador-tema", tema), esquema === "dark" ? "oscuro" : "claro");
     await page.goto("/informes");
     const fallan = await page.evaluate(() => {
       const lum = (c: string) => {

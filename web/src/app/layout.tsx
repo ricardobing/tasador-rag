@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { AppShell } from "@/components/app-shell";
 import { quienSoy } from "@/lib/api";
+import { CLAVE_TEMA } from "@/lib/tema";
 import "./globals.css";
 
 /**
@@ -36,7 +37,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     : null;
 
   return (
-    <html lang="es-AR" className={display.variable}>
+    <html lang="es-AR" className={display.variable} data-theme="claro" suppressHydrationWarning>
+      <head>
+        {/* Antes de pintar: lee el tema elegido y lo aplica. Sin esto, la
+            pantalla se pinta clara y salta a oscura un instante después. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem("${CLAVE_TEMA}");if(t==="oscuro"||t==="auto")document.documentElement.dataset.theme=t}catch(e){}`,
+          }}
+        />
+      </head>
       <body>
         <AppShell esAdmin={esAdmin} quien={quien}>
           {children}

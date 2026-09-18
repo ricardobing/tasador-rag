@@ -217,11 +217,11 @@ def _hook_http_sincrono(response: httpx.Response) -> None:
         buf.append(response.headers)
 
 
-def cliente_http_sincrono_instrumentado(timeout: float = 180.0) -> httpx.Client:
+def cliente_http_sincrono_instrumentado(timeout: float = 300.0) -> httpx.Client:
     return httpx.Client(timeout=timeout, event_hooks={"response": [_hook_http_sincrono]})
 
 
-def cliente_http_instrumentado(timeout: float = 180.0) -> httpx.AsyncClient:
+def cliente_http_instrumentado(timeout: float = 300.0) -> httpx.AsyncClient:
     """Un `httpx.AsyncClient` con el hook de contabilidad ya puesto.
 
     Existe para poder inyectárselo a librerías que traen su propio cliente

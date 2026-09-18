@@ -263,9 +263,23 @@ nodes:
     prompt: critic/v2
     # Si el crítico se cae, el informe NO sale con prosa no verificada.
     on_error: fail
+    # 240 s: con 8.192 tokens de salida el modelo abierto tarda 95-110 s por
+    # crítica y el tercer intento de un informe real se cortó a los 180 s
+    # ("Request timed out", 18/09). Un timeout que corta la crítica deja el
+    # informe sin narrativa por una razón que no es del informe.
+    timeout_seconds: 240
     params:
       temperature: 0.0
-      max_tokens: 4096
+      # 8192 y no 4096 (18/09): con el crítico en un modelo abierto la salida
+      # estructurada se cortó en 4.096 tokens dos veces seguidas sobre informes
+      # reales y salieron sin narrativa. Este valor pisa al del gateway.
+      max_tokens: 8192
+      # Sin razonamiento extendido: con él, el modelo abierto tardaba 95-180 s
+      # por crítica (el tercer intento se cortaba) y escribía 4-5 mil tokens.
+      # La crítica es una lectura contra datos, no un problema de varios pasos.
+      provider_params:
+        reasoning:
+          enabled: false
       max_rejections: 2              # al tercero, informe sin narrativa
       # A dónde vuelve el informe cuando el crítico lo rechaza. El ciclo del
       # grafo sale de acá, no del código: si mañana hay un nodo de reescritura

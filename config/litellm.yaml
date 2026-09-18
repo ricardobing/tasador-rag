@@ -159,7 +159,10 @@ model_list:
       model: openrouter/deepseek/deepseek-v4-flash
       api_key: os.environ/OPENROUTER_API_KEY
       temperature: 0.0
-      max_tokens: 4096
+      # 8192 y no 4096: el 18/09 la crítica de un informe real se cortó en
+      # 4.096 tokens de salida ("output is incomplete due to max_tokens") y el
+      # informe salió sin narrativa. El prompt pide brevedad; esto es el margen.
+      max_tokens: 8192
     model_info:
       input_cost_per_token: 1.400e-07
       output_cost_per_token: 2.800e-07
@@ -167,7 +170,10 @@ model_list:
 router_settings:
   routing_strategy: simple-shuffle
   num_retries: 2
-  timeout: 120
+  # 240 y no 120: la crítica con 8.192 tokens de salida tarda 95-110 s en el
+  # modelo abierto y el gateway cortaba el tercer intento ("Request timed
+  # out", 18/09). El nodo crítico tiene el mismo tope en agents.yaml.
+  timeout: 240
   allowed_fails: 3
   cooldown_time: 60
   # Degradación explícita, en orden. Primero el reemplazo barato de la misma

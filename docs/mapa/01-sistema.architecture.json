@@ -1,0 +1,397 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Tasador · sistema",
+    "output": "01-sistema.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/ricardobing/tasador-rag",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "d3b4a1a2aec2884cfc3b97d40087e6a82c4212e7"
+    },
+    "views": [
+      {
+        "id": "camino-informe",
+        "label": "Camino de un informe",
+        "focus": [
+          "navegador",
+          "web",
+          "api",
+          "redis",
+          "worker",
+          "postgres"
+        ],
+        "note": "El pedido entra por el front, la API lo encola y el worker corre el grafo de 11 nodos contra Postgres."
+      },
+      {
+        "id": "modelos",
+        "label": "Modelos: gateway y locales",
+        "focus": [
+          "worker",
+          "litellm",
+          "proveedor",
+          "locales"
+        ],
+        "note": "Ningún SDK de proveedor en el código: todo LLM pasa por LiteLLM; embeddings y reranker corren en CPU local."
+      },
+      {
+        "id": "corpus",
+        "label": "De dónde sale el corpus",
+        "focus": [
+          "csv",
+          "postgres"
+        ],
+        "note": "Avisos por archivo (el repo no captura portales) y datos abiertos, todo a Postgres."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "navegador",
+      "type": "external",
+      "label": "Inmobiliaria",
+      "sublabel": "navegador",
+      "pos": [
+        40,
+        300
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "Web",
+      "sublabel": "Next.js 15 · :3000",
+      "brand": "next-js",
+      "pos": [
+        230,
+        300
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "sources": [
+        {
+          "path": "web/src/app/informes/[id]/preguntar.tsx",
+          "label": "ficha + preguntar"
+        }
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "API",
+      "sublabel": "FastAPI · /v1 · :8000",
+      "brand": "fastapi",
+      "pos": [
+        440,
+        300
+      ],
+      "size": [
+        150,
+        64
+      ],
+      "tag": "multi-tenant",
+      "sources": [
+        {
+          "path": "src/tasador/v1/reports.py",
+          "label": "informes"
+        },
+        {
+          "path": "src/tasador/v1/ask.py",
+          "label": "preguntar"
+        }
+      ]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL 16",
+      "sublabel": "pgvector · core / corpus / eval",
+      "brand": "postgresql",
+      "pos": [
+        850,
+        300
+      ],
+      "size": [
+        180,
+        64
+      ],
+      "tag": "checkpoints + eventos",
+      "sources": [
+        {
+          "path": "src/tasador/db/models.py",
+          "label": "modelo"
+        },
+        {
+          "path": "migrations/versions/202609180001_listing_chunks.py",
+          "label": "chunks"
+        }
+      ]
+    },
+    {
+      "id": "csv",
+      "type": "external",
+      "label": "Avisos por archivo",
+      "sublabel": "PORTAL_A / PORTAL_B · BA Data",
+      "pos": [
+        850,
+        120
+      ],
+      "size": [
+        180,
+        60
+      ],
+      "sources": [
+        {
+          "path": "src/tasador/ingest/csv_scan.py",
+          "label": "ingesta"
+        }
+      ]
+    },
+    {
+      "id": "redis",
+      "type": "messagebus",
+      "label": "Redis",
+      "sublabel": "cola arq · rate limit",
+      "brand": "redis",
+      "pos": [
+        440,
+        470
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Worker",
+      "sublabel": "arq · LangGraph 11 nodos",
+      "pos": [
+        650,
+        470
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "tag": "el pipeline",
+      "sources": [
+        {
+          "path": "src/tasador/agents/graph.py",
+          "label": "grafo"
+        },
+        {
+          "path": "src/tasador/agents/nodes/valuation.py",
+          "label": "precio sin LLM"
+        }
+      ]
+    },
+    {
+      "id": "locales",
+      "type": "backend",
+      "label": "Modelos locales",
+      "sublabel": "fastembed · CPU",
+      "pos": [
+        1060,
+        470
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "tag": "costo cero",
+      "sources": [
+        {
+          "path": "src/tasador/rag/embedder.py",
+          "label": "embeddings"
+        },
+        {
+          "path": "src/tasador/rag/rerank.py",
+          "label": "reranker"
+        }
+      ]
+    },
+    {
+      "id": "litellm",
+      "type": "security",
+      "label": "LiteLLM",
+      "sublabel": "gateway · tarea → modelo",
+      "pos": [
+        650,
+        640
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "tag": "ADR-003",
+      "sources": [
+        {
+          "path": "config/litellm.yaml",
+          "label": "tarea → proveedor"
+        },
+        {
+          "path": "config/agents.yaml",
+          "label": "nodo → tarea"
+        }
+      ]
+    },
+    {
+      "id": "proveedor",
+      "type": "external",
+      "label": "Proveedor de LLM",
+      "sublabel": "API compatible con OpenAI",
+      "pos": [
+        850,
+        640
+      ],
+      "size": [
+        180,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Docker Compose · red interna",
+      "wraps": [
+        "web",
+        "api",
+        "redis",
+        "worker",
+        "postgres",
+        "litellm",
+        "locales"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "único punto de salida a modelos",
+      "wraps": [
+        "litellm"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "usa-web",
+      "from": "navegador",
+      "to": "web",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "web-api",
+      "from": "web",
+      "to": "api",
+      "label": "REST /v1",
+      "variant": "emphasis"
+    },
+    {
+      "id": "api-encola",
+      "from": "api",
+      "to": "redis",
+      "label": "encola",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    },
+    {
+      "id": "redis-worker",
+      "from": "redis",
+      "to": "worker",
+      "label": "job",
+      "variant": "emphasis"
+    },
+    {
+      "id": "worker-postgres",
+      "from": "worker",
+      "to": "postgres",
+      "label": "checkpoint · eventos",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "via": [
+        [
+          730,
+          420
+        ],
+        [
+          940,
+          420
+        ]
+      ],
+      "labelAt": [
+        835,
+        406
+      ]
+    },
+    {
+      "id": "api-postgres",
+      "from": "api",
+      "to": "postgres",
+      "label": "SQL"
+    },
+    {
+      "id": "ingesta",
+      "from": "csv",
+      "to": "postgres",
+      "label": "ingesta",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    },
+    {
+      "id": "worker-litellm",
+      "from": "worker",
+      "to": "litellm",
+      "label": "4 tareas LLM",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    },
+    {
+      "id": "litellm-proveedor",
+      "from": "litellm",
+      "to": "proveedor",
+      "label": "HTTPS",
+      "variant": "security"
+    },
+    {
+      "id": "worker-locales",
+      "from": "worker",
+      "to": "locales",
+      "label": "embed · rerank",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "El principio",
+      "items": [
+        "El LLM hace lenguaje y juicio; la matemática hace los números (ADR-002)"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Lo que corre",
+      "items": [
+        "FastAPI + arq + LangGraph con checkpoint en Postgres"
+      ]
+    }
+  ]
+}

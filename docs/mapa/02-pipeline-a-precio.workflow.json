@@ -1,0 +1,234 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Tasador · del sujeto al precio (nodos 1–7)",
+    "output": "02-pipeline-a-precio.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "camino",
+        "label": "Camino feliz",
+        "focus": [
+          "normalizar",
+          "recuperar",
+          "extraer",
+          "dedup",
+          "curar",
+          "valuar"
+        ],
+        "note": "Seis nodos: dirección → barrio → pool de 60 → lectura con cita → un aviso por inmueble → descarte con motivo → mediana robusta."
+      },
+      {
+        "id": "citas",
+        "label": "Dónde interviene un LLM",
+        "focus": [
+          "extraer",
+          "dedup",
+          "curar"
+        ],
+        "note": "Tres nodos usan modelo, y en los tres cada dato que mueve el precio viene con la cita textual verificada sin LLM."
+      },
+      {
+        "id": "salida",
+        "label": "Saber decir «no sé»",
+        "focus": [
+          "curar",
+          "valuar",
+          "insuficiente"
+        ],
+        "note": "Menos de 5 comparables válidos → INSUFFICIENT_DATA con el desglose de por qué se cayó cada candidato."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "sujeto",
+      "label": "Sujeto y candidatos (sin LLM)"
+    },
+    {
+      "id": "lectura",
+      "label": "Lectura de avisos (LLM con cita verificada)"
+    },
+    {
+      "id": "numeros",
+      "label": "Números (sin LLM · ADR-002)"
+    },
+    {
+      "id": "salida",
+      "label": "Salida temprana",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "entrada",
+      "label": "Entrada",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "lectura",
+      "label": "Lectura y depuración",
+      "fromCol": 2,
+      "toCol": 4,
+      "variant": "emphasis"
+    },
+    {
+      "id": "precio",
+      "label": "Precio",
+      "fromCol": 5,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "groups": [
+    {
+      "id": "escalera",
+      "label": "SQL + escalera + orden léxico",
+      "lane": "sujeto",
+      "fromCol": 1,
+      "toCol": 1,
+      "variant": "emphasis"
+    },
+    {
+      "id": "controles",
+      "label": "cita obligatoria · motivos cerrados",
+      "lane": "lectura",
+      "fromCol": 2,
+      "toCol": 4,
+      "variant": "security"
+    }
+  ],
+  "mainPath": [
+    "normalizar",
+    "recuperar",
+    "extraer",
+    "dedup",
+    "curar",
+    "valuar"
+  ],
+  "nodes": [
+    {
+      "id": "normalizar",
+      "lane": "sujeto",
+      "col": 0,
+      "type": "backend",
+      "label": "1 · Normalizar",
+      "sublabel": "dirección → barrio",
+      "width": 124
+    },
+    {
+      "id": "recuperar",
+      "lane": "sujeto",
+      "col": 1,
+      "type": "database",
+      "label": "2 · Recuperar",
+      "sublabel": "pool de 60 · léxico",
+      "tag": "modo: lexico",
+      "width": 124
+    },
+    {
+      "id": "extraer",
+      "lane": "lectura",
+      "col": 2,
+      "type": "backend",
+      "label": "4 · Extraer",
+      "sublabel": "datos con cita",
+      "tag": "cita verificada",
+      "width": 124
+    },
+    {
+      "id": "dedup",
+      "lane": "lectura",
+      "col": 3,
+      "type": "backend",
+      "label": "5 · Deduplicar",
+      "sublabel": "hash · fuzzy · juez",
+      "width": 124
+    },
+    {
+      "id": "curar",
+      "lane": "lectura",
+      "col": 4,
+      "type": "security",
+      "label": "6 · Curar",
+      "sublabel": "reglas + juez",
+      "tag": "5 motivos",
+      "width": 124
+    },
+    {
+      "id": "valuar",
+      "lane": "numeros",
+      "col": 5,
+      "type": "backend",
+      "label": "7 · Valuar",
+      "sublabel": "mediana robusta",
+      "tag": "sin LLM",
+      "width": 124
+    },
+    {
+      "id": "insuficiente",
+      "lane": "salida",
+      "col": 5,
+      "type": "security",
+      "label": "INSUFFICIENT_DATA",
+      "sublabel": "< 5 válidos",
+      "width": 124
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "normalizar",
+      "to": "recuperar",
+      "label": "sujeto",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e2",
+      "from": "recuperar",
+      "to": "extraer",
+      "label": "60 candidatos",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e3",
+      "from": "extraer",
+      "to": "dedup",
+      "label": "features",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e4",
+      "from": "dedup",
+      "to": "curar",
+      "label": "canónicos",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e5",
+      "from": "curar",
+      "to": "valuar",
+      "label": "≥ 5 válidos",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e6",
+      "from": "curar",
+      "to": "insuficiente",
+      "label": "< 5",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Lo que garantiza cada nodo",
+      "items": [
+        "El nodo 2 no usa modelo: filtro SQL, escalera de relajación registrada, orden léxico sobre los chunks"
+      ]
+    }
+  ]
+}

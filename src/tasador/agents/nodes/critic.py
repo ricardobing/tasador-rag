@@ -379,6 +379,9 @@ async def critic(state: ReportState, cfg: NodeConfig) -> NodeResult:
             max_tokens=int(cfg.param("max_tokens", 4096)),
             max_attempts=cfg.max_attempts,
             use_cache=not state.get("rehacer", False),
+            # Mismo canal que extract y curate: lo que el proveedor necesita
+            # (p. ej. apagar el razonamiento) vive en agents.yaml.
+            provider_params=cfg.param("provider_params") or None,
         )
         ledger.extend(usos)
     except (LlmValidationError, LlmError) as e:

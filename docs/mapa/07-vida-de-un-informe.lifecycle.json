@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Tasador · la vida de un informe",
+    "output": "07-vida-de-un-informe.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "principal",
+        "label": "Camino principal",
+        "focus": [
+          "queued",
+          "running",
+          "critica",
+          "succeeded"
+        ],
+        "note": "Encolado, corriendo el grafo, criticado y terminado con PDF."
+      },
+      {
+        "id": "reintentos",
+        "label": "Reintentos y rechazos",
+        "focus": [
+          "running",
+          "reintento",
+          "critica",
+          "reescritura"
+        ],
+        "note": "Un nodo puede reintentar; el crítico puede devolver la prosa al redactor hasta dos veces."
+      },
+      {
+        "id": "salidas",
+        "label": "Salidas sin precio o sin prosa",
+        "focus": [
+          "running",
+          "insufficient",
+          "reescritura",
+          "sin_prosa",
+          "failed"
+        ],
+        "note": "Sin 5 comparables no hay precio; sin crítica aprobada no hay prosa; un error no recuperable falla con traza."
+      }
+    ],
+    "viewBox": [
+      1080,
+      660
+    ]
+  },
+  "lanes": [
+    {
+      "id": "main",
+      "label": "Estados del informe"
+    },
+    {
+      "id": "esperas",
+      "label": "Reintentos"
+    },
+    {
+      "id": "terminal",
+      "label": "Salidas terminales"
+    }
+  ],
+  "states": [
+    {
+      "id": "queued",
+      "type": "start",
+      "label": "QUEUED",
+      "sublabel": "creado por la API",
+      "lane": "main",
+      "col": 0,
+      "step": "01",
+      "tag": "202"
+    },
+    {
+      "id": "running",
+      "type": "active",
+      "label": "RUNNING",
+      "sublabel": "nodos 1–9, checkpoint",
+      "lane": "main",
+      "col": 1,
+      "step": "02",
+      "tag": "worker"
+    },
+    {
+      "id": "critica",
+      "type": "decision",
+      "label": "CRÍTICA",
+      "sublabel": "fase A + fase B",
+      "lane": "main",
+      "col": 2,
+      "step": "03",
+      "tag": "nodo 10"
+    },
+    {
+      "id": "succeeded",
+      "type": "success",
+      "label": "SUCCEEDED",
+      "sublabel": "PDF + ficha + link",
+      "lane": "main",
+      "col": 3,
+      "step": "04",
+      "tag": "listo"
+    },
+    {
+      "id": "reintento",
+      "type": "waiting",
+      "label": "Reintento",
+      "sublabel": "nodo con error",
+      "lane": "esperas",
+      "col": 0,
+      "tag": "≤ 2"
+    },
+    {
+      "id": "reescritura",
+      "type": "waiting",
+      "label": "Reescritura",
+      "sublabel": "rechazo con motivo",
+      "lane": "esperas",
+      "col": 1,
+      "tag": "≤ 2"
+    },
+    {
+      "id": "insufficient",
+      "type": "failure",
+      "label": "INSUFFICIENT_DATA",
+      "sublabel": "< 5 comparables",
+      "lane": "terminal",
+      "col": 0,
+      "tag": "con desglose"
+    },
+    {
+      "id": "sin_prosa",
+      "type": "failure",
+      "label": "Sin narrativa",
+      "sublabel": "tabla y números",
+      "lane": "terminal",
+      "col": 1,
+      "tag": "3er rechazo"
+    },
+    {
+      "id": "failed",
+      "type": "failure",
+      "label": "FAILED",
+      "sublabel": "error con traza",
+      "lane": "terminal",
+      "col": 2,
+      "tag": "terminal"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "t1",
+      "from": "running",
+      "to": "reintento",
+      "variant": "default"
+    },
+    {
+      "id": "t2",
+      "from": "reintento",
+      "to": "running",
+      "variant": "emphasis"
+    },
+    {
+      "id": "t3",
+      "from": "critica",
+      "to": "reescritura",
+      "variant": "security"
+    },
+    {
+      "id": "t4",
+      "from": "reescritura",
+      "to": "critica",
+      "variant": "dashed"
+    },
+    {
+      "id": "t5",
+      "from": "running",
+      "to": "insufficient",
+      "variant": "security"
+    },
+    {
+      "id": "t6",
+      "from": "reescritura",
+      "to": "sin_prosa",
+      "variant": "security"
+    },
+    {
+      "id": "t7",
+      "from": "running",
+      "to": "failed",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "top",
+      "via": [
+        [
+          248,
+          96
+        ],
+        [
+          710,
+          96
+        ]
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Camino principal",
+      "items": [
+        "QUEUED → RUNNING → CRÍTICA → SUCCEEDED",
+        "Cada nodo deja un evento con costo; el checkpoint permite reanudar"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Salidas",
+      "items": [
+        "INSUFFICIENT_DATA: sin 5 comparables no se inventa un precio",
+        "Sin narrativa: al tercer rechazo del crítico, sin prosa"
+      ]
+    }
+  ]
+}

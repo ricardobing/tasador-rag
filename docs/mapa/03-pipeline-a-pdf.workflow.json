@@ -1,0 +1,272 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Tasador · del precio al PDF (nodos 8–11)",
+    "output": "03-pipeline-a-pdf.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "camino",
+        "label": "Camino feliz",
+        "focus": [
+          "valuacion",
+          "contexto",
+          "redactar",
+          "fase_a",
+          "fase_b",
+          "pdf"
+        ],
+        "note": "Números → contexto de mercado → prosa → verificación sin modelo → crítica adversarial → PDF."
+      },
+      {
+        "id": "critico",
+        "label": "El crítico en dos fases",
+        "focus": [
+          "redactar",
+          "fase_a",
+          "fase_b",
+          "rechazo"
+        ],
+        "note": "Fase A extrae toda cifra de la prosa y la busca en los datos; una sola no trazable rechaza. Fase B es un LLM adversarial."
+      },
+      {
+        "id": "sin-prosa",
+        "label": "Nunca prosa sin verificar",
+        "focus": [
+          "rechazo",
+          "sin_narrativa",
+          "pdf"
+        ],
+        "note": "Tras dos rechazos el informe sale con la tabla y sin prosa; nunca con prosa no verificada."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "prosa",
+      "label": "Prosa (LLM)"
+    },
+    {
+      "id": "critico",
+      "label": "Crítico"
+    },
+    {
+      "id": "salida",
+      "label": "Salida"
+    },
+    {
+      "id": "rechazo",
+      "label": "Rechazo y reescritura",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "escribir",
+      "label": "Escribir",
+      "fromCol": 0,
+      "toCol": 2
+    },
+    {
+      "id": "verificar",
+      "label": "Verificar",
+      "fromCol": 3,
+      "toCol": 4,
+      "variant": "emphasis"
+    },
+    {
+      "id": "entregar",
+      "label": "Entregar",
+      "fromCol": 5,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "groups": [
+    {
+      "id": "gate",
+      "label": "Toda cifra existe en los datos · sin modelo",
+      "lane": "critico",
+      "fromCol": 3,
+      "toCol": 3,
+      "variant": "security"
+    }
+  ],
+  "mainPath": [
+    "valuacion",
+    "contexto",
+    "redactar",
+    "fase_a",
+    "fase_b",
+    "pdf"
+  ],
+  "nodes": [
+    {
+      "id": "valuacion",
+      "lane": "prosa",
+      "col": 0,
+      "type": "database",
+      "label": "7 · Valuación",
+      "sublabel": "rango y confianza",
+      "width": 150
+    },
+    {
+      "id": "contexto",
+      "lane": "prosa",
+      "col": 1,
+      "type": "backend",
+      "label": "8 · Contexto",
+      "sublabel": "mercado del barrio",
+      "width": 150
+    },
+    {
+      "id": "redactar",
+      "lane": "prosa",
+      "col": 2,
+      "type": "backend",
+      "label": "9 · Redactar",
+      "sublabel": "6 secciones",
+      "tag": "writer",
+      "width": 150
+    },
+    {
+      "id": "fase_a",
+      "lane": "critico",
+      "col": 3,
+      "type": "security",
+      "label": "10a · Cifras",
+      "sublabel": "toda cifra trazable",
+      "tag": "sin LLM",
+      "width": 160
+    },
+    {
+      "id": "fase_b",
+      "lane": "critico",
+      "col": 4,
+      "type": "security",
+      "label": "10b · Adversarial",
+      "sublabel": "afirmaciones y tono",
+      "tag": "critic",
+      "width": 160
+    },
+    {
+      "id": "pdf",
+      "lane": "salida",
+      "col": 5,
+      "type": "cloud",
+      "label": "11 · PDF + ficha",
+      "sublabel": "WeasyPrint · link",
+      "width": 150
+    },
+    {
+      "id": "rechazo",
+      "lane": "rechazo",
+      "col": 3,
+      "type": "messagebus",
+      "label": "Rechazo",
+      "sublabel": "motivo con cita",
+      "tag": "máx. 2",
+      "width": 150
+    },
+    {
+      "id": "sin_narrativa",
+      "lane": "rechazo",
+      "col": 5,
+      "type": "security",
+      "label": "Sin narrativa",
+      "sublabel": "tabla y números",
+      "width": 150
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "valuacion",
+      "to": "contexto",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e2",
+      "from": "contexto",
+      "to": "redactar",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e3",
+      "from": "redactar",
+      "to": "fase_a",
+      "label": "prosa",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e4",
+      "from": "fase_a",
+      "to": "fase_b",
+      "label": "todas trazables",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e5",
+      "from": "fase_b",
+      "to": "pdf",
+      "label": "aprobado",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e6",
+      "from": "fase_a",
+      "to": "rechazo",
+      "label": "cifra no trazable",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "e7",
+      "from": "fase_b",
+      "to": "rechazo",
+      "label": "hallazgo grave",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "e8",
+      "from": "rechazo",
+      "to": "redactar",
+      "label": "reescribir",
+      "variant": "dashed",
+      "role": "return"
+    },
+    {
+      "id": "e9",
+      "from": "rechazo",
+      "to": "sin_narrativa",
+      "label": "3er rechazo",
+      "variant": "security",
+      "role": "branch"
+    },
+    {
+      "id": "e10",
+      "from": "sin_narrativa",
+      "to": "pdf",
+      "variant": "dashed",
+      "role": "return"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Dos fases, una garantía",
+      "items": [
+        "Fase A no usa modelo: extrae cada cifra de la prosa y la busca en los datos con tolerancia 0,1%"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Cuándo no hay prosa",
+      "items": [
+        "Cada rechazo vuelve al redactor con el motivo y la cita"
+      ]
+    }
+  ]
+}

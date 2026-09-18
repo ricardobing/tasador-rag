@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Tasador · del aviso al veredicto (RAG y su medición)",
+    "output": "06-rag-y-evaluacion.html",
+    "viewBox": [
+      1080,
+      600
+    ],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "indice",
+        "label": "Cómo se indexa",
+        "focus": [
+          "avisos",
+          "features",
+          "chunks",
+          "vectores",
+          "tsv"
+        ],
+        "note": "Cada aviso se parte en chunks con un encabezado estructurado; cada chunk tiene un vector local y un tsvector en español."
+      },
+      {
+        "id": "sistemas",
+        "label": "Los sistemas que se compararon",
+        "focus": [
+          "vectores",
+          "tsv",
+          "retriever",
+          "pipeline"
+        ],
+        "note": "A recencia · B/C denso · D léxico · E/H fusión RRF · F rerank. Ganó D."
+      },
+      {
+        "id": "vara",
+        "label": "La vara",
+        "focus": [
+          "consultas",
+          "retriever",
+          "pipeline",
+          "juicios",
+          "tabla"
+        ],
+        "note": "113 consultas; el pool de cada sistema lo juzga el propio pipeline; nDCG, recall, bpref y descartados con bootstrap apareado."
+      }
+    ]
+  },
+  "stages": [
+    {
+      "label": "Corpus"
+    },
+    {
+      "label": "Chunks"
+    },
+    {
+      "label": "Índices"
+    },
+    {
+      "label": "Recuperación"
+    },
+    {
+      "label": "Juicio y veredicto"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "avisos",
+      "type": "database",
+      "label": "Avisos",
+      "sublabel": "8.514 vigentes",
+      "stage": 0,
+      "row": 1,
+      "tag": "privados"
+    },
+    {
+      "id": "features",
+      "type": "backend",
+      "label": "Features",
+      "sublabel": "nodo 4 · con cita",
+      "stage": 0,
+      "row": 2,
+      "tag": "caché"
+    },
+    {
+      "id": "chunks",
+      "type": "backend",
+      "label": "Chunks",
+      "sublabel": "oraciones + encab.",
+      "stage": 1,
+      "row": 1,
+      "tag": "83.063"
+    },
+    {
+      "id": "vectores",
+      "type": "database",
+      "label": "Vectores",
+      "sublabel": "MiniLM · pgvector",
+      "stage": 2,
+      "row": 0,
+      "tag": "apagado"
+    },
+    {
+      "id": "tsv",
+      "type": "database",
+      "label": "tsvector",
+      "sublabel": "FTS spanish · GIN",
+      "stage": 2,
+      "row": 2,
+      "tag": "encendido"
+    },
+    {
+      "id": "consultas",
+      "type": "external",
+      "label": "Consultas",
+      "sublabel": "112 sujetos",
+      "stage": 3,
+      "row": 0,
+      "tag": "leave-one-out"
+    },
+    {
+      "id": "retriever",
+      "type": "backend",
+      "label": "Sistemas A–H",
+      "sublabel": "SQL + escalera",
+      "stage": 3,
+      "row": 1,
+      "tag": "top-30 cada uno"
+    },
+    {
+      "id": "pipeline",
+      "type": "security",
+      "label": "Pipeline juzga",
+      "sublabel": "nodos 4–7",
+      "stage": 4,
+      "row": 0,
+      "tag": "pooling"
+    },
+    {
+      "id": "juicios",
+      "type": "database",
+      "label": "Juicios",
+      "sublabel": "grado 0 / 1 / 2",
+      "stage": 4,
+      "row": 1,
+      "tag": "incremental"
+    },
+    {
+      "id": "tabla",
+      "type": "backend",
+      "label": "Tabla + backtest",
+      "sublabel": "nDCG · MdAPE",
+      "stage": 4,
+      "row": 2,
+      "tag": "bootstrap apareado"
+    }
+  ],
+  "flows": [
+    {
+      "id": "f1",
+      "from": "avisos",
+      "to": "features",
+      "label": "extraer",
+      "classification": "LLM con cita",
+      "variant": "dashed",
+      "labelDy": 24
+    },
+    {
+      "id": "f2",
+      "from": "avisos",
+      "to": "chunks",
+      "label": "partir",
+      "classification": "≤ 120 tokens",
+      "variant": "emphasis"
+    },
+    {
+      "id": "f3",
+      "from": "chunks",
+      "to": "vectores",
+      "label": "embed",
+      "classification": "CPU · 13/s",
+      "variant": "dashed"
+    },
+    {
+      "id": "f4",
+      "from": "chunks",
+      "to": "tsv",
+      "label": "to_tsvector",
+      "classification": "spanish",
+      "variant": "emphasis"
+    },
+    {
+      "id": "f5",
+      "from": "consultas",
+      "to": "retriever",
+      "label": "sujeto",
+      "classification": "113",
+      "variant": "emphasis",
+      "labelDy": 24
+    },
+    {
+      "id": "f6",
+      "from": "tsv",
+      "to": "retriever",
+      "label": "ts_rank_cd",
+      "classification": "D · ganador",
+      "variant": "emphasis"
+    },
+    {
+      "id": "f7",
+      "from": "vectores",
+      "to": "retriever",
+      "label": "coseno",
+      "classification": "B/C/E/H",
+      "variant": "dashed"
+    },
+    {
+      "id": "f8",
+      "from": "retriever",
+      "to": "pipeline",
+      "label": "unión top-30",
+      "classification": "pool",
+      "variant": "emphasis"
+    },
+    {
+      "id": "f9",
+      "from": "pipeline",
+      "to": "juicios",
+      "label": "grados",
+      "classification": "solo lo nuevo",
+      "variant": "default",
+      "labelDy": 24
+    },
+    {
+      "id": "f10",
+      "from": "juicios",
+      "to": "tabla",
+      "label": "métricas",
+      "classification": "113 consultas",
+      "variant": "emphasis",
+      "labelDy": 24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Lo medido",
+      "items": [
+        "nDCG@25: recencia 0,747 · léxico 0,821 · híbrido 0,781 · rerank 0,790",
+        "Descartes en curaduría: 29% del top-30 con recencia, 22% con léxico"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Lo que corrigió la medición",
+      "items": [
+        "bge-m3 no lo sirve la librería; e5-large tarda 6–12 h en CPU",
+        "Los juicios de agosto eran de un pool que ya no existe: pooling por el pipeline"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Lo que quedó encendido",
+      "items": [
+        "semantic.enabled: true · modo: lexico",
+        "El denso y el reranker: construidos, medidos, apagados"
+      ]
+    }
+  ]
+}

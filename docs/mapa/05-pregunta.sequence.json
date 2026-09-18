@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Tasador · preguntale al informe",
+    "output": "05-pregunta.html",
+    "viewBox": [
+      1080,
+      480
+    ],
+    "column_fit": "spread",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "pregunta",
+        "label": "Preguntale al informe",
+        "focus": [
+          "agente",
+          "web",
+          "api",
+          "locales",
+          "litellm"
+        ],
+        "note": "Compuerta doble sin modelo (coseno y léxico): sin evidencia se rechaza en milisegundos; con evidencia, respuesta con citas verificadas."
+      }
+    ]
+  },
+  "participants": [
+    {
+      "id": "agente",
+      "type": "external",
+      "label": "Agente",
+      "sublabel": "inmobiliaria"
+    },
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "Web",
+      "sublabel": "Next.js"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "API",
+      "sublabel": "FastAPI /v1"
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "Postgres",
+      "sublabel": "corpus + eventos"
+    },
+    {
+      "id": "litellm",
+      "type": "security",
+      "label": "LiteLLM",
+      "sublabel": "4 tareas"
+    },
+    {
+      "id": "locales",
+      "type": "backend",
+      "label": "fastembed",
+      "sublabel": "CPU local"
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 258,
+      "label": "Compuerta sin modelo"
+    },
+    {
+      "from": 258,
+      "to": 342,
+      "label": "Respuesta con citas"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m13",
+      "from": "agente",
+      "to": "web",
+      "y": 160,
+      "label": "¿cuántos comparables?",
+      "variant": "default"
+    },
+    {
+      "id": "m14",
+      "from": "web",
+      "to": "api",
+      "y": 188,
+      "label": "POST /v1/reports/{id}/ask",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m15",
+      "from": "api",
+      "to": "locales",
+      "y": 216,
+      "label": "embed hechos + pregunta",
+      "variant": "dashed"
+    },
+    {
+      "id": "m16",
+      "from": "locales",
+      "to": "api",
+      "y": 244,
+      "label": "coseno ≥ 0,40 o léxico ≥ 0,34",
+      "variant": "return"
+    },
+    {
+      "id": "m17",
+      "from": "api",
+      "to": "litellm",
+      "y": 272,
+      "label": "responder con citas [N]",
+      "variant": "security"
+    },
+    {
+      "id": "m18",
+      "from": "litellm",
+      "to": "api",
+      "y": 300,
+      "label": "respuesta + ids citados",
+      "variant": "return"
+    },
+    {
+      "id": "m19",
+      "from": "api",
+      "to": "web",
+      "y": 328,
+      "label": "citas verificadas · evento ask",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "api",
+      "from": 184,
+      "to": 332,
+      "type": "backend"
+    },
+    {
+      "participant": "locales",
+      "from": 212,
+      "to": 248,
+      "type": "backend"
+    },
+    {
+      "participant": "litellm",
+      "from": 268,
+      "to": 304,
+      "type": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Preguntar sin inventar",
+      "items": [
+        "Sin evidencia se rechaza sin llamar al modelo (80 ms)",
+        "Las citas [N] se verifican con la misma función que las cifras del crítico"
+      ]
+    }
+  ]
+}

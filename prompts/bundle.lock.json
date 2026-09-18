@@ -1,6 +1,6 @@
 {
   "agents_version": "2026.08.1",
-  "bundle_hash": "e39e49fa7a8f",
+  "bundle_hash": "1c3086a49007",
   "nodes": {
     "extract_features": {
       "task": "extractor",

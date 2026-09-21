@@ -4,6 +4,11 @@
 · Método: ejecutar y medir. Cada hallazgo tiene su comando y su salida en el
 documento de su sección.
 
+> Los scripts de sonda que produjeron esas mediciones no se publican: corren
+> contra el corpus real y la base de la inmobiliaria, así que no se pueden
+> reproducir con el corpus demo de este repositorio. Los comandos y sus
+> salidas quedan transcritos en cada sección tal como se ejecutaron.
+
 ---
 
 ## El estado, en un párrafo

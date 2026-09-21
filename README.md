@@ -1,10 +1,30 @@
 # Tasador — tasaciones inmobiliarias con IA, sin que la IA ponga el precio
 
+<p align="center">
+  <img alt="Python 3.12+" src="https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white">
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-async-009688?logo=fastapi&logoColor=white">
+  <img alt="PostgreSQL 16 + pgvector" src="https://img.shields.io/badge/PostgreSQL%2016-pgvector-4169E1?logo=postgresql&logoColor=white">
+  <img alt="LangGraph, 11 nodos" src="https://img.shields.io/badge/LangGraph-11%20nodos-1C3C3C">
+  <img alt="Next.js 15" src="https://img.shields.io/badge/Next.js%2015-front-000000?logo=nextdotjs&logoColor=white">
+  <img alt="492 tests" src="https://img.shields.io/badge/tests-492-2ea44f">
+  <img alt="mypy strict" src="https://img.shields.io/badge/mypy-strict-1f7a5c">
+  <img alt="PolyForm Noncommercial 1.0.0" src="https://img.shields.io/badge/licencia-PolyForm%20NC%201.0.0-a86a12">
+</p>
+
 Motor de valuación comparativa para inmobiliarias argentinas. Recibe una propiedad,
 recupera avisos comparables de un corpus real, los lee, los depura y produce un
 **Informe de Mercado Comparativo** en PDF: un rango de precio justificado, la tabla de
 comparables que lo sustenta —los usados y los descartados, cada uno con su motivo— y una
 narrativa en la que **cada cifra fue verificada contra los datos antes de salir**.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/mapa/img/01-sistema.dark.png">
+    <img alt="Arquitectura: web, API, Redis, worker, PostgreSQL con pgvector, LiteLLM y modelos locales" src="docs/mapa/img/01-sistema.light.png" width="100%">
+  </picture>
+</p>
+
+<p align="center"><sub>Lo que corre y quién le habla a quién. El único punto de salida a modelos es el gateway · <a href="docs/mapa/01-sistema.html">versión interactiva</a></sub></p>
 
 ```
 propiedad ──▶ normalizar ──▶ recuperar comparables ──▶ extraer (LLM, con cita verificada)
@@ -38,6 +58,24 @@ Alrededor, cuatro controles sobre cada lugar donde un modelo sí interviene:
 | **Crítico en dos fases** ([`critic.py`](src/tasador/agents/nodes/critic.py)) | Fase A, sin LLM: extrae toda cifra de la narrativa y la busca en los datos; una sola no trazable rechaza el texto. Fase B, adversarial. Tras dos rechazos el informe sale con la tabla y sin prosa — nunca con prosa no verificada |
 | **Saber decir "no sé"** ([`engine.py`](src/tasador/valuation/engine.py)) | Menos de 5 comparables válidos → `INSUFFICIENT_DATA` con el desglose de por qué se cayó cada candidato. Confianza calibrada: cuando dice BAJA, se equivoca cinco veces más |
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/mapa/img/02-pipeline-a-precio.dark.png">
+    <img alt="Nodos 1 a 7: normalizar, recuperar, extraer con cita, deduplicar, curar y valuar" src="docs/mapa/img/02-pipeline-a-precio.light.png" width="100%">
+  </picture>
+</p>
+
+<p align="center"><sub>Nodos 1 a 7. El nodo que calcula el precio no tiene modelo asignado, y un test lo impide · <a href="docs/mapa/02-pipeline-a-precio.html">versión interactiva</a></sub></p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/mapa/img/03-pipeline-a-pdf.dark.png">
+    <img alt="Nodos 8 a 11: contexto de mercado, redacción, crítico en dos fases y PDF" src="docs/mapa/img/03-pipeline-a-pdf.light.png" width="100%">
+  </picture>
+</p>
+
+<p align="center"><sub>Nodos 8 a 11. El ciclo crítico → redactor, y por dónde sale un informe sin prosa · <a href="docs/mapa/03-pipeline-a-pdf.html">versión interactiva</a></sub></p>
+
 El crítico se midió contra sí mismo inyectando precios inventados: dejaba pasar el
 **50,5%**; tras tres cambios —uno de ellos bajar la tolerancia de 1% a 0,1% con la tabla
 de sensibilidad escrita al lado del parámetro— pasó a **4,3%**. Está contado en
@@ -60,6 +98,15 @@ para reproducir el pipeline, no las cifras.
 | Extracción (golden set, 24 avisos) | mediana 76% en 5 corridas, **17,6 pp de amplitud entre corridas idénticas** | por eso ninguna decisión de prompt se toma con una corrida |
 | Aporte de la extracción al MdAPE | **no distinguible del ruido** (−0,33 pp contra 1,83 pp entre semillas) | 3 semillas × 300 casos; con una sola semilla parecía +0,6 pp |
 | Recuperación léxica contra recencia (18/09) | nDCG@25 **0,821 contra 0,747** · descartes en curaduría 22% contra 29% · MdAPE 21,2% contra 23,6% | 113 consultas juzgadas por *pooling*, bootstrap apareado; backtest 600 casos × 3 semillas ([resultados](docs/informes/2026-09-18-rag-resultados.md)) |
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/mapa/img/06-rag-y-evaluacion.dark.png">
+    <img alt="Del aviso al veredicto: indexado del corpus, siete sistemas comparados y la vara de evaluación" src="docs/mapa/img/06-rag-y-evaluacion.light.png" width="100%">
+  </picture>
+</p>
+
+<p align="center"><sub>Cómo se indexó el corpus, qué siete sistemas se compararon y con qué vara. Ganó el más simple · <a href="docs/mapa/06-rag-y-evaluacion.html">versión interactiva</a></sub></p>
 
 La última fila es la más importante para leer las demás: este proyecto midió su propia
 hipótesis central y la publicó como salió.
@@ -140,6 +187,52 @@ Guía completa: [docs/guias/puesta-en-marcha.md](docs/guias/puesta-en-marcha.md)
   función que verifica las cifras del crítico— y rechazo sin llamar al modelo cuando
   no hay evidencia.
 
+## Los siete mapas
+
+Cada diagrama es una página HTML autocontenida en [`docs/mapa/`](docs/mapa/) —búsqueda,
+foco por componente, trazado de relaciones, vistas guiadas, tema claro/oscuro y
+exportación—, generada con [Archify](https://github.com/tt-a1i/archify) desde los JSON
+que están al lado. En el de arquitectura, cada componente enlaza al archivo del repo que
+lo implementa. Cloná y abrí [`docs/mapa/index.html`](docs/mapa/index.html) para
+recorrerlos con la guía; acá abajo están los tres que faltan, como imagen.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/mapa/img/04-informe.dark.png">
+    <img alt="Secuencia de pedir un informe: navegador, API, Redis, worker, PostgreSQL y LiteLLM" src="docs/mapa/img/04-informe.light.png" width="100%">
+  </picture>
+</p>
+
+<p align="center"><sub>Pedir un informe: 202 en la API, el grafo en el worker, SUCCEEDED · <a href="docs/mapa/04-informe.html">versión interactiva</a></sub></p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/mapa/img/05-pregunta.dark.png">
+    <img alt="Secuencia de «Preguntale al informe»: compuerta doble sin modelo y citas verificadas" src="docs/mapa/img/05-pregunta.light.png" width="100%">
+  </picture>
+</p>
+
+<p align="center"><sub>«Preguntale al informe»: rechazo en milisegundos cuando no hay evidencia, sin llamar al modelo · <a href="docs/mapa/05-pregunta.html">versión interactiva</a></sub></p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/mapa/img/07-vida-de-un-informe.dark.png">
+    <img alt="Ciclo de vida de un informe: QUEUED, RUNNING, CRÍTICA, SUCCEEDED y las salidas terminales" src="docs/mapa/img/07-vida-de-un-informe.light.png" width="100%">
+  </picture>
+</p>
+
+<p align="center"><sub>Los estados de un informe, los reintentos y las tres salidas terminales · <a href="docs/mapa/07-vida-de-un-informe.html">versión interactiva</a></sub></p>
+
+| # | Diagrama | Responde |
+|---|---|---|
+| 01 | [Sistema](docs/mapa/01-sistema.html) | ¿Qué corre y quién habla con quién? |
+| 02 | [Del sujeto al precio](docs/mapa/02-pipeline-a-precio.html) | ¿Cómo llega una dirección a un rango de precio? (nodos 1–7) |
+| 03 | [Del precio al PDF](docs/mapa/03-pipeline-a-pdf.html) | ¿Cómo se escribe y se verifica la prosa? (nodos 8–11) |
+| 04 | [Pedir un informe](docs/mapa/04-informe.html) | ¿Qué pasa entre el navegador, la API, la cola, el worker y los modelos? |
+| 05 | [Preguntale al informe](docs/mapa/05-pregunta.html) | ¿Cómo se responde con citas y cuándo se rechaza sin modelo? |
+| 06 | [Del aviso al veredicto](docs/mapa/06-rag-y-evaluacion.html) | ¿Cómo se indexó el corpus, qué sistemas se compararon y con qué vara? |
+| 07 | [La vida de un informe](docs/mapa/07-vida-de-un-informe.html) | ¿En qué estados puede quedar un informe y por qué? |
+
 ## Stack
 
 Python 3.12+ · FastAPI · SQLAlchemy 2 async · Alembic · PostgreSQL 16 + pgvector +
@@ -172,6 +265,7 @@ crítico, que no usa ningún modelo. Cambiar cualquiera es editar `config/litell
 | [00 Visión y alcance](docs/00-vision-y-alcance.md) · [01 Arquitectura y ADRs](docs/01-arquitectura.md) · [02 Fuentes](docs/02-fuentes-de-datos.md) · [03 Modelo de datos](docs/03-modelo-de-datos.md) | Qué es y cómo está hecho |
 | [04 Pipeline nodo por nodo](docs/04-pipeline-de-agentes.md) · [05 Metodología de valuación](docs/05-metodologia-de-valuacion.md) · [17 Arquitectura viva](docs/17-arquitectura-viva.md) | El grafo y la matemática |
 | [06 API](docs/06-api-contrato.md) · [07 Pantallas](docs/07-pantallas.md) · [20 Frontend: auditoría y sistema visual](docs/20-frontend-rediseno.md) · [08 Infra](docs/08-infra-y-despliegue.md) · [10 Seguridad y legal](docs/10-seguridad-y-legal.md) · [11 Costos](docs/11-costos.md) | Producto y operación |
+| [Mapa del proyecto](docs/mapa/README.md) — los siete diagramas y cómo regenerarlos | Cómo se ve |
 | [09 Evaluación y backtest](docs/09-evaluacion-y-backtest.md) · [auditoría](docs/auditoria/00-resumen.md) · [informes](docs/informes/) | Cómo se mide |
 | [18 Propuesta RAG](docs/18-rag-propuesta.md) · [resultados](docs/informes/2026-09-18-rag-resultados.md) · [ESTADO 18/09](docs/ESTADO-2026-09-18.md) | Lo que sigue, lo medido, y dónde quedó |
 

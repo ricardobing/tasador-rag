@@ -82,3 +82,19 @@ ops/palabras-privadas.txt
 web/tsconfig.tsbuildinfo
 data/eval/
 data/models/
+
+# Documentación interna: queda en el disco de trabajo, no en el repo público.
+# Son notas de proceso (plan por etapas, riesgos abiertos, informes intermedios
+# del 13 y 14/08) y las sondas de la auditoría, que corren contra el corpus
+# real y no se pueden reproducir con el corpus demo. Lo que sostiene cada
+# afirmación del README —la auditoría, el cierre, la implementación, el
+# backtest y los resultados del RAG— sí está publicado.
+docs/12-plan-de-desarrollo.md
+docs/13-riesgos-y-preguntas-abiertas.md
+docs/auditoria/prompt-sesion-1-analisis.md
+docs/auditoria/sondas/
+docs/informes/2026-08-13-etapa-0-cierre.md
+docs/informes/2026-08-13-etapa-1-avance.md
+docs/informes/2026-08-13-etapa-3-grafo-y-extraccion.md
+docs/informes/2026-08-14-*.md
+docs/informes/2026-08-15-prueba-con-casos-reales.md

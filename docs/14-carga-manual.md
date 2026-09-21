@@ -288,7 +288,7 @@ La tabla de comparables suma:
 
 ## 10. Impacto en el plan de desarrollo
 
-Se suman a [12](12-plan-de-desarrollo.md):
+Se suman al plan de desarrollo:
 
 | Etapa | Tarea nueva |
 |---|---|

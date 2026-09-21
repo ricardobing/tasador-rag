@@ -17,6 +17,9 @@ implementa (evidencia verificada contra el commit `d3b4a1a`).
 | 06 | [Del aviso al veredicto](06-rag-y-evaluacion.html) · [fuente](06-rag-y-evaluacion.dataflow.json) | flujo de datos | ¿Cómo se indexó el corpus, qué sistemas se compararon y con qué vara? |
 | 07 | [La vida de un informe](07-vida-de-un-informe.html) · [fuente](07-vida-de-un-informe.lifecycle.json) | ciclo de vida | ¿En qué estados puede quedar un informe y por qué? |
 
+Cada diagrama está además exportado a PNG en [`img/`](img/), en tema claro y oscuro:
+son los que usa el README de la raíz. Se regeneran con la misma fuente que el HTML.
+
 Para regenerarlos (Node 22+; la skill se instala con `npx skills add tt-a1i/archify -g`):
 
 ```bash

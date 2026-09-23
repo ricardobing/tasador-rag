@@ -184,7 +184,9 @@ def informe_html(state: ReportState, *, org: str = "Tasador", template: str = "i
             "usd_m2": _num(d.get("raw_price_per_m2")),
             "usd_m2_ajustado": _num(d.get("adjusted_price_per_m2")),
             "included": bool(d.get("included")),
-            "motivo": MOTIVO_DE_DESCARTE.get(d.get("exclusion_reason") or "", d.get("exclusion_reason") or "descartado"),
+            "motivo": MOTIVO_DE_DESCARTE.get(
+                d.get("exclusion_reason") or "", d.get("exclusion_reason") or "descartado"
+            ),
         }
         # Primero los usados: es lo que sostiene el número. Los descartados van
         # después pero VAN, con su motivo (doc 03 §3.6).
